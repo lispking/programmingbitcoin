@@ -166,26 +166,33 @@ For a variety of reasons that will become clear later, it turns out that fields 
 你可能已经注意到，域的序总是质数。
 由于一些将在后面变得清晰的原因，结果证明域 _必须_ 具有质数的幂次作为序，而那些序为质数的有限域正是我们感兴趣的。
 
-==== Constructing a Finite Field in Python
+==== Constructing a Finite Field in Python 在Python中构建有限域
 
 We((("FieldElement class"))) want to represent each finite field element, so in Python, we'll be creating a class that represents a single finite field element.
 Naturally, we'll name the class pass:[<span class="keep-together"><code>FieldElement</code></span>].
 
+我们想要表示每个有限域元素，所以在Python中，我们将创建一个代表单个有限域元素的类。 自然，我们将命名该类为FieldElement。
+
 
 The class represents an element in a field __F__~prime~.
 The bare bones of the class look like this:
+
+该类表示有限域__F__~prime~中的一个元素。 该类的核心代码如下：
 
 [source,python]
 ----
 include::code-ch01/ecc.py[tag=source1]
 ----
 <1> We first check that `num` is between `0` and `prime-1` inclusive.
-If not, we get an invalid +FieldElement+ and we raise a `ValueError`, which is what we should raise when we get an inappropriate value.
-<2> The((("&#x005F;&#x005F;init&#x005F;&#x005F; method"))) rest of the `__init__` method assigns the initialization values to the object.
-<3> The((("&#x005F;&#x005F;eq&#x005F;&#x005F; method"))) `__eq__` method checks if two objects of class `FieldElement` are equal.
-This is only true when the `num` and `prime` properties are equal.
+If not, we get an invalid +FieldElement+ and we raise a `ValueError`, which is what we should raise when we get an inappropriate value. 我们首先检查`num`是否在`0`和`prime-1`之间（包括`0`和`prime-1`）。
+如果不是，我们将得到一个无效的`FieldElement`，并引发一个`ValueError`，这是当我们得到不合适的值时应该引发的异常。
+<2> The((("&#x005F;&#x005F;init&#x005F;&#x005F; method"))) rest of the `__init__` method assigns the initialization values to the object. `__init__`方法的剩余部分将初始化值分配给对象。
+<3> The((("&#x005F;&#x005F;eq&#x005F;&#x005F; method"))) `__eq__` method checks if two objects of class `FieldElement` are equal. `__eq__`方法检查两个`FieldElement`类的对象是否相等。
+This is only true when the `num` and `prime` properties are equal. 这仅在`num`和`prime`属性相等时才是真的。
 
 What we've defined already allows us to do this:
+
+我们已经定义的内容允许我们这样做：
 
 [source,python]
 ----
@@ -194,19 +201,27 @@ include::code-ch01/examples.py[tag=example1]
 
 Python((("== operator"))) allows us to override the `==` operator on `FieldElement` with the `__eq__` method, which is something we'll be taking advantage of going forward.
 
+Python的 == 运算符允许我们将FieldElement的 == 运算符覆盖为__eq__方法，这是我们在后续操作中会利用到的。
+
 You can see this in action in the code that accompanies this book.
 Once you've set up Jupyter Notebook (see <<setting_up>>), you can navigate to _code-ch01/Chapter1.ipynb_ and run the code to see the results.
 For the next exercise, you'll want to open up _ecc.py_ by clicking the link in the Exercise 1 box.
 If you get stuck, please remember that the answers to every exercise are in <<appendix_solutions>>.((("", startref="FFsets01")))((("&#x005F;&#x005F;ne&#x005F;&#x005F; method")))
 
+您可以在本书附带的代码中看到这个操作。一旦您设置好Jupyter Notebook（请参阅<<设置>>），您就可以导航到 _code-ch01/Chapter1.ipynb_ 并运行代码以查看结果。 下一个练习，您需要打开 _ecc.py_，通过点击练习1框中的链接来访问。 如果您遇到困难，请记住每个练习的答案都在<<附录解决方案>>中。
+
 include::code-ch01/answers.py[tag=exercise1,indent=0]
 
-=== Modulo Arithmetic
+=== Modulo Arithmetic 模运算
 
 One((("finite fields", "modulo arithmetic", id="FFmodulo01")))((("modulo arithmetic", id="modulo01"))) of the tools we can use to make a finite field closed under addition, subtraction, multiplication, and division is something called _modulo arithmetic_.
 
+有限域((“finite fields”，“modulo arithmetic”，id=“FFmodulo01”))中，我们可以使用模运算((“modulo arithmetic”，id=“modulo01”))这一工具，使得有限域在加法、减法、乘法和除法下封闭。
+
 We can define addition on the finite set using modulo arithmetic, which is something you probably learned when you first learned division.
 Remember problems like the one in <<long_division_example_one>>?
+
+我们可以使用模运算在有限集合上定义加法，这可能是你在学习除法时就已经了解的内容。 还记得像<<long_division_example_one>>中的问题吗？
 
 [[long_division_example_one]]
 .Long division example 1
@@ -215,6 +230,10 @@ image::images/prbc_0101.png[Long Division Example 1]
 Whenever the division wasn't even, there was something called the "remainder," which is the amount left over from the actual division.
 We define modulo in the same way.
 We((("% (modulo) operator"))) use the operator % for modulo:
+
+每当除法不整除时，就有一种称为"余数"的东西，它是实际除法中剩余的量。
+我们同样地定义模运算。
+我们使用%运算符来进行模运算：
 
 ++++
 <ul class="simplelist">
@@ -231,6 +250,9 @@ image::images/prbc_0102.png[Long Division Example 2]
 Formally speaking, the modulo operation is the remainder after division of one number by another.
 Let's look at another example with larger numbers:
 
+正式地说，模运算是一个数除以另一个数后的余数。
+让我们看一个更大的数字的例子：
+
 ++++
 <ul class="simplelist">
 <li>1747 % 241 = 60</li>
@@ -240,6 +262,7 @@ Let's look at another example with larger numbers:
 [role="pagebreak-before"]
 If it helps, you can think of modulo arithmetic as "wraparound" or "clock" math.
 Imagine a problem like this:
+如果这能帮到您，您可以这样理解模运算：“循环”或“时钟”数学。想象一下这样的问题
 
 ++++
 <ul class="simplelist">
@@ -255,8 +278,12 @@ image::images/prbc_0103.png[Clock]
 
 We can also see this as "wrapping around" in the sense that we go past 0 every time we move ahead 12 hours.
 
+我们也可以将其视为“循环”，因为每当我们向前移动12小时，就会经过0。
+
 We can perform modulo on negative numbers.
 For example, you can ask:
+
+我们可以在负数上执行模运算。 例如，您可以问：
 
 ++++
 <ul class="simplelist">
@@ -280,6 +307,7 @@ For example, you can ask:
 <ul class="simplelist">
 <li>It is currently 12 minutes past the hour.
 What minute will it be 843 minutes from now?</li>
+
 </ul>
 ++++
 
@@ -339,13 +367,17 @@ We can also use the modulo operator on negative numbers, like((("", startref="FF
 include::code-ch01/examples.py[tag=example3]
 ----
 
-=== Finite Field Addition and Subtraction
+=== Finite Field Addition and Subtraction 有限域的加法和减法
 
 Remember((("finite fields", "addition and subtraction", id="FFadd01"))) that we need to define finite field addition such that we ensure the result is still in the set.
 That is, we want to make sure that addition in a finite field is _closed_.
 
+请记住，我们需要定义有限域的加法，以确保结果仍然在集合中。 也就是说，我们想要确保有限域中的加法是封闭的。
+
 We can use what we just learned, modulo arithmetic, to make addition closed.
 Let's say we have a finite field of 19:
+
+我们可以使用刚刚学到的模运算，使加法封闭。 假设我们有一个19的有限域：
 
 ++++
 <ul class="simplelist">
@@ -356,7 +388,11 @@ Let's say we have a finite field of 19:
 where _a_, _b_ ∈ __F__~19~. Note((("element of (&#x2208;) symbol")))((("&#x2208; (element of) symbol"))) that the symbol ∈ means "is an element of."
 In our case, _a_ and _b_ are elements of __F__~19~.
 
+其中 a, b ∈ F~19~。注意，符号 ∈ 表示“是某个集合的元素”。 在我们的例子中，a 和 b 是 F~19~ 的元素。
+
 Addition being closed means:
+
+加法封闭意味着：
 
 ++++
 <ul class="simplelist">
@@ -366,8 +402,13 @@ Addition being closed means:
 
 We denote finite field addition with pass:[+<sub><em>f</em></sub>] to avoid confusion with normal integer addition, +.
 
+为了避免与普通的整数加法混淆，我们用 pass:[+<sub><em>f</em></sub>] 表示有限域的加法。
+如果我们使用模运算，我们可以保证这是正确的。
+
 If we utilize modulo arithmetic, we can guarantee this to be the case.
 We can define pass:[<em>a</em>+<sub><em>f</em></sub><em>b</em>] this way:
+
+我们可以这样定义 pass:[<em>a</em>+<sub><em>f</em></sub><em>b</em>]：  
 
 ++++
 <ul class="simplelist">
@@ -392,7 +433,13 @@ We take any two numbers in the set, add, and "wrap around" the end to get the su
 We are creating our own addition operator here and the result is a bit unintuitive.
 After all, pass:[11+<sub><em>f</em></sub>17 = 9] just doesn't look right because we're not used to finite field addition.
 
+我们在集合中取任意两个数字，相加，然后“绕过”末尾得到和。
+在这里，我们正在创建自己的加法运算符，结果可能有些不直观。
+毕竟，pass:[11+<sub><em>f</em></sub>17 = 9] 看起来不太对，因为我们不习惯有限域的加法。
+
 More generally, we define field addition this way:
+
+更一般地说，我们这样定义域的加法：  
 
 ++++
 <ul class="simplelist">
@@ -411,10 +458,13 @@ We also define the additive inverse this way. pass:[<em>a</em> ∈ <em>F</em><su
 ++++
 
 
-
 Again, for clarity, we use pass:[–<sub><em>f</em></sub>] to distinguish field subtraction and negation from integer subtraction and negation.
 
+再次，为了清晰起见，我们使用 pass:[–<sub><em>f</em></sub>] 来区分域的减法和负数与整数的减法和负数。
+
 In __F__~19~:
+
+在 __F__~19~ 中：  
 
 ++++
 <ul class="simplelist">
@@ -459,10 +509,12 @@ and so on.
 
 include::code-ch01/answers.py[tag=exercise2,indent=0]
 
-==== Coding Addition and Subtraction in Python
+==== Coding Addition and Subtraction in Python 在Python中编码加法和减法
 
 In((("&#x005F;&#x005F;add&#x005F;&#x005F; method")))((("&#x005F;&#x005F;sub&#x005F;&#x005F; method"))) the class `FieldElement` we can now define `__add__` and `__sub__` methods.
 The idea of these methods is that we want something like this to work:
+
+在 `FieldElement` 类中，我们现在可以定义 `__add__` 和 `__sub__` 方法。 这些方法的思想是，我们希望类似这样的操作能够实现：
 
 [source,python]
 ----
@@ -473,27 +525,37 @@ In((("&#x002B; (addition) operator")))((("addition (&#x002B;) operator"))) Pytho
 So how do we do this?
 We combine what we learned with modulo arithmetic and create a new method of the class `FieldElement` like so:
 
+在Python中，我们可以通过 `__add__` 方法定义加法（或 + 运算符）对于我们的类的含义。
+那么我们如何实现呢？
+我们将模运算的知识结合起来，并创建 `FieldElement` 类的新方法，如下所示：
+
 [source,python]
 ----
 include::code-ch01/ecc.py[tag=source2]
 ----
-<1> We have to ensure that the elements are from the same finite field, otherwise this calculation doesn't have any meaning.
-<2> Addition in a finite field is defined with the modulo operator, as explained earlier.
+<1> We have to ensure that the elements are from the same finite field, otherwise this calculation doesn't have any meaning. 我们必须确保元素来自同一个有限域，否则这种计算没有任何意义。
+<2> Addition in a finite field is defined with the modulo operator, as explained earlier. 有限域中的加法定义为模运算符，如前所述。
 <3> We((("self.&#x005F;&#x005F;class&#x005F;&#x005F; method"))) have to return an instance of the class, which we can conveniently access with `self.__class__`.
-We pass the two initializing arguments, `num` and `self.prime`, for the `__init__` method we saw earlier.
+We pass the two initializing arguments, `num` and `self.prime`, for the `__init__` method we saw earlier. 我们必须返回类的一个实例，我们可以方便地使用 `self.__class__` 访问它。我们将之前看到的 `__init__` 方法的两个初始化参数 `num` 和 `self.prime` 传递进去。
 
 Note that we could use `FieldElement` instead of `self.__class__`, but this would not make the method easily inheritable.
 We will be subclassing `FieldElement` later, so making the method inheritable is important here.((("", startref="FFadd01")))
 
+请注意，我们可以使用 `FieldElement` 代替 `self.__class__`，但这将使方法不易继承。 后面我们将继承 `FieldElement` 类，因此在这里使方法可继承是很重要的。
+
 include::code-ch01/answers.py[tag=exercise3,indent=0]
 
-=== Finite Field Multiplication and Exponentiation
+=== Finite Field Multiplication and Exponentiation 有限域的乘法和指数运算
 
 Just((("finite fields", "multiplication and exponentiation", id="FFmulti1"))) as we defined a new addition (+~__f__~) for finite fields that was closed, we can also define a new multiplication for finite fields that's closed.
 By multiplying the same number many times, we can also define exponentiation.
 In this section, we'll go through exactly how to define this using modulo arithmetic.
 
+正如我们为有限域定义了一个新的加法（+~__f__~）一样，我们也可以定义一个闭合的有限域乘法。 通过多次乘以相同的数，我们也可以定义指数运算。 在本节中，我们将详细介绍如何使用模运算来定义乘法和指数运算。
+
 Multiplication is adding multiple times:
+
+乘法就是多次相加：
 
 ++++
 <ul class="simplelist">
@@ -525,7 +587,11 @@ Note that the second result is pretty unintuitive.
 We don't normally think of 8 ⋅~__f__~ 17 = 3, but that's part of what's necessary in order to define multiplication to be closed.
 That is, the result of field multiplication is always in the set {0, 1, ... __p__–1}.
 
+请注意，第二个结果相当不直观。 我们通常不会认为 8 ⋅~__f__~ 17 = 3，但这是定义乘法为闭合的必要部分。 也就是说，域乘法的结果总是集合 {0, 1, ... __p__–1} 中的元素。
+
 Exponentiation is simply multiplying a number many times:
+
+指数运算就是多次乘以一个数：
 
 ++++
 <ul class="simplelist">
@@ -535,7 +601,11 @@ Exponentiation is simply multiplying a number many times:
 
 In a finite field, we can do exponentiation using modulo arithmetic.
 
+在有限域中，我们可以使用模运算来进行指数运算。
+
 In __F__~19~:
+
+在 __F__~19~ 中:
 
 ++++
 <ul class="simplelist">
@@ -549,24 +619,35 @@ Exponentiation again gives us counterintuitive results.
 We don't normally think 7^3^ = 1 or 9^12^ = 7.
 Again, finite fields have to be defined so that the operations _always_ result in a number within the field.
 
+指数运算再次给了我们反直觉的结果。
+我们通常不会认为7的3次方等于1，或者9的12次方等于7。
+再次强调，有限域必须定义得使运算结果总是域内的数。
+
 include::code-ch01/answers.py[tag=exercise4,indent=0]
 
 include::code-ch01/answers.py[tag=exercise5,indent=0]
 
-.Why Prime Fields are Useful
+.Why Prime Fields are Useful 为什么素数域是有用的
 [NOTE]
 ====
 The answer to Exercise 5 is why we choose to use finite fields with a _prime_ number of elements.
 No matter what _k_ you choose, as long as it's greater than 0, multiplying the entire set by _k_ will result in the same set as you started with.
 
+练习5的答案就是为什么我们选择使用元素个数为素数的有限域。 无论你选择什么k，只要它大于0，将整个集合乘以k，结果将与初始的集合相同。
+
 Intuitively, the fact that we have a prime order results in every element of a finite field being equivalent.
 If the order of the set was a composite number, multiplying the set by one of the divisors would result in a smaller set.
+
+直观上，我们有一个素数阶的结果是每个有限域的元素都是等价的。 如果集合的阶是一个合数，将集合乘以其中一个约数，将得到一个较小的集合。
+
 ====
 
-==== Coding Multiplication in Python
+==== Coding Multiplication in Python 在Python中编码乘法
 
 Now((("&#x005F;&#x005F;mul&#x005F;&#x005F; method")))((("&#x002A; (multiplication) operator")))((("multiplication (&#x002A;) operator"))) that we understand what multiplication should be in `FieldElement`, we want to define the `__mul__` method that overrides the `*` operator.
 We want this to work:
+
+现在我们了解了 `FieldElement` 中乘法应该是什么样子，我们想要定义 `__mul__` 方法，它覆盖了*运算符。 我们希望它能这样工作：
 
 [source,python]
 ----
@@ -575,13 +656,17 @@ include::code-ch01/examples.py[tag=example5]
 
 As with addition and subtraction, the next exercise is to make multiplication work for our class by defining the `__mul__` method.
 
+与加法和减法类似，下一个练习是定义`__mul__`方法，使乘法适用于我们的类。
+
 include::code-ch01/answers.py[tag=exercise6,indent=0]
 
-==== Coding Exponentiation in Python
+==== Coding Exponentiation in Python 在Python中编码指数运算
 
 We((("&#x005F;&#x005F;pow&#x005F;&#x005F; method")))((("&#x002A;&#x002A; operator"))) need to define the exponentiation for `FieldElement`, which in Python can be defined with the `__pow__` method, overriding the `**` operator.
 The difference here is that the exponent is _not_ a `FieldElement`, so it has to be treated a bit differently.
 We want something like this to work:
+
+我们需要为 `FieldElement` 定义指数运算，在 `Python` 中，这可以通过定义 `__pow__` 方法，重写 `**` 运算符来实现。 这里的区别在于，指数不是一个 `FieldElement`，因此需要稍微区别对待。 我们希望以下代码能够工作：
 
 [source,python]
 ----
@@ -591,6 +676,9 @@ include::code-ch01/examples.py[tag=example6]
 Note that because the exponent is an integer, instead of another instance of `FieldElement`, the method receives the variable `exponent` as an integer.
 We can code it this way:
 
+
+请注意，因为指数是一个整数，而不是另一个 `FieldElement` 实例，所以该方法将变量 `exponent` 作为整数接收。我们可以这样编码：
+
 [source,python]
 ----
 class FieldElement:
@@ -599,23 +687,31 @@ class FieldElement:
         num = (self.num ** exponent) % self.prime  # <1>
         return self.__class__(num, self.prime)  # <2>
 ----
-<1> This is a perfectly fine way to do it, but `pow(self.num, exponent, self.prime)` is more efficient.
-<2> We have to return an instance of the class as before.
+<1> This is a perfectly fine way to do it, but `pow(self.num, exponent, self.prime)` is more efficient. 这是一种非常好的方法，但是 `pow(self.num, exponent, self.prime)` 更加高效。
+<2> We have to return an instance of the class as before. 我们必须返回一个类实例，就像以前一样。
 
 Why don't we force the exponent to be a `FieldElement` object?
 It turns out that the exponent doesn't have to be a member of the finite field for the math to work.
 In fact, if it were, the exponents wouldn't display the intuitive behavior we expect, like being able to add the exponents when we multiply with the same base.
 
+为什么我们不强制指数成为一个 `FieldElement` 对象呢？ 事实上，指数不必是有限域的成员，只要数学运算有效即可。 实际上，如果指数是有限域的成员，它就不会显示我们期望的直观行为，例如在乘以相同底数时无法相加指数。
+
 Some of what we're doing now may seem slow for large numbers, but we'll use some clever tricks to improve the performance of these algorithms.((("", startref="FFmulti1")))
+
+现在我们做的这些对于大数字来说可能看起来很慢，但是我们会使用一些巧妙的技巧来提高这些算法的性能。
 
 include::code-ch01/answers.py[tag=exercise7,indent=0]
 
-=== Finite Field Division
+=== Finite Field Division 有限域除法
 
 The((("finite fields", "division", id="FFdiv01"))) intuition that helps us with addition, subtraction, multiplication, and perhaps even exponentiation unfortunately doesn't help us quite as much with division.
 Because division is the hardest operation to make sense of, we'll start with something that should make sense.
 
+在加法、减法、乘法以及甚至指数运算中帮助我们理解的有限域直觉，在除法运算中并不那么有帮助。 因为除法是最难理解的运算，所以我们从一些应该能理解的内容开始。
+
 In normal math, division is the inverse of multiplication:
+
+在普通数学中，除法是乘法的逆运算：
 
 * 7 ⋅ 8 = 56 implies that 56/8 = 7
 * 12 ⋅ 2 = 24 implies that 24/12 = 2
@@ -623,6 +719,9 @@ In normal math, division is the inverse of multiplication:
 And so on.
 We can use this as the definition of division to help us.
 Note that like in normal math, you cannot divide by 0.
+
+我们可以将这个作为除法的定义来帮助我们。
+请注意，与普通数学一样，您不能除以0。
 
 In __F__~19~, we know that:
 
@@ -637,12 +736,18 @@ This is very unintuitive, as we generally think of 2/~__f__~7 or 7/~__f__~5 as f
 Yet that is one of the remarkable things about finite fields: finite fields are _closed_ under division.
 That is, dividing any two numbers where the denominator is not 0 will result in another finite field element.
 
+这非常违反直觉，因为我们通常将2/~f~7或7/~f~5视为分数，而不是漂亮的有限域元素。 然而，这正是有限域的一个显著特点：有限域在除法下是封闭的。 也就是说，除以任何两个数（除数不为0）的结果将是另一个有限域元素。
+
 The question you might be asking yourself is, how do I calculate 2/~__f__~7 if I don't know beforehand that 3⋅~__f__~7 = 2?
 This is indeed a very good question; to answer it, we'll have to use the result from Exercise 7.
+
+你可能正在问自己的问题是，如果我不知道3⋅~f~7 = 2，我怎么能计算出2/~f~7呢？这是一个非常好的问题；为了回答这个问题，我们将使用第7题的结果。
 
 In case you didn't get it, the answer is that __n__^(__p__–1)^ is always 1 for every _p_ that is prime and every _n_ > 0.
 This is a beautiful result from number theory called((("Fermat’s little theorem"))) Fermat's little theorem.
 Essentially, the theorem says:
+
+如果你没有得出答案，那么答案是对于每个素数 p 和每个 n > 0，n^(p–1)^总是1。这是数论中的一个漂亮结果，称为(((“费马小定理”))))费马小定理。本质上，这个定理说的是：
 
 ++++
 <ul class="simplelist">
@@ -654,9 +759,13 @@ where _p_ is prime.
 
 Since we are operating in prime fields, this will always be true.
 
-.Fermat's Little Theorem
+由于我们在素数域中操作，这总是正确的。
+
+.Fermat's Little Theorem 费马小定理
 ****
 There are many proofs of this theorem, but perhaps the simplest is using what we saw in Exercise 5—namely, that these sets are equal:
+
+这个定理有许多证明，但或许最简单的是使用我们在第5题中看到的内容——也就是说，这些集合是相等的：
 
 ++++
 <ul class="simplelist">
@@ -666,6 +775,8 @@ There are many proofs of this theorem, but perhaps the simplest is using what we
 
 The resulting numbers might not be in the right order, but the same numbers are in both sets. We can then multiply every element in both sets to get this equality:
 
+结果数字可能不在正确的顺序，但两个集合中都包含相同的数字。然后我们可以将两个集合中的每个元素相乘以得到这种相等性：
+
 ++++
 <ul class="simplelist">
 <li>1 ⋅ 2 ⋅ 3 ⋅ ... ⋅ (<em>p</em>–2) ⋅ (<em>p</em>–1) % <em>p</em> = <em>n</em> ⋅ 2<em>n</em> ⋅ 3<em>n</em> ⋅ ... ⋅ (<em>p</em>–2)<em>n</em> ⋅ (<em>p</em>–1)<em>n</em> % <em>p</em></li>
@@ -674,6 +785,8 @@ The resulting numbers might not be in the right order, but the same numbers are 
 
 The left side is the same as (__p__–1)! % _p_ where ! is the factorial (e.g.,
 5! = 5 ⋅ 4 ⋅ 3 ⋅ 2 ⋅ 1). On the right side, we can gather up all the __n__`'s and get:
+
+左边与(__p__–1)! % _p_ 相同，其中！是阶乘（例如，5! = 5 × 4 × 3 × 2 × 1）。在右边，我们可以收集所有的 __n__`'s 并得到：  
 
 ++++
 <ul class="simplelist">
@@ -699,9 +812,14 @@ The (_p_–1)! on both sides cancel, giving us:
 
 
 This proves Fermat's little theorem.
+
+这证明了费马小定理。
+
 ****
 
 Because division is the inverse of multiplication, we know:
+
+因为除法是乘法的逆运算，所以我们知道：
 
 ++++
 <ul class="simplelist">
@@ -713,6 +831,9 @@ Because division is the inverse of multiplication, we know:
 We can reduce the division problem to a multiplication problem as long as we can figure out what __b__^–1^ is.
 This is where Fermat's little theorem comes into play.
 We know:
+
+我们可以将除法问题转化为乘法问题，只要我们能确定什么是__b__^-1^。这就是费马小定理发挥作用的地方。
+我们知道：
 
 ++++
 <ul class="simplelist">
@@ -759,15 +880,19 @@ The `pow` function, however, has an optional third argument that makes our calcu
 Specifically, `pow` will modulo by the third argument.
 Thus, `pow(7,17,19)` will give the same result as `7**17%19` but do so faster because the modulo function is done after each round of multiplication.((("&#x005F;&#x005F;truediv&#x005F;&#x005F; method")))((("&#x005F;&#x005F;floordiv&#x005F;&#x005F; method")))((("", startref="FFdiv01")))
 
+这是一个相对昂贵的计算，因为指数增长非常快。因此，除法是最昂贵的操作。为了减轻这种开销，我们可以使用 `Python` 中的 `pow` 函数，该函数进行指数运算。在 `Python` 中， `pow(7,17)` 和 `7**17` 完成相同的操作。然而，`pow` 函数有一个可选的第三个参数，使我们的计算更加高效。具体来说，`pow` 会对第三个参数取模。因此，`pow(7,17,19)` 将给出与 `7**17%19` 相同的结果，但计算速度更快，因为模运算是在每一轮乘法之后进行。
+
 include::code-ch01/answers.py[tag=exercise8,indent=0]
 
 include::code-ch01/answers.py[tag=exercise9,indent=0]
 
-=== Redefining Exponentiation
+=== Redefining Exponentiation 重新定义指数运算
 
 One((("&#x005F;&#x005F;pow&#x005F;&#x005F; method")))((("finite fields", "redefining exponentiation"))) last thing that we need to take care of before we leave this chapter is the `__pow__` method, which needs to handle negative exponents.
 For example, __a__^–3^ needs to be a finite field element, but the current code does not take care of this case.
 We want, for example, something like this to work:
+
+在我们离开本章之前，我们需要处理的最后一件事是 `__pow__` 方法，该方法需要处理负指数。例如， `__a__^-3^-` 需要是一个有限域元素，但当前代码并没有处理这种情况。我们希望，例如，像下面这样的操作能够成功：
 
 [source,python]
 ----
@@ -776,7 +901,11 @@ include::code-ch01/examples.py[tag=example7]
 
 Unfortunately, the way we've defined `__pow__` simply doesn't handle negative exponents, because the second parameter of the built-in Python function `pow` is required to be positive.
 
+不幸的是，我们定义的 `__pow__` 方法并不能处理负指数，因为内置的 `Python` 函数 `pow` 的第二个参数必须是正数。
+
 Thankfully, we can use some math we already know to solve this. We know from pass:[<span class="keep-together">Fermat's</span>] little theorem that:
+
+幸运的是，我们可以利用我们已经掌握的一些数学知识来解决这个问题。我们从费马小定理知道：
 
 ++++
 <ul class="simplelist">
@@ -788,6 +917,10 @@ Thankfully, we can use some math we already know to solve this. We know from pas
 This fact means that we can multiply by __a__^__p__–1^ as many times as we want.
 So, for __a__^–3^, we can do:
 
+
+这个事实意味着我们可以随意多次乘以 `__a__^__p__-1^`。
+所以，对于 `__a__^-3^-`，我们可以这样做：  
+
 ++++
 <ul class="simplelist">
 <li><em>a</em><sup>–3</sup> = <em>a</em><sup>–3</sup> ⋅ <em>a</em><sup><em>p</em>–1</sup> = <em>a</em><sup><em>p</em>–4</sup></li>
@@ -796,6 +929,8 @@ So, for __a__^–3^, we can do:
 
 This is a way we can do negative exponents.
 A naive implementation would do something like this:
+
+这是我们处理负指数的一种方法。一个简单的实现可能会这样做：
 
 [source,python]
 ----
@@ -808,13 +943,15 @@ class FieldElement:
         num = pow(self.num, n, self.prime) # <2>
         return self.__class__(num, self.prime)
 ----
-<1> We add until we get a positive exponent.
-<2> We use the Python built-in `pow` to make this more efficient.
+<1> We add until we get a positive exponent. 我们不断加1，直到得到一个正指数。
+<2> We use the Python built-in `pow` to make this more efficient. 我们使用 `Python` 内置的 `pow` 函数来提高效率。
 
 Thankfully, we can do even better.
 We already know how to force a number out of being negative, using our familiar friend `%`!
 As a bonus, we can also reduce very large exponents at the same time given that __a__^__p__–1^ = 1.
 This will make the `pow` function not work as hard:
+
+幸运的是，我们还可以做得更好。 我们已经知道如何使用我们熟悉的模运算符%来强制一个数变为正数！ 作为一个额外的奖励，我们还可以在给定 `__a__^p-1^ = 1` 的同时减少非常大的指数。 这将使 `pow` 函数不必那么努力工作：
 
 [source,python]
 ----
@@ -822,10 +959,12 @@ class FieldElement:
 ...
 include::code-ch01/ecc.py[tag=source3]
 ----
-<1> Make the exponent into something within the 0 to __p__–2 range, inclusive.
+<1> Make the exponent into something within the 0 to __p__–2 range, inclusive. 将指数转换为0到 `__p__-2` 范围内的值，包括边界值。
 
-=== Conclusion
+=== Conclusion 结论
 
 In this chapter we learned about finite fields and how to implement them in Python.
 We'll be using finite fields in <<chapter_elliptic_curve_cryptography>> for elliptic curve cryptography.
 We turn next to the other mathematical component that we need for elliptic curve cryptography: elliptic curves.((("", startref="MTfinite01")))
+
+在本章中，我们学习了有限域以及如何在 `Python` 中实现有限域。 在<<chapter_elliptic_curve_cryptography>>章中，我们将使用有限域进行椭圆曲线密码学。 接下来，我们需要转向椭圆曲线密码学的另一个数学组件：椭圆曲线。
