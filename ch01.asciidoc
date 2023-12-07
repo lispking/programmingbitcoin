@@ -1,10 +1,12 @@
 [[chapter_finite_fields]]
 [role="pagenumrestart"]
-== Finite Fields
+== Finite Fields 有限域
 
 [.lead]
 One of the most difficult things about learning how to program Bitcoin is knowing where to start.
 There are so many components that depend on each other that learning one thing may lead you to have to learn another, which in turn may lead you to need to learn something else before you can understand the original thing.
+
+学习编程比特币最困难的事情之一就是知道从哪里开始。有如此多的组件相互依赖，学习一个东西可能会让你不得不学习另一个，而这又可能导致你需要先学习其他东西才能理解原来的东西。
 
 This((("Bitcoin", "overview of components")))((("elliptic curve cryptography", "role in Bitcoin")))((("signing and verification", "purpose of")))((("transactions", "role in Bitcoin"))) chapter is going to get you off to a more manageable start.
 It may seem strange, but we'll start with the basic math that you need to understand elliptic curve cryptography.
@@ -12,40 +14,58 @@ Elliptic curve cryptography, in turn, gives us the signing and verification algo
 These are at the heart of how transactions work, and transactions are the atomic unit of value transfer in Bitcoin.
 By learning about finite fields((("finite fields", "role in Bitcoin")))((("elliptic curves", "role in Bitcoin"))) and elliptic curves first, you'll get a firm grasp of concepts that you'll need to progress logically.
 
+本章将带你开始一个更易于管理的学习旅程。我们可能会从基本的数学概念开始，这些概念可以帮助你理解椭圆曲线密码学。椭圆曲线密码学为我们提供了签名和验证算法。这些算法是比特币交易的核心，而交易是比特币中价值转移的基本单位。通过首先学习有限域和椭圆曲线的概念，你将牢固掌握需要逻辑发展的概念。
+
 Be aware that this chapter and the next two chapters may feel a bit like you're eating vegetables, especially if you haven't done formal math in a long time.
 I would encourage you to get through them, though, as the concepts and code presented here will be used throughout the book.
 
-=== Learning Higher-Level Math
+请注意，本章以及接下来的两章可能会让你觉得有点像在吃蔬菜，尤其是如果你已经很长时间没有接触过正式的数学了。然而，我建议你坚持下去，因为这里介绍的概念和代码将在整本书中被使用。
+
+=== Learning Higher-Level Math 学习高级数学
 
 Learning about new mathematical structures can be a bit intimidating, and in this chapter, I hope to dispel the myth that high-level math is difficult.
 Finite fields, in particular, don't require all that much more in terms of prior mathematical knowledge than, say, algebra.
 
+学习新的数学结构可能有些令人畏惧，在这章中，我希望消除高级数学困难的神话。 特别是有限域，在先前的数学知识方面，并不比代数要求得多。
+
 Think of finite fields as something that you could have learned instead of trigonometry, except that the education system you're a part of decided that trigonometry was more important for you to learn.
 This is my way of telling you that finite fields are not that hard to learn and require no more background than algebra.
+
+将有限域视为你可能学习的东西，而不是三角学，只是你所在的教育系统认为三角学对你来说更重要。 这是我在告诉你，有限域并不难学，而且不需要比代数更多的背景知识。
 
 This chapter is required if you want to understand elliptic curve cryptography.
 Elliptic curve cryptography is required for understanding signing and verification, which is at the heart of Bitcoin itself.
 As I've said, this chapter and the next two may feel a bit unrelated, but I encourage you to endure.
 The fundamentals here will not only make understanding Bitcoin a lot easier, but also make understanding Schnorr signatures, confidential transactions, and other leading-edge Bitcoin technologies easier.
 
-=== Finite Field Definition
+如果你想要理解椭圆曲线密码学，那么这一章就是必不可少的。 理解椭圆曲线密码学是理解签名和验证的基础，而签名和验证是比特币的核心。 正如我前面所说，这一章和接下来的两章可能让人觉得有些无关，但我鼓励你坚持下去。 这里的 fundamentals 将使理解比特币以及其他先进的比特币技术（如 Schnorr 签名、保密交易等）变得更加容易。
+
+
+
+=== Finite Field Definition 有限域定义
 
 Mathematically,((("mathematical tools", "finite fields", id="MTfinite01")))((("finite fields", "definition of"))) a _finite field_ is defined as a finite set of numbers and two operations *+* (addition) and *⋅* (multiplication) that satisfy the following:
 
+从数学角度来说，(((“数学工具”, “有限域”, id=“MTfinite01”)))(((“有限域”, “定义”))))，有限域是一个由有限个数和两个运算符 +（加法）和 ⋅（乘法）组成的集合，满足以下条件：
+
 1. If _a_ and _b_ are in the set, __a + b__ and __a__ ⋅ __b__ are in the set.
-We call this property _closed_.
-2. 0 exists and has the property __a__ + 0 = __a__. We call this the _additive identity_.
-3. 1 exists and has the property __a__ ⋅ 1 = __a__. We call this the _multiplicative identity_.
-4. If _a_ is in the set, __–a__ is in the set, which is defined as the value that makes __a__ + (–__a__) = 0.
+We call this property _closed_. 如果 a 和 b 在集合中，那么 a + b 和 a ⋅ b 也在集合中。 我们称这个性质为 封闭。
+2. 0 exists and has the property __a__ + 0 = __a__. We call this the _additive identity_. 存在一个元素0，使得 a + 0 = a。我们称这个性质为 加法恒等。
+3. 1 exists and has the property __a__ ⋅ 1 = __a__. We call this the _multiplicative identity_. 存在一个元素1，使得 a ⋅ 1 = a。我们称这个性质为 乘法恒等。
+4. If _a_ is in the set, __–a__ is in the set, which is defined as the value that makes __a__ + (–__a__) = 0. 如果 a 在集合中，那么 –a 也在集合中，定义为使得 a + (–a) = 0 的值。 这个性质被称为 加法逆元。
 This((("additive inverse"))) is what we call the _additive inverse_.
 5. If _a_ is in the set and is not 0, __a__^–1^ is in the set, which is defined as the value that makes __a__ ⋅ __a__^–1^ = 1.
-This((("multiplicative inverse"))) is what we call the _multiplicative inverse_.
+This((("multiplicative inverse"))) is what we call the _multiplicative inverse_. 如果 a 在集合中且不等于0，那么 a^–1^ 也在集合中，定义为使得 a ⋅ a^–1^ = 1 的值。 这个性质被称为 乘法逆元。
 
 Let's unpack each of these criteria.
+
+让我们逐一解析这些条件。
 
 We have a set of numbers that's finite.
 Because the set is finite, we can designate a number _p_, which is how big the set is.
 This is what we call the _order_ of the set.
+
+我们有一个有限数的集合。 由于集合是有限的，我们可以指定一个数 p，表示集合的大小。 这就是我们所说的集合的 阶。
 
 #1 says we are closed under addition and multiplication.
 This means that we have to define addition and multiplication in a way that ensures the results stay in the set.
@@ -54,15 +74,23 @@ Of course we can define addition a little differently to make this work, but usi
 On the other hand, the set {–1,0,1} is closed under normal multiplication.
 Any two numbers can be multiplied (there are nine such combinations), and the result is always in the set.
 
+第1个条件说明我们在加法和乘法下是封闭的。 这意味着我们必须以某种方式定义加法和乘法，以确保结果留在集合中。 例如，包含 {0,1,2} 的集合在加法下 不 是封闭的，因为 1 + 2 = 3，而 3 不在集合中；2 + 2 = 4 也不在集合中。 当然，我们可以以稍微不同的方式定义加法来使其工作，但是使用 “正常” 的加法，这个集合是不封闭的。 另一方面，集合 {–1,0,1} 在正常乘法下是封闭的。 任何两个数都可以相乘（有九种这样的组合），结果总是在集合中。
+
 The other option we have in mathematics is to define multiplication in a particular way to make these sets closed.
 We'll get to how exactly we define addition and multiplication later in this chapter, but the key concept here is that we can _define addition and subtraction differently than the addition and subtraction you are familiar with_.
+
+我们在数学中的另一个选择是 以特定方式定义乘法，以使这些集合封闭。 我们将在本章后面详细介绍如何定义加法和乘法，但这里的关键概念是，我们可以 以不同于您熟悉的加法和减法来定义加法和减法。
 
 #2 and #3 mean that we have the additive and multiplicative identities.
 That means 0 and 1 are in the set.
 
+第2点和第3点意味着我们有加法和乘法的恒等元。 也就是说，0和1在集合中。
+
 #4 means that we have the additive inverse.
 That is, if _a_ is in the set, _–a_ is in the set.
 Using the additive inverse, we can define subtraction.
+
+第4点意味着我们有加法的逆元。 也就是说，如果 a 在集合中，那么 –a 也在集合中。 利用加法逆元，我们可以定义减法。
 
 #5 means that multiplication has the same property.
 If _a_ is in the set, __a__^–1^ is in the set.
@@ -70,13 +98,19 @@ That is _a_ ⋅ __a__^–1^ = 1.
 Using the multiplicative inverse, we can define division.
 This will be the trickiest to define in a finite field.
 
-=== Defining Finite Sets
+第5点意味着乘法具有相同的性质。 如果 a 在集合中，那么 a^–1^ 也在集合中。 也就是说 a ⋅ a^–1^ = 1。 利用乘法逆元，我们可以定义除法。 这在有限域中定义将是最高级的。
+
+=== Defining Finite Sets 定义有限集合
 
 If((("finite fields", "defining finite sets", id="FFsets01")))((("order (size)"))) the order (or size) of the set is _p_, we can call the elements of the set, 0, 1, 2, ... _p_ – 1.
 These((("elements"))) numbers are what we call the _elements_ of the set, not necessarily the traditional numbers 0, 1, 2, 3, etc.
 They behave in many ways like traditional numbers, but have some differences in how we add, subtract, multiply, and so forth.
 
+如果(((“有限域”, “定义有限集合”, id=“FFsets01”)))(((“阶（大小）”))) 集合的阶（或大小）是 p，我们可以将集合的元素称为0，1，2，… p – 1。 这些(((“元素”))) 数字是我们所说的集合的 元素，不一定是传统的0，1，2，3等数字。 它们在很多方面都像传统数字一样表现，但在加法、减法、乘法等方面有一些不同。
+
 In math notation the finite field set looks like this:
+
+在数学符号中，有限域集合看起来像这样：
 
 ++++
 <ul class="simplelist">
@@ -89,8 +123,14 @@ __F__~__p__~ is a specific finite field called "field of _p_" or "field of 29" o
 The numbers between the {}s represent what elements are in the field.
 We name the elements 0, 1, 2, etc. because these names are convenient for our purposes.
 
+在有限域集合中，元素是什么。((("p域")))
+__F__~__p__~ 是一个特定的有限域，称为 "_p_" 域或 "29域" 或其他任意大小（再次，这个大小就是数学家称之为 _序_ 的东西）。 
+花括号之间的数字表示域中的元素。 
+我们用0、1、2等命名元素，因为这些名称对我们的目的来说很方便。
 
 A finite field of order 11 looks like this:
+
+一个序为11的有限域看起来像这样：
 
 ++++
 <ul class="simplelist">
@@ -100,6 +140,8 @@ A finite field of order 11 looks like this:
 
 A finite field of order 17 looks like this:
 
+一个序为17的有限域看起来像这样：
+
 ++++
 <ul class="simplelist">
 <li><em>F</em><sub>17</sub>= {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}</li>
@@ -107,6 +149,8 @@ A finite field of order 17 looks like this:
 ++++
 
 A finite field of order 983 looks like this:
+
+一个序为983的有限域看起来像这样：
 
 ++++
 <ul class="simplelist">
@@ -117,6 +161,10 @@ A finite field of order 983 looks like this:
 Notice the order of the field is always 1 more than the largest element.
 You might have noticed that the field has a prime order every time.
 For a variety of reasons that will become clear later, it turns out that fields _must_ have an order that is a power of a prime, and that the finite fields whose order is prime are the ones we're interested in.
+
+请注意，域的序总是比最大元素多1。
+你可能已经注意到，域的序总是质数。
+由于一些将在后面变得清晰的原因，结果证明域 _必须_ 具有质数的幂次作为序，而那些序为质数的有限域正是我们感兴趣的。
 
 ==== Constructing a Finite Field in Python
 
