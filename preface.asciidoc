@@ -1,87 +1,124 @@
 [preface]
-== Preface
+== Preface 序言
 
 This((("Bitcoin", "approach to learning"))) book will teach you the technology of Bitcoin at a fundamental level.
 It doesn't cover the monetary, economic, or social dynamics of Bitcoin, but knowing how Bitcoin works under the hood should give you greater insight into what's possible.
 There's a tendency to hype Bitcoin and blockchain without really understanding what's going on; this book is meant to be an antidote to that tendency.
+
+这本书将教你比特币技术的基本知识。 它不包括比特币的货币、经济或社会动态，但了解比特币在内部如何工作应该会给你带来更深入的洞察。 存在一种夸大比特币和区块链的倾向，而没有真正理解正在发生的事情；这本书旨在对抗这种倾向。
 
 After all, there are lots of books about Bitcoin, covering the history and the economic aspects and giving technical descriptions.
 The aim of this book is to get you to understand Bitcoin by coding all of the components necessary for a Bitcoin library.
 The library is not meant to be exhaustive or efficient.
 The aim of the library is to help you learn.
 
-=== Who Is This Book For?
+毕竟，关于比特币的书籍有很多，涵盖了历史和经济方面，并提供了技术描述。 这本书的目的是让你通过编写一个比特币库所需的所有组件来理解比特币。 该库并非旨在详尽或高效。 库的目标是帮助你学习。
+
+=== Who Is This Book For? 这本书是为谁写的？
 
 This((("Bitcoin", "target audience"))) book is for programmers who want to learn how Bitcoin works by coding it themselves.
 You will learn Bitcoin by coding the "bare metal" stuff in a Bitcoin library you will create from scratch.
 This is not a reference book where you can look up the specification for a particular feature.
 
+这本书是为那些想通过自己编写代码来学习比特币是如何工作的程序员写的。 你将通过从零开始编写一个比特币库的“裸机”内容来学习比特币。 这本书不是一本参考书，你不能在其中查找特定功能的规范。
+
 The material from this book has been largely taken from my https://programmingblockchain.com[two-day seminar] where I teach developers all about Bitcoin.
 The material has been refined extensively, as I've taught this course more than 20 times, to over 400 people as of this writing.
+
+这本书的材料主要来源于我的 https://programmingblockchain.com[两天研讨会]，在这个研讨会中，我教开发者关于比特币的所有知识。 我已经多次教授这个课程，到目前为止已经教过400多人。
 
 By the time you're done with the book, you'll not only be able to create transactions, but also get all the data you need from peers and send the transactions over the network.
 It covers everything needed to accomplish this, including the math, parsing, network connectivity, and block validation.
 
-=== What Do I Need to Know?
+在你完成这本书的时候，你不仅能创建交易，还能从同伴那里获取所需的所有数据，并通过网络发送交易。 它涵盖了完成这一切所需的所有内容，包括数学、解析、网络连接和区块验证。
+
+=== What Do I Need to Know? 我需要了解什么？
 
 A((("Bitcoin", "prerequisites to learning"))) prerequisite for this book is that you know programming—Python, in particular.
 The library itself is written in Python 3, and a lot of the exercises can be done in a controlled environment like a Jupyter notebook.
 An intermediate knowledge of Python is preferable, but even a beginning knowledge is probably sufficient to get a lot of the concepts.
 
+学习这本书的一个前提是你要懂得编程，特别是Python。 这个库本身是用Python 3编写的，很多练习可以在像Jupyter笔记本这样的受控环境中完成。 最好是具备中级Python知识，但即使是初级知识，也可能足够理解很多概念。
+
 Some knowledge of math is required, especially for Chapters pass:[<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_finite_fields">#chapter_finite_fields</a> and <a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_elliptic_curves">#chapter_elliptic_curves</a>].
 These chapters introduce mathematical concepts probably not familiar to those who didn't major in mathematics.
 Math knowledge around algebra level should suffice to understand the new concepts and to code the exercises covered in those chapters.
 
+需要一定的数学知识，尤其是在有限域和椭圆曲线章节中。 这些章节介绍了可能对非数学专业学生来说不太熟悉的数学概念。 大约相当于代数水平的数学知识应该足够理解这些新概念，并编写那些章节中涵盖的练习。
+
 General computer science knowledge, for example, of hash functions, will come in handy but is not strictly necessary to complete the exercises in this book.
 
-=== How Is the Book Arranged?
+一般计算机科学知识，例如哈希函数，会有帮助，但不是完成这本书中练习的必要条件。
+
+=== How Is the Book Arranged? 这本书是如何安排的？
 
 This((("Bitcoin", "topics covered"))) book is split into 14 chapters. Each is meant to build on the previous one as the Bitcoin library gets built from scratch all the way to the end.
+
+这本书分为14章。每一章都是建立在上一章的基础上，从零开始构建比特币库，一直到最后一章。
 
 Roughly speaking, Chapters pass:[<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_finite_fields">#chapter_finite_fields</a>–<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_serialization">#chapter_serialization</a>] establish the mathematical tools that we need; Chapters pass:[<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_tx_parsing">#chapter_tx_parsing</a>–<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_p2sh">#chapter_p2sh</a>] cover transactions, which are the fundamental unit of Bitcoin; and Chapters pass:[<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_blocks">#chapter_blocks</a>–<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_bloom_filters">#chapter_bloom_filters</a>] cover blocks and networking.
 The last two chapters cover some advanced topics but don't actually require you to write code.
 
+粗略地说，从<<有限域>>至<<序列化>>建立了我们需要使用的数学工具；<<交易解析>>至<<P2SH>>涵盖了交易，这是比特币的基本单位；<<区块>>至<<布隆过滤器>>涵盖了区块和网络。 最后两章涵盖了一些高级主题，但并不实际要求你编写代码。
+
 Chapters pass:[<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_finite_fields">#chapter_finite_fields</a> and <a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_elliptic_curves">#chapter_elliptic_curves</a>] cover some math that we need.
 Finite fields and elliptic curves are needed to understand elliptic curve cryptography in <<chapter_elliptic_curve_cryptography>>.
 After we've established the public key cryptography at the end of <<chapter_elliptic_curve_cryptography>>, <<chapter_serialization>> adds parsing and serialization, which are how cryptographic primitives are stored and transmitted.
+
+<<有限域>>和<<椭圆曲线>>涵盖了我们需要的一些数学知识。 <<有限域>>和<<椭圆曲线>>是为了理解<<椭圆曲线>>密码学中的椭圆曲线密码学。 在我们确立了公钥密码学之后，序列化章增加了解析和序列化，这是存储和传输密码学原语的方式。
 
 <<chapter_tx_parsing>> covers the transaction structure.
 <<chapter_script>> goes into the smart contract language behind Bitcoin, called Script.
 <<chapter_tx>> builds on all the previous chapters, showing how to validate and create transactions based on the elliptic curve cryptography from the first four chapters.
 <<chapter_p2sh>> establishes how pay-to-script-hash (p2sh) works, which is a way to make more powerful smart contracts.
 
+<<chapter_tx_parsing>>章介绍了交易结构。 <<chapter_script>>章深入讲解了比特币背后的智能合约语言，称为Script。 <<chapter_tx>>章在前四章的基础上，展示了如何根据椭圆曲线密码学验证和创建交易。 <<chapter_p2sh>>章阐述了支付脚本哈希（p2sh）的工作原理，这是一种使智能合约更强大的方法。
+
 <<chapter_blocks>> covers blocks, which are groups of ordered transactions.
 <<chapter_networking>> covers network communication in Bitcoin. Chapters pass:[<a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_spv">#chapter_spv</a> and <a data-type="xref" data-xrefstyle="select:labelnumber" href="#chapter_bloom_filters">#chapter_bloom_filters</a>] go into how a light client, or software without access to the entire blockchain, might request and broadcast data to and from nodes that store the entire blockchain.
 
+<<chapter_blocks>>章涵盖了区块，即有序交易的组织。 <<chapter_networking>>章介绍了比特币中的网络通信。<<SPV>>和<<布隆过滤器>>探讨了轻客户端（或无法访问整个区块链的软件）如何请求和广播与完整区块链节点之间的数据。
+
+
 <<chapter_segwit>> covers Segwit, a backward-compatible upgrade introduced in 2017, and <<chapter_advanced>> provides suggestions for further study.
 These chapters are not strictly necessary, but are included as a way to give you a taste of what more there is to learn.
+
+<<chapter_segwit>>章介绍了2017年引入的向后兼容升级Segwit，而<<chapter_advanced>>章为深入研究所提供的建议。 这些章节并非严格必要，但作为给你一个了解更多学习内容的途径，因此予以包含。
 
 Chapters 1–12 have exercises that require you to build up the library from scratch.
 The answers are in <<appendix_solutions>> and in the corresponding chapter directory in the https://github.com/jimmysong/programmingbitcoin[GitHub repo].
 You will be writing many Python classes and building toward not just validating transactions/blocks, but also creating your own transactions and broadcasting them on the network.
 
+第1-12章都有需要你从零开始构建库的练习。答案在<<附录解决方案>>中，以及在https://github.com/jimmysong/programmingbitcoin[GitHub仓库]的相应章节目录中。你将编写许多Python类，不仅仅是验证交易/区块，而且还可以创建自己的交易并将它们广播到网络。
+
 The last exercise in <<chapter_bloom_filters>> specifically asks you to connect to another node on the testnet network, calculate what you can spend, construct and sign a transaction of your devising, and broadcast that on the network.
 The first 11 chapters essentially prepare you for this exercise.
+
+在<<布隆过滤器>>的最后一个练习中，具体要求你连接到测试网络上的另一个节点，计算你可以花费的金额，构建并签署你设计的交易，并将此交易广播到网络。 前11章基本上为你准备了这个练习。
 
 There will be a lot of unit tests that your code will need to pass.
 The book has been designed this way so you can do the "fun" part of coding.
 To aid your progress, we will be looking at a lot of code and diagrams throughout.
 
+你的代码需要通过许多单元测试。本书之所以这样设计，是为了让你能够进行编码的"有趣"部分。为了帮助你进步，我们将在整个过程中查看许多代码和图表。
+
 [[setting_up]]
-=== Setting Up
+=== Setting Up 设置
 
 To((("Bitcoin", "downloading and installation", id="Bdown00")))((("example code", "environment setup", id="ECset00")))((("environment setup", id="envset00")))((("exercises", "environment setup", id="Eset00"))) get the most out of this book, you'll want to create an environment where you can run the example code and do the exercises.
 Here are the steps required to set everything up:
 
-. Install Python 3.5 or higher on your machine:
+要充分利用这本书，你需要创建一个可以运行示例代码和练习的环境。以下是一些设置所需步骤：
+
+. Install Python 3.5 or higher on your machine: 在你的机器上安装Python 3.5或更高版本
 +
 Windows:: https://www.python.org/ftp/python/3.6.2/python-3.6.2-amd64.exe[]
 macOS:: https://www.python.org/ftp/python/3.6.2/python-3.6.2-macosx10.6.pkg[]
-Linux:: See your distro docs (many Linux distributions, like Ubuntu, come with Python 3.5+ preinstalled)
+Linux:: See your distro docs (many Linux distributions, like Ubuntu, come with Python 3.5+ preinstalled) 参见你的发行版文档（许多Linux发行版，如Ubuntu，都预装了Python 3.5+）
 
-. Install pip by downloading this script: https://bootstrap.pypa.io/get-pip.py[].
+. Install pip by downloading this script: https://bootstrap.pypa.io/get-pip.py[]. 通过下载此脚本来安装pip
 
-. Run this script using Python 3:
+. Run this script using Python 3: 使用Python 3运行此脚本
 +
 [source,bash]
 ----
@@ -151,6 +188,9 @@ image::images/prbc_0001.png[Jupyter]
 
 From here, you can((("Jupyter Notebook", "navigating chapter directories"))) navigate to the chapter directories. To do the exercises from <<chapter_finite_fields>>, you would navigate to _code-ch01_ (<<pr0002>>).
 
+
+从这里，你可以导航到各个章节目录。要完成<<有限域>>的练习，你需要导航到_code-ch01_（<<pr0002>>）。
+
 [[pr0002]]
 .Jupyter directory view
 image::images/prbc_0002.png[Chapter 1 Directory]
@@ -164,11 +204,15 @@ image::images/prbc_0003.png[Chapter 1 Notebook]
 You may want to familiarize yourself with this interface if you haven't seen it before, but the gist of Jupyter is that it can run Python code from the browser in a way that makes experimenting easy.
 You can run each "cell" and see the results as if this were an interactive Python shell.
 
+如果你之前没有见过这个界面，你可能需要熟悉一下。但是，Jupyter的核心功能是可以在浏览器中运行Python代码，使得实验变得简单。 你可以运行每个"单元格"，并像在交互式Python shell中一样查看结果。
+
 A large portion of the exercises will be coding concepts introduced in the book.
 The((("exercises", "unit tests")))((("unit tests"))) unit tests are written for you, but you will need to write the Python code to make the tests pass.
 You can check whether your code is correct directly in Jupyter.
 You will need to edit the corresponding file by clicking through a link like the "this test" link in <<pr0003>>.
 This will take you to a browser tab like the one shown in <<pr0004>>.
+
+大部分练习将是书中介绍的编程概念。 单元测试是为你编写的，但你需要编写Python代码以使测试通过。 你可以在Jupyter中直接检查你的代码是否正确。 你需要通过点击像<<pr0003>>中的"此测试"链接之类的链接来编辑相应的文件。 这将带你到一个类似<<pr0004>>中所示浏览器的标签页。
 
 [[pr0004]]
 .ecc.py
@@ -266,43 +310,80 @@ Follow us on Twitter: link:$$http://twitter.com/oreillymedia$$[]
 
 Watch us on YouTube: link:$$http://www.youtube.com/oreillymedia$$[]
 
-=== Acknowledgments
+=== Acknowledgments 致谢
 
 The((("acknowledgments", id="ack00"))) number of people that got me here is legion. The experiences and knowledge that an author draws from tend to have a lot of sources, and it's difficult to give them all their proper credit. This is my way of saying that I'm probably going to forget a significant number of people, and for that I sincerely apologize.
 
+让我有今天成就的人有很多。作者从经验和中汲取的知识往往有很多来源，很难给所有人都给予适当的赞誉。这就是我表示可能会忘记很多人的方式，为此我深表歉意。
+
 First, I want to thank my Lord Jesus Christ for putting me on this journey. If not for my faith, I would not have had the ethical conviction to blog about the importance of sound money in general and Bitcoin in particular, which ultimately led to the writing of this book.
+
+首先，我要感谢我的主耶稣基督让我踏上这个旅程。如果不是因为我的信仰，我就不会有道德信念在博客上谈论健全货币的重要性以及比特币的特别之处，这最终导致了这本书的写作。
 
 My parents, Kathy and Kyung-Sup, had the courage to immigrate to America back when I was eight years old, which ultimately led to the opportunities I've had. My dad got me my first computers (a Commodore 16, a generic Hyundai 8086, and a 486 33-Mhz from a manufacturer I don't remember), and my mom got me private programming tutoring as a sixth- and seventh-grader from a woman whose name I can't remember. How she found her when I showed some proclivity for programming, I don't know. That teacher-whose-name-I-can't-remember stoked that natural tendency, and I hope this acknowledgment finds its way to her.
 
+我的父母，Kathy和Kyung-Sup，在我八岁的时候有勇气移民到美国，这最终为我提供了机会。我父亲给我买了我的第一台电脑（一台Commodore 16，一台通用的Hyundai 8086，还有一台486 33-Mhz，生产商我已经不记得了），我母亲在我六年级和七年级时请了一位私人编程家教，那位老师的名字我也已经不记得了。她是如何在我表现出对编程的倾向时找到她的，我不得而知。那位名字我已经忘记的老师激发了我天然的趋势，我希望这篇致谢能够找到她。
+
 Speaking of which, I've had many teachers along the way, some of whom I hated at the time. Mr. Marain, Mrs. Edelman, and Mrs. Nelson taught me math and computer science back in high school. I'm not necessarily a fan of the current education system, but what I learned in those classes was instrumental to my love of math and programming.
+
+说到这里，我在一路上有很多老师，有些我在当时并不喜欢。Mr. Marain，Mrs. Edelman和Mrs. Nelson在我高中时教我数学和计算机科学。我并不一定喜欢当前的教育制度，但我在那些课程中学到的知识对我热爱数学和编程起到了关键作用。
 
 My high school classmate Eric Silberstein gave me my first job out of college as a programmer at Idiom Technologies. I was slated to go down the consulting path before a fateful phone call back in 1998 that led me down the programmer/startup path instead. In a sense, I've never left.
 
+我的高中同学Eric Silberstein在我大学毕业后的第一份工作，在Idiom Technologies公司担任程序员。我本打算走咨询道路，但在1998年一个决定命运的电话让我走上了程序员/创业道路。从某种意义上说，我从未离开过。
+
 At that first job, I met Ken Liu, and I'm amazed that we're where we are in our careers writing books. He not only gave me great advice about book publishing, but also wrote the wonderful foreword. He's also a great sounding board and an amazing friend, and I'm privileged to know him.
+
+在那第一份工作中，我遇到了Ken Liu，我惊讶地发现我们竟然在职业生涯中走到了写书这一步。他不仅给了我关于出版书籍的宝贵建议，还写了精彩的前言。他也是一个很好的倾听者，令人惊叹的朋友，我很荣幸能认识他。
 
 With regard to Bitcoin, the anonymous developer((("Bitcoin", "developer of"))) Satoshi Nakamoto invented what I thought before was impossible: decentralized digital scarcity. Bitcoin is a profound invention that the world hasn't fully grokked. The website http://slashdot.org[Slashdot] introduced me to Bitcoin in 2011, and Alex Mizrahi gave me my first work as a Bitcoin developer in 2013. I had no idea what I was doing, but I learned quite a bit about what Bitcoin was about through his direction.
 
+关于比特币，匿名开发者Satoshi Nakamoto发明了我认为以前不可能实现的东西：去中心化的数字稀缺性。比特币是一项深奥的发明，世界尚未完全理解。http://slashdot.org[Slashdot]网站在2011年向我介绍了比特币，Alex Mizrahi在2013年给了我作为比特币开发者的第一份工作。我并不知道我在做什么，但通过他的指导，我了解到了比特币的许多知识。
+
 The Austin Bitcoin Meetup in 2013 was where I met a lot of Bitcoiners, and at the subsequent Texas Bitcoin Conference in 2014 I met a ton of people that I still know today. Though this meetup and conference are not ones I attend anymore, I am grateful for the people I met there—among them Michael Goldstein, Daniel Krawisz, and Napoleon Cole.
+
+2013年的Austin比特币聚会是我结识了很多比特币爱好者的地方，2014年的Texas比特币会议上我认识了许多至今仍相识的人。尽管我已经不再参加这个聚会和会议，但我仍然感激我在那里遇到的人，其中包括Michael Goldstein，Daniel Krawisz和Napoleon Cole。
 
 Alan Reiner recruited me to Armory back in 2014, and I'm grateful I had the opportunity to contribute to such a significant project.
 
+Alan Reiner在2014年招募我加入Armory，我很感激有机会为这样一个重要的项目做出贡献。
+
 Paxos/itBit was where I worked next. Chad Cascarilla and Raj Nair were the CEO and VP of Engineering who stretched me while I was there. Raj, in particular, made me write some blog posts for Paxos, which I was surprised to find I enjoyed. This led to blog posts on my own site, which eventually led to my seminars, which finally led to this book.
+
+Paxos/itBit是我接下来的工作地点。Chad Cascarilla和Raj Nair分别是公司的CEO和工程副总裁，他们在我任职期间给予我很多挑战。尤其是Raj，他让我为Paxos写了一些博客文章，让我惊讶的是，我发现自己很喜欢这个过程。这导致我在自己的网站上写博客，最终导致我举办研讨会，最后写成这本书。
 
 Three colleagues I met at Paxos were particularly significant. Richard Kiss, creator of pycoin, was the impetus for my writing this book, as he proposed that we write one together. Somewhere along the way, that turned into just me writing a book, but I'm grateful to him for giving me the idea. Aaron Caswell is a great dev who has helped me out in my seminars and reviewed this book. He's a great programmer and mathematician, and a pretty good karate fighter from what I hear. Michael Flaxman has reviewed almost everything Bitcoin-related I've written, including my blog, many of my GitHub libraries, and this book. He's also helped me out on my seminars and is just a great person to talk to. He's one of those people who make others sharper, and I'm grateful for his significant friendship.
 
+我在Paxos认识的三个同事尤其重要。Richard Kiss，pycoin的创始人，是我写这本书的推动力，他提议我们一起写一本书。在写作过程中，这变成了我独自写书，但我还是很感激他给我这个想法。Aaron Caswell是一位出色的开发者，他在我的研讨会和本书的审阅中给予我很多帮助。他是一位优秀的程序员和数学家，据我所知，他还是一位相当不错的空手道选手。Michael Flaxman审阅了我写的几乎所有与比特币相关的内容，包括我的博客、许多GitHub库以及这本书。他还帮助我举办研讨会，而且是一个非常有趣的人。他属于那种让其他人变得更聪明的人，我非常感激他深厚的友谊。
+
 Vortex, Thomas Hunt, and Tone Vays brought me into the World Crypto Network back in 2017, which launched my YouTube career. Tone in particular has been an inspiration on working hard and being dedicated to a craft.
+
+Vortex、Thomas Hunt和Tone Vays在2017年将我带入World Crypto Network，开启了我的YouTube职业生涯。尤其是Tone，他在努力工作和专注于技艺方面给了我很大的启发。
 
 John Newbery was very helpful to me when I first contributed to Bitcoin Core, and he's just a really good person, period. He's become such a significant contributor in a relatively short time, which speaks to his talent and dedication. I'm grateful to other Core developers too, like Marco Falke, Wladimir van der Laan, Alex Morcos, Pieter Wuille, Matt Corallo, Suhas Daftuar, and Greg Maxwell, who have reviewed some of my code and blog posts.
 
+当我第一次为Bitcoin Core做贡献时，John Newbery给了我很多帮助，他真的是一个非常好的人。他在相对较短的时间内成为了非常重要的贡献者，这显示了她的才华和敬业精神。我还要感谢其他Core开发者，如Marco Falke、Wladimir van der Laan、Alex Morcos、Pieter Wuille、Matt Corallo、Suhas Daftuar和Greg Maxwell，他们审阅了我的一些代码和博客文章。
+
 David Harding was exceptional in his technical review of this book. He reviewed the text three times, with a lot of great comments. He'd better write a book about Bitcoin at some point, because he has an encyclopedic knowledge of nearly everything that's happend in Bitcoin's history.
+
+David Harding在技术审阅这本书方面表现得非常出色。他三次审阅了这本书，并给出了很多宝贵的意见。他应该在某个时候写一本关于比特币的书，因为他几乎对比特币历史上发生的所有事情都有深入的了解。
 
 Jim Calvin helped me get in contact with people at O'Reilly, and Mike Loukides was the intake editor who green-lighted the project. Andreas Antonopolous gave me some great pointers and recommended me to people at O'Reilly. Michele Cronin kept me on track during my year-long writing spree. Kristen Brown was the production editor who did a lot to get this book out on time. James Fraleigh did copyediting. I'm a big fan of this publisher, and Tim O'Reilly has done a great service to the tech community by making such great books available.
 
+Jim Calvin帮助我联系上了O’Reilly的人，Mike Loukides是接收编辑，他批准了这个项目。Andreas Antonopolous给了我一些很好的建议，并向O’Reilly推荐了我。Michele Cronin在我长达一年的写作过程中一直保持我的进度。Kristen Brown是生产编辑，她为这本书的按时出版做了很多工作。James Fraleigh负责校对。我非常喜欢这个出版社，Tim O’Reilly通过出版如此优秀的书籍为技术社区提供了巨大的服务。
+
 The crew of Bitcoiners in Austin have helped keep me on track. They include Bryan Bishop, Will Cole, Napoleon Cole, Tipton Cole, Tuur Demeester, Johnny Dilley, Michael Flaxman, Parker Lewis, Justin Moon, Alan Piscitello, and Andrew Poelstra. There's also a Slack channel (TAAS) where Saifedean Ammous announced that he was writing a book whose success inspired me. 
+
+Austin的比特币团队帮助我保持进度。他们包括Bryan Bishop，Will Cole，Napoleon Cole，Tipton Cole，Tuur Demeester，Johnny Dilley，Michael Flaxman，Parker Lewis，Justin Moon，Alan Piscitello和Andrew Poelstra。还有一个Slack频道（TAAS），Saifedean Ammous在那里宣布他正在写一本书，这本书的成功激发了我。
 
 Alumni of my course, Programming Blockchain, in addition to Bitcoiners on GitHub also did tech reviews of my book. Jeff Flowers, Brian Liotti, Casey Bowman, Johnson Lau, Albert Chen, Jason Les, Thomas Braunberger, Eduardo Cobain, and Spencer Hanson are among the people who found issues. Katrina Javier is my faithful assistant that helped me make a lot of the diagrams.
 
+我的编程区块链课程的校友以及在GitHub上的比特币开发者也审阅了我的书。Jeff Flowers，Brian Liotti，Casey Bowman，Johnson Lau，Albert Chen，Jason Les，Thomas Braunberger，Eduardo Cobain和Spencer Hanson是其中一些人。Katrina Javier是我的忠实助手，她帮助我制作了很多图表。
+
 My subscribers on YouTube, my followers on Twitter, and my readers on Medium have been instrumental in helping me find my voice and setting me on my path as an entrepreneur.
+
+我的YouTube订阅者，Twitter关注者和Medium读者在帮助我找到自己的声音并确立我作为企业家的道路方面发挥了重要作用。
 
 Lastly, my wife, Julie, and my kids supported me throughout the past couple of years. If not for them, I doubt I'd have had the motivation to work as I have.((("", startref="ack00")))
 
+最后，我的妻子Julie和孩子们在过去几年里一直支持我。如果没有他们，我怀疑我是否有动力如此努力工作。
