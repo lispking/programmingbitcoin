@@ -1,20 +1,26 @@
 [[chapter_elliptic_curves]]
-== Elliptic Curves
+== Elliptic Curves 椭圆曲线
 
 [.lead]
 In((("mathematical tools", "elliptic curves", id="MTeliptic02"))) this chapter we're going to learn about elliptic curves.
 In <<chapter_elliptic_curve_cryptography>>, we will combine elliptic curves with finite fields to make elliptic curve cryptography.
+
+在本章中，我们将学习椭圆曲线。 在<<chapter_elliptic_curve_cryptography>>章中，我们将把椭圆曲线与有限域结合起来，实现椭圆曲线密码学。
 
 Like finite fields, elliptic curves can look intimidating if you haven't seen them before.
 But again, the actual math isn't very difficult.
 Most of what you need to know about elliptic curves could have been taught to you after algebra.
 In this chapter, we'll explore what these curves are and what we can do with them.
 
-=== Definition
+与有限域一样，如果你以前没有接触过椭圆曲线，它们可能会让你感到畏惧。 但是，实际的数学并不复杂。 关于椭圆曲线，你需要了解的大部分内容在代数之后就可以教授。 在本章中，我们将探讨这些曲线是什么以及我们可以用它们做什么。
+
+=== Definition 定义
 
 Elliptic curves((("elliptic curves", "definition of"))) are like many equations you've seen since pre-algebra.
 They have _y_ on one side and _x_ on the other, in some form.
 elliptic curves have a form like this:
+
+椭圆曲线看起来像自代数以来的许多方程。 它们在某一侧有 _y_，在另一侧有 _x_，呈某种形式。 椭圆曲线具有以下形式：
 
 ++++
 <ul class="simplelist">
@@ -25,6 +31,9 @@ elliptic curves have a form like this:
 You've worked with other equations that look similar.
 For example, you probably learned the linear equation back in pre-algebra:
 
+您已经与其他看起来类似的方程工作过了。
+例如，您可能在代数之前就学过线性方程：
+
 ++++
 <ul class="simplelist">
 <li><em>y</em> = <em>mx</em> + <em>b</em></li>
@@ -34,11 +43,17 @@ For example, you probably learned the linear equation back in pre-algebra:
 You may even remember that _m_ here has the name _slope_ and _b_ is the _y-intercept_.
 You can also graph linear equations, as shown in <<linear_equation>>.
 
+
+您甚至可能还记得这里的 _m_ 叫做 _斜率_，而 _b_ 是 _y_ 截距。
+您还可以绘制线性方程，如<<linear_equation>>所示。
+
 [[linear_equation]]
 .Linear equation
 image::images/prbc_0201.png[Linear equation]
 
 Similarly, you're probably familiar with the quadratic equation and its graph (<<quadratic_equation>>):
+
+同样，您可能对二次方程及其图像（<<quadratic_equation>>）非常熟悉：  
 
 ++++
 <ul class="simplelist">
@@ -47,6 +62,8 @@ Similarly, you're probably familiar with the quadratic equation and its graph (<
 ++++
 
 And sometime around algebra, you did even higher orders of __x__—something called the cubic equation and its graph (<<cubic_equation>>):
+
+在大约代数的时候，您还研究了更高阶的 __x__ —— 被称为立方方程及其图像（<<cubic_equation>>）：  
 
 ++++
 <ul class="simplelist">
@@ -66,6 +83,8 @@ image::images/prbc_0203.png[Cubic equation]
 
 An elliptic curve isn't all that different:
 
+椭圆曲线并没有那么不同：  
+
 ++++
 <ul class="simplelist">
 <li><em>y</em><sup>2</sup> = <em>x</em><sup>3</sup> + <em>ax</em> + <em>b</em></li>
@@ -74,6 +93,9 @@ An elliptic curve isn't all that different:
 
 The only real difference between the elliptic curve and the cubic curve in <<cubic_equation>> is the __y__^2^ term on the left side.
 This has the effect of making the graph symmetric over the x-axis, as shown in <<continuous_elliptic_curve>>.
+
+椭圆曲线和<<cubic_equation>>中的立方曲线之间的唯一实际区别是左侧的 __y__^2^ 项。
+这使得图像在x轴上对称，如<<continuous_elliptic_curve>>所示。
 
 [[continuous_elliptic_curve]]
 .Continuous elliptic curve
@@ -85,6 +107,10 @@ The elliptic curve is also less steep than the cubic curve.
 Again, this is because of the __y__^2^ term on the left side.
 At times, the curve may even be disjoint, as in <<disjoint_elliptic_curve>>.
 
+椭圆曲线也比立方曲线要平缓。
+同样，这是因为左侧的 __y__^2^ 项。
+有时，曲线甚至可能是不连续的，如<<disjoint_elliptic_curve>>所示。
+
 [[disjoint_elliptic_curve]]
 .Disjoint elliptic curve
 [role="width-75"]
@@ -92,6 +118,8 @@ image::images/prbc_0205.png[Elliptic curve equation]
 
 [role="pagebreak-before"]
 If it helps, an elliptic curve can be thought of as taking a cubic equation graph (<<step_1_a_cubic_equation>>), flattening out the part above the x-axis (<<step_2_a_cubic_equation>>), and then mirroring that part below the x-axis (<<step_3_a_cubic_equation>>).
+
+如果这有助于理解，可以将椭圆曲线看作是取一个立方方程图形（<<step_1_a_cubic_equation>>），将x轴上方的部分压平（<<step_2_a_cubic_equation>>），然后将这部分在x轴下方进行镜像（<<step_3_a_cubic_equation>>）。
 
 [[step_1_a_cubic_equation]]
 .Step 1: A cubic equation
@@ -110,6 +138,8 @@ image::images/prbc_0208.png[Symmetric]
 
 Specifically, the((("secp256k1 curve")))((("elliptic curves", "secp256k1 curve"))) elliptic curve used in Bitcoin is called _secp256k1_ and it uses this particular equation:
 
+具体来说，比特币中使用的((("secp256k1曲线")))((("椭圆曲线"，"secp256k1曲线")))椭圆曲线称为 _secp256k1_，它使用这个特定的方程：  
+
 ++++
 <ul class="simplelist">
 <li><em>y</em><sup>2</sup> = <em>x</em><sup>3</sup> + 7</li>
@@ -119,16 +149,20 @@ Specifically, the((("secp256k1 curve")))((("elliptic curves", "secp256k1 curve")
 The canonical form is pass:[<em>y</em><sup>2</sup> = <em>x</em><sup>3</sup> + <em>ax</em> + <em>b</em>], so the curve is defined by the constants _a_ = 0, pass:[<span class="keep-together"><em>b</em> = 7</span>].
 It looks like <<secp256k1_curve>>.
 
+标准形式是 pass:[<em>y</em><sup>2</sup> = <em>x</em><sup>3</sup> + <em>ax</em> + <em>b</em>] ，所以曲线由常数 _a_ = 0，pass:[<span class="keep-together"><em>b</em> = 7</span>] 定义。它看起来像 <<secp256k1_curve>>。
+
 [[secp256k1_curve]]
 .secp256k1 curve
 image::images/prbc_0209.png[secp256k1 curve]
 
-=== Coding Elliptic Curves in Python
+=== Coding Elliptic Curves in Python 在Python中编码椭圆曲线
 
 For((("elliptic curves", "coding in Python"))) a variety of reasons that will be made clear later, we are not interested in the curve itself, but specific points on the curve.
 For example, in the curve __y__^2^ = __x__^3^ + 5__x__ + 7, we are interested in the coordinate (–1,1).
 We((("Point class"))) are thus going to define the class `Point` to be a _point_ on a specific curve.
 The curve has the form __y__^2^ = __x__^3^ + _ax_ + _b_, so we can define the curve with just the two numbers _a_ and _b_:
+
+对于(((“椭圆曲线”，“在Python中编码”)))多种原因，我们将在后面明确解释，我们不对曲线本身感兴趣，而是对曲线上的特定点感兴趣。 例如，在曲线 __y__^2^ = __x__^3^ + 5__x__ + 7 中，我们对坐标 (-1,1) 感兴趣。 我们(((“点类”)))因此将定义一个名为 Point 的类，该类表示特定曲线上的一个 点。 曲线的形式为 __y__^2^ = __x__^3^ + _ax_ + _b_，因此我们可以仅用两个数字 _a_ 和 _b_ 来定义曲线：
 
 [source,python]
 ----
