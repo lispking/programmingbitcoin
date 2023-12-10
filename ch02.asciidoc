@@ -168,10 +168,12 @@ The curve has the form __y__^2^ = __x__^3^ + _ax_ + _b_, so we can define the cu
 ----
 include::code-ch02/ecc.py[tag=source1]
 ----
-<1> We check here that the point is actually on the curve.
-<2> Points are equal if and only if they are on the same curve and have the same coordinates.
+<1> We check here that the point is actually on the curve. 我们在此检查点是否实际上在曲线上。
+<2> Points are equal if and only if they are on the same curve and have the same coordinates. 如果两个点在相同的曲线上并且具有相同的坐标，则它们相等。
 
 We can now create `Point` objects, and we will get an error if the point is not on the curve:
+
+现在我们可以创建 Point 对象，如果点不在曲线上，我们将收到错误提示：
 
 [source,python]
 ----
@@ -180,11 +182,13 @@ include::code-ch02/examples.py[tag=example1]
 
 In other words, `__init__` will raise an exception when the point is not on the curve.
 
+换句话说，当点不在曲线上时，`__init__` 将引发一个异常。
+
 include::code-ch02/answers.py[tag=exercise1,indent=0]
 
 include::code-ch02/answers.py[tag=exercise2,indent=0]
 
-=== Point Addition
+=== Point Addition 点加法
 
 Elliptic curves((("elliptic curves", "point addition"))) are useful because of something called _point addition_.
 Point addition is where we can do an operation on two of the points on the curve and get a third point, also on the curve.
@@ -192,8 +196,12 @@ This is called _addition_ because the operation has a lot of the intuitions we a
 For example, point addition is commutative.
 That is, adding point A to point B is the same as adding point B to point A.
 
+椭圆曲线(((“elliptic curves”, “point addition”)))之所以有用，是因为有一种叫做 _点加法_ 的操作。 点加法是指我们可以在曲线上的两个点上进行一种操作，得到第三个点，这个点也在曲线上。 这个操作被称为 _加法_，因为它具有与我们熟悉的数学加法操作类似的许多直觉。 例如，点加法是交换的。 也就是说，将点A加到点B与将点B加到点A是相同的。
+
 The((("point addition", "definition of"))) way we define point addition is as follows.
 It turns out that for every elliptic curve, a line will intersect it at either one point (<<line_intersects_at_only_1_point>>) or three points (<<line_intersects_at_3_points>>), except in a couple of special cases.
+
+我们定义点加法的方式如下。 事实证明，对于每一条椭圆曲线，一条直线要么与它相交于一个点(<<line_intersects_at_only_1_point>>)，要么与它相交于三个点(<<line_intersects_at_3_points>>)，除了在少数特殊情况下。
 
 [[line_intersects_at_only_1_point]]
 .Line intersects at only one point
@@ -220,15 +228,26 @@ image::images/prbc_0213.png[Tangent Line]
 
 We will come back to these two cases later.
 
+我们稍后会回到这两种情况。
+
 We can define point addition using the fact that lines intersect one or three times with the elliptic curve.
 Two points define a line, so since that line must intersect the curve one more time, that third point reflected over the x-axis is the result of the point addition.
 
+我们可以利用直线与椭圆曲线相交一次或三次的事实来定义点加法。 两个点定义了一条直线，所以由于这条直线必须与曲线再相交一次，那么在x轴上反射的第三个点就是点加法的结果。
+
 So, for any two points __P__~1~ = (__x__~1~,__y__~1~) and __P__~2~ = (__x__~2~,__y__~2~), we get __P__~1~ + __P__~2~ as follows:
+
+所以，对于任意两个点 P~1~ = (x~1~,y~1~) 和 P~2~ = (x~2~,y~2~)，我们通过以下步骤得到 P~1~ + P~2~：
 
 * Find the point intersecting the elliptic curve a third time by drawing a line through __P__~1~ and __P__~2~.
 * Reflect the resulting point over the x-axis.
 
+通过 P~1~ 和 P~2~ 绘制一条直线，找到与椭圆曲线相交的第三个点。
+将结果点在x轴上反射。
+
 Visually, it looks like <<point_addition>>.
+
+从视觉上看，它看起来像<<point_addition>>。
 
 [[point_addition]]
 .Point addition
@@ -239,22 +258,30 @@ We first draw a line through the two points we're adding (_A_ and _B_).
 The third intersection point is _C_.
 We then reflect that point over the x-axis, which puts us at the _A_ + _B_ point in <<point_addition>>.
 
+我们首先通过我们要添加的两个点（A 和 B）绘制一条直线。 第三个交点是 C。 然后我们在x轴上反射这个点，这让我们在 <<point_addition>> 的 A + B 点上。
+
 One of the properties that we are going to use is that point addition is not easily predictable.
 We can calculate point addition easily enough with a formula, but intuitively, the result of point addition can be almost anywhere given two points on the curve.
 Going back to <<point_addition>>, _A_ + _B_ is to the right of both points, _A_ + _C_ would be somewhere between _A_ and _C_ on the x-axis, and _B_ + _C_ would be to the left of both points.
 In mathematics parlance, point addition is _nonlinear_.
 
-=== Math of Point Addition
+我们要使用的属性之一是，点加法不容易预测。 我们用公式计算点加法足够容易，但直观上，给定了曲线上的两个点，点加法的结果可能几乎在任何地方。 回到 <<point_addition>>，A + B 在两个点的右边，A + C 将在 A 和 C 之间的x轴上，而 B + C 将在两个点的左边。 用数学术语来说，点加法是 非线性的。
+
+=== Math of Point Addition 点加法的数学
 
 ((("elliptic curves", "point addition math")))((("point addition", "math of")))Point addition satisfies certain properties that we associate with addition, such as:
 
-* Identity
-* Commutativity
-* Associativity
-* Invertibility
+(((“椭圆曲线”，“点加法的数学”)))(((“点加法”，“数学的”)))点加法满足我们与加法相关的某些属性，如：
+
+* Identity 恒等性
+* Commutativity 交换性
+* Associativity 结合性
+* Invertibility 可逆性
 
 _Identity_ here((("identity"))) means that there's a zero.
 That is, there exists some point _I_ that, when added to a point _A_, results in _A_:
+
+这里的 _恒等性_ (((“恒等性”)))意味着存在一个零。 也就是说，存在某个点 I ，当与点 A 相加时，结果为 A ：
 
 ++++
 <ul class="simplelist">
@@ -264,9 +291,13 @@ That is, there exists some point _I_ that, when added to a point _A_, results in
 
 We'll((("point at infinity"))) call this point the _point at infinity_ (reasons for this will become clear in a moment).
 
+我们将(((“指向无穷大”)))称这个点为无穷大点（稍后会明白这个原因）。
+
 This((("invertibility"))) is related to _invertibility_.
 For some point _A_, there's some other point –_A_ that results in the identity point.
 That is:
+
+这与(((“可逆性”)))有关。对于某个点 A ，存在另一个点 –A ，它与恒等点相加。也就是说：
 
 ++++
 <ul class="simplelist">
@@ -276,6 +307,8 @@ That is:
 
 Visually, these points are opposite one another over the x-axis on the curve (see <<vertical_line_intersection>>).
 
+从视觉上看，这些点在曲线的x轴上方彼此相对（请参见 <<vertical_line_intersection>>）。
+
 [[vertical_line_intersection]]
 .Vertical line intersection
 [role="width-50"]
@@ -284,16 +317,31 @@ image::images/prbc_0212.png[Vertical Line]
 This is why we call this point the point at infinity.
 We have one extra point in the elliptic curve, which makes the vertical line intersect the curve a third time.
 
+这就是为什么我们称这个点为无穷大点。我们在椭圆曲线上有一个额外的点，使得垂直线在曲线上第三次相交。
+_交换性_ 意味着（"交换性"）_A_ + _B_ = _B_ + _A_。
+
 _Commutativity_ means((("commutativity"))) that _A_ + _B_ = _B_ + _A_.
 This is obvious since the line going through _A_ and _B_ will intersect the curve a third time in the same place, no matter the order.
 
+这是显而易见的，因为通过 _A_ 和 _B_ 的线将第三次在同一地点与曲线相交，无论顺序如何。
+
 _Associativity_ means((("associativity"))) that (_A_ + _B_) + _C_ = _A_ + (_B_ + _C_).
+
+_结合性_ 意味着（"结合性"）(_A_ + _B_) + _C_ = _A_ + (_B_ + _C_)。
+
 This isn't obvious and is the reason for flipping over the x-axis. This is shown in pass:[Figures <a data-type="xref" href="#a_b_c_case_1" data-xrefstyle="select:labelnumber">#a_b_c_case_1</a> and 
+<a data-type="xref" href="#a_b_c_case_2" data-xrefstyle="select:labelnumber">#a_b_c_case_2</a>.]
+
+这并不显然，这就是为什么要在x轴上翻转。这在 pass:[Figures <a data-type="xref" href="#a_b_c_case_1" data-xrefstyle="select:labelnumber">#a_b_c_case_1</a> and 
 <a data-type="xref" href="#a_b_c_case_2" data-xrefstyle="select:labelnumber">#a_b_c_case_2</a>.]
 
 You can see that in both <<a_b_c_case_1>> and <<a_b_c_case_2>>, the final point is the same.
 In other words, we have good reason to believe that (_A_ + _B_) + _C_ = _A_ + (_B_ + _C_).
 While this doesn't prove the associativity of point addition, the visual should at least give you the intuition that this is true.
+
+在 <<a_b_c_case_1>> 和 <<a_b_c_case_2>> 中，你可以看到最后的点是相同的。
+换句话说，我们有充分的理由相信 (_A_ + _B_) + _C_ = _A_ + (_B_ + _C_)。
+虽然这并没有证明点加法的结合性，但至少从视觉上可以给你一种直觉，这是正确的。
 
 [[a_b_c_case_1]]
 .(A + B) + C
@@ -307,15 +355,19 @@ image::images/prbc_0217.png[Case 2]
 
 To code point addition, we're going to split it up into three steps:
 
-1. Where the points are in a vertical line or using the identity point
-2. Where the points are not in a vertical line, but are different
-3. Where the two points are the same
+要编写点加法的代码，我们将将其分解为三个步骤：
 
-=== Coding Point Addition
+1. Where the points are in a vertical line or using the identity point 点在垂直线上或使用恒等点
+2. Where the points are not in a vertical line, but are different 点不在垂直线上，但不同
+3. Where the two points are the same 两个点相同
+
+=== Coding Point Addition 编码点加法
 
 We((("elliptic curves", "point addition coding", id="ECpoindcode02")))((("point addition", "coding", id="PAcode02"))) first handle the identity point, or point at infinity.
 Since we can't easily use infinity in Python, we'll use the `None` value instead.
 What we want is this to work:
+
+我们首先处理恒等点，或者无穷大点。因为在 `Python` 中不能直接使用无穷大，我们将使用 `None` 值代替。我们希望以下代码能够运行：
 
 [source,python]
 ----
@@ -324,6 +376,10 @@ include::code-ch02/examples.py[tag=example2]
 
 To make this work, we have to do two things. First, we have to adjust the `__init__` method slightly so it doesn't check that the curve equation is satisfied when we have the point at infinity.
 Second, we have to overload the addition operator or `__add__` as we did with the `FieldElement` class:
+
+
+为了让这个方法工作，我们需要做两件事。首先，我们需要稍微调整`__init__`方法，使其在无穷大点的情况下不检查曲线方程是否满足。
+其次，我们需要重载加法运算符或`__add__`，就像我们在`FieldElement`类中所做的那样：  
 
 [source,python]
 ----
@@ -340,22 +396,24 @@ include::code-ch02/ecc.py[tag=source2]
 
 include::code-ch02/ecc.py[tag=source3]
 ----
-<1> The _x_ coordinate and _y_ coordinate being `None` is how we signify the point at infinity.
-Note that the next +if+ statement will fail if we don't return here.
-<2> We overload the `+` operator here.
-<3> `self.x` being `None` means that `self` is the point at infinity, or the additive identity.
-Thus, we return `other`.
-<4> `other.x` being `None` means that `other` is the point at infinity, or the additive identity.
-Thus, we return `self`.
+<1> The _x_ coordinate and _y_ coordinate being `None` is how we signify the point at infinity. _x_坐标和_y_坐标为None是我们表示无穷大点的方式。 
+Note that the next +if+ statement will fail if we don't return here. 请注意，如果我们在这种情况下不返回，下一个+if+语句将失败。
+<2> We overload the `+` operator here. 我们在这里重载+运算符。
+<3> `self.x` being `None` means that `self` is the point at infinity, or the additive identity. 如果self.x为None，则意味着self是无穷大点，也就是加法恒等元。
+Thus, we return `other`. 因此，我们返回other。
+<4> `other.x` being `None` means that `other` is the point at infinity, or the additive identity. 如果other.x为None，则意味着other是无穷大点，也就是加法恒等元。
+Thus, we return `self`. 因此，我们返回self。
 
 include::code-ch02/answers.py[tag=exercise3,indent=0]
 
-=== Point Addition for When x~1~≠x~2~
+=== Point Addition for When x~1~≠x~2~ 当 x₁ ≠ x₂ 时的点加法
 
 Now that we've covered the vertical line, let's examine when the points are different.
 When we have points where the `x`'s differ, we can add using a fairly simple formula.
 To help with intuition, we'll first find the slope created by the two points.
 We can figure this out using a formula from pre-algebra:
+
+现在我们已经了解了垂直线的情况，让我们来研究一下当点不同的情况。 当我们有不同x值的点时，我们可以使用一个相当简单的公式来相加。 为了帮助理解，我们首先找到由两个点形成的斜率。 我们可以使用一个来自代数前的公式来解决这个问题：
 
 ++++
 <ul class="simplelist">
@@ -369,6 +427,10 @@ This((("slope"))) is the _slope_, and we can use the slope to calculate __x__~3~
 Once we know __x__~3~, we can calculate __y__~3~.
 __P__~3~ can be derived using this formula:
 
+这是斜率，我们可以使用斜率来计算 __x__~3~。
+一旦我们知道了 __x__~3~，我们就可以计算 __y__~3~。
+__P__~3~可以使用以下公式推导出来：  
+
 ++++
 <ul class="simplelist">
 <li><em>x</em><sub>3</sub> = <em>s</em><sup>2</sup> – <em>x</em><sub>1</sub> – <em>x</em><sub>2</sub></li>
@@ -378,10 +440,12 @@ __P__~3~ can be derived using this formula:
 
 Remember that __y__~3~ is the reflection over the x-axis.
 
-.Deriving the Point Addition Formula
+要记得 __y__~3~ 是关于x轴的反射。
+
+.Deriving the Point Addition Formula 推导点加法公式
 ****
 
-Supposing:
+Supposing: 假设：
 
 ++++
 <ul class="simplelist">
@@ -392,7 +456,11 @@ Supposing:
 
 We((("point addition", "deriving the point addition Formula"))) want to know what __P__~3~ is.
 
+我们想要求解 __P__~3~。
+
 Let's start with the fact that the line goes through __P__~1~ and __P__~2~, and has this formula:
+
+从事实出发，这条线穿过 __P__~1~ 和 __P__~2~，有这个公式：
 
 ++++
 <ul class="simplelist">
@@ -404,6 +472,9 @@ Let's start with the fact that the line goes through __P__~1~ and __P__~2~, and 
 The second formula is the equation of the line that intersects at both __P__~1~ and __P__~2~.
 Using this formula and plugging it into the elliptic curve equation, we get:
 
+第二个公式是经过 __P__~1~ 和 __P__~2~的直线的方程。
+将此公式代入椭圆曲线方程，我们得到：  
+
 ++++
 <ul class="simplelist">
 <li><em>y</em><sup>2</sup> = <em>x</em><sup>3</sup> + <em>ax</em> + <em>b</em></li>
@@ -413,6 +484,8 @@ Using this formula and plugging it into the elliptic curve equation, we get:
 
 Gathering all the terms, we have this polynomial equation:
 
+将所有项收集在一起，我们得到这个多项式方程：  
+
 ++++
 <ul class="simplelist">
 <li><em>x</em><sup>3</sup> – <em>s</em><sup>2</sup><em>x</em><sup>2</sup> + (<em>a</em> + 2<em>s</em><sup>2</sup><em>x</em><sub>1</sub> – 2<em>sy</em><sub>1</sub>)<em>x</em> + <em>b</em> – <em>s</em><sup>2</sup><em>x</em><sub>1</sub><sup>2</sup> + 2<em>sx</em><sub>1</sub><em>y</em><sub>1</sub> – <em>y</em><sub>1</sub><sup>2</sup> = 0</li>
@@ -420,6 +493,8 @@ Gathering all the terms, we have this polynomial equation:
 ++++
 
 We also know that __x__~1~, __x__~2~, and __x__~3~ are solutions to this equation, thus:
+
+我们也知道 __x__~1~，__x__~2~和 __x__~3~都是这个方程的解，因此：  
 
 ++++
 <ul class="simplelist">
@@ -430,6 +505,8 @@ We also know that __x__~1~, __x__~2~, and __x__~3~ are solutions to this equatio
 
 From earlier, we know that:
 
+从之前的内容，我们知道：  
+
 ++++
 <ul class="simplelist">
 <li><em>x</em><sup>3</sup> – <em>s</em><sup>2</sup><em>x</em><sup>2</sup> + (<em>a</em> + 2<em>s</em><sup>2</sup><em>x</em><sub>1</sub> – 2<em>sy</em>~1~)<em>x</em> + <em>b</em> – <em>s</em><sup>2</sup><em>x</em><sub>1</sub><sup>2</sup> + 2<em>sx</em><sub>1</sub><em>y</em><sub>1</sub> – <em>y</em><sub>1</sub><sup>2</sup> = 0</li>
@@ -439,6 +516,8 @@ From earlier, we know that:
 There's((("Vieta’s Formula"))) a result from what's called http://bit.ly/2HXJtMp[Vieta's formula], which states that the coefficients have to equal each other if the roots are the same.
 The first coefficient that's interesting is the coefficient in front of __x__^2^:
 
+有一个被称为 Vieta 公式的结果，该公式表明如果根相同，那么系数必须相等。我们首先感兴趣的系数是 __x__^2^ 前的系数：
+
 ++++
 <ul class="simplelist">
 <li>–<em>s</em><sup>2</sup> = –(<em>x</em><sub>1</sub> + <em>x</em><sub>2</sub> + <em>x</em><sub>3</sub>)</li>
@@ -446,6 +525,8 @@ The first coefficient that's interesting is the coefficient in front of __x__^2^
 ++++
 
 We can use this to derive the formula for __x__~3~:
+
+我们可以用这个来推导 __x__~3~ 的公式：  
 
 ++++
 <ul class="simplelist">
@@ -455,6 +536,8 @@ We can use this to derive the formula for __x__~3~:
 
 We can plug this into the formula for the line above:
 
+我们可以将这个结果代入上面的公式：
+
 ++++
 <ul class="simplelist">
 <li><em>y</em> = <em>s</em>(<em>x</em> – <em>x</em><sub>1</sub>) + <em>y</em><sub>1</sub></li>
@@ -462,6 +545,8 @@ We can plug this into the formula for the line above:
 ++++
 
 But we have to reflect over the x-axis, so the right side has to be negated:
+
+但是我们需要在x轴上进行反射，所以右侧必须取负值。
 
 ++++
 <ul class="simplelist">
@@ -474,11 +559,15 @@ QED.
 
 include::code-ch02/answers.py[tag=exercise4,indent=0]
 
-=== Coding Point Addition for When x~1~≠x~2~
+=== Coding Point Addition for When x~1~≠x~2~ 当 x1 ≠ x2 时的编码点加法
 
 We now code this into our library.
 That means we have to adjust the `__add__` method to handle the case where __x__~1~≠__x__~2~.
 We have the formulas:
+
+我们现在将此目标编入我们的库。
+这意味着我们需要调整 `__add__` 方法以处理 x1 ≠ x2 的情况。
+我们有如下公式：
 
 ++++
 <ul class="simplelist">
@@ -490,12 +579,16 @@ We have the formulas:
 
 At the end of the method, we return an instance of the class `Point` using `self.__class__` to make subclassing easier.
 
+在方法末尾，我们使用 `self.__class__` 返回 `Point` 类的实例，以使子类继承更容易。
+
 include::code-ch02/answers.py[tag=exercise5,indent=0]
 
-=== Point Addition for When P~1~ = P~2~
+=== Point Addition for When P~1~ = P~2~ 当 P1 = P2 时点的加法
 
 When the _x_ coordinates are the same and the _y_ coordinate is different, we have the situation where the points are opposite each other over the x-axis.
 We know that this means:
+
+当 x 坐标相同时，y 坐标不同，我们就有了一种情况，即点在 x 轴的两侧相对。 我们知道这意味着：
 
 ++++
 <ul class="simplelist">
@@ -505,9 +598,15 @@ We know that this means:
 
 We've already handled this in Exercise 3.
 
+我们在练习3中已经处理过这种情况。
+
 What happens when __P__~1~ = __P__~2~?
 Visually, we have to calculate the line that's _tangent_ to the curve at __P__~1~ and find the point at which the line intersects the curve.
 The situation looks like <<line_thats_tangent_to_the_curve>>, as we saw before.
+
+当 P1 = P2 时会发生什么？
+从视觉上讲，我们需要计算在 P1 处与曲线相切的线，并找到线与曲线相交的点。
+这种情况看起来像我们之前看到的 <<line_thats_tangent_to_the_curve>>。
 
 [[line_thats_tangent_to_the_curve]]
 .Line that's tangent to the curve
@@ -515,6 +614,8 @@ The situation looks like <<line_thats_tangent_to_the_curve>>, as we saw before.
 image::images/prbc_0213.png[Tangent Line]
 
 Once again, we'll find the slope of the tangent point:
+
+再次，我们将找到切点的斜率：
 
 ++++
 <ul class="simplelist">
@@ -526,6 +627,8 @@ Once again, we'll find the slope of the tangent point:
 
 The rest of the formula goes through as before, except __x__~1~ = __x__~2~, so we can combine them:
 
+公式的其余部分与之前一样，除了 x1 = x2，所以我们可以将它们合并：  
+
 ++++
 <ul class="simplelist">
 <li><em>x</em><sub>3</sub> = <em>s</em><sup>2</sup> – 2<em>x</em><sub>1</sub></li>
@@ -534,10 +637,14 @@ The rest of the formula goes through as before, except __x__~1~ = __x__~2~, so w
 ++++
 
 [NOTE]
-.Deriving the Slope Tangent to the Curve
+.Deriving the Slope Tangent to the Curve .求曲线切线的斜率
 ====
 We can derive the slope of the tangent line using some slightly more advanced math: calculus.
 We know that the slope at a given point is:
+
+我们可以使用一些更高级的数学：微积分来求切线的斜率。
+我们知道在给定点的斜率是：
+
 
 ++++
 <ul class="simplelist">
@@ -547,6 +654,8 @@ We know that the slope at a given point is:
 
 
 To get this, we need to take the derivative of both sides of the elliptic curve equation:
+
+为了得到这个，我们需要对椭圆曲线方程的两边求导：
 
 ++++
 <ul class="simplelist">
@@ -558,6 +667,8 @@ To get this, we need to take the derivative of both sides of the elliptic curve 
 
 Taking the derivative of both sides, we get:
 
+对两边求导，我们得到：  
+
 ++++
 <ul class="simplelist">
 <li>2<em>y dy</em> = (3<em>x</em><sup>2</sup> + <em>a</em>) <em>dx</em></li>
@@ -566,6 +677,8 @@ Taking the derivative of both sides, we get:
 
 
 Solving for __dy__/__dx__, we get:
+
+解出 __dy__/__dx__，我们得到：
 
 ++++
 <ul class="simplelist">
@@ -576,14 +689,19 @@ Solving for __dy__/__dx__, we get:
 
 That's how we arrive at the slope formula.
 The rest of the results from the point addition formula derivation hold.
+
+这就是我们得到斜率公式的过程。 点加法公式推导出的其他结果仍然成立。
+
 ====
 
 include::code-ch02/answers.py[tag=exercise6,indent=0]
 
-=== Coding Point Addition for When P~1~ = P~2~
+=== Coding Point Addition for When P~1~ = P~2~ 为 P1 = P2 编写点加法
 
 We adjust the `__add__` method to account for this particular case.
 We have the formulas, and now we implement them:
+
+我们调整__add__方法以考虑这个特殊情况。 我们已经有了公式，现在我们来实现它们：
 
 ++++
 <ul class="simplelist">
@@ -595,9 +713,11 @@ We have the formulas, and now we implement them:
 
 include::code-ch02/answers.py[tag=exercise7,indent=0]
 
-=== Coding One More Exception
+=== Coding One More Exception 编写更多的异常
 
 There is one more exception, and this involves the case where the tangent line is vertical (<<vertical_and_tangent_to_the_curve>>).
+
+还有一个异常，这涉及到切线垂直的情况（<<vertical_and_tangent_to_the_curve>>）。
 
 [[vertical_and_tangent_to_the_curve]]
 .Vertical and tangent to the curve
@@ -606,7 +726,11 @@ image::images/prbc_0219.png[Tangent Vertical]
 
 This can only happen if __P__~1~ = __P__~2~ and the _y_ coordinate is 0, in which case the slope calculation will end up with a 0 in the denominator.
 
+这只能在 __P__~1~ = __P__~2~ 且 y 坐标为 0 的情况下发生，在这种情况下，斜率计算将导致分母为 0。
+
 We handle this with a special case:
+
+我们用一种特殊情况来处理这个问题：
 
 [source,python]
 ----
@@ -617,9 +741,12 @@ class Point:
 	if self == other and self.y == 0 * self.x:  # <1>
 	    return self.__class__(None, None, self.a, self.b)
 ----
-<1> If the two points are equal and the _y_ coordinate is 0, we return the point at pass:[<span class="keep-together">infinity</span>].((("", startref="MTeliptic02")))((("", startref="ECpoindcode02")))((("", startref="PAcode02")))
+<1> If the two points are equal and the _y_ coordinate is 0, we return the point at pass:[<span class="keep-together">infinity</span>].((("", startref="MTeliptic02")))((("", startref="ECpoindcode02")))((("", startref="PAcode02"))) 如果两个点相等且 y 坐标为 0，我们返回无穷大的点。((("", startref="MTeliptic02")))((("", startref="ECpoindcode02")))((("", startref="PAcode02")))
 
-=== Conclusion
+=== Conclusion 结论
 
 We've covered what elliptic curves are, how they work, and how to do point addition.
 We'll now combine the concepts from the first two chapters to learn elliptic curve cryptography in <<chapter_elliptic_curve_cryptography>>.
+
+我们已经介绍了椭圆曲线是什么，如何工作以及如何进行点加法。
+接下来，我们将结合前两章的概念来学习椭圆曲线密码学，详情请见<<chapter_elliptic_curve_cryptography>>。
