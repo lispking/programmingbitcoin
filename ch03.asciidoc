@@ -1,5 +1,5 @@
 [[chapter_elliptic_curve_cryptography]]
-== Elliptic Curve Cryptography
+== Elliptic Curve Cryptography 椭圆曲线密码学
 
 [.lead]
 The((("mathematical tools", "elliptic curve cryptography", id="MTelipcurcrypt03"))) previous two chapters covered some fundamental math.
@@ -7,25 +7,35 @@ We learned how finite fields work and what an elliptic curve is.
 In this chapter, we're going to combine the two concepts to learn elliptic curve cryptography.
 Specifically, we're going to build the primitives needed to sign and verify messages, which is at the heart of what Bitcoin does.
 
-=== Elliptic Curves over Reals
+前两章我们学习了数学工具和椭圆曲线。 我们了解了有限域的工作原理和什么是椭圆曲线。 在这一章中，我们将结合这两个概念来学习椭圆曲线密码学。 具体来说，我们将构建用于签名和验证消息的基元，这是比特币所做的核心工作。
+
+=== Elliptic Curves over Reals 实数域上的椭圆曲线
 
 We((("elliptic curve cryptography", "elliptic curves over real numbers")))((("real numbers"))) discussed in <<chapter_elliptic_curves>> what an elliptic curve looks like visually because we were plotting the curve over _real_ numbers.
 Specifically, it's not just integers or even rational numbers, but all real numbers.
 Pi, __sqrt__(2), __e__+7th root of 19, and the like are all real numbers.
 
+我们在<<椭圆曲线>>那一章中讨论了实数域上的椭圆曲线，因为我们是在实数上绘制曲线。 具体来说，不仅仅是整数，甚至是有理数，而是所有的实数。 π，√2，e+7次方根19等都是实数。
+
 This worked because real numbers are also a field.
 Unlike a _finite_ field, there are an _infinite_ number of real numbers, but otherwise the same properties hold:
 
-1. If _a_ and _b_ are in the set, _a_ + _b_ and _a_ ⋅ _b_ are in the set.
-2. 0 exists and has the property _a_ + 0 = _a_.
-3. 1 exists and has the property _a_ ⋅ 1 = _a_.
-4. If _a_ is in the set, _–a_ is in the set, which is defined as the value that makes _a_ + (–__a__) = 0.
-5. If _a_ is in the set and is not 0, __a__^–1^ is in the set, which is defined as the value that makes _a_ ⋅ __a__^–1^ = 1.
+这之所以可行，是因为实数也是一个域。 与有限域不同，实数是无限的，但其他属性仍然成立：
+
+1. If _a_ and _b_ are in the set, _a_ + _b_ and _a_ ⋅ _b_ are in the set. 如果 a 和 b 在集合中，那么 a + b 和 a × b 也在集合中。
+2. 0 exists and has the property _a_ + 0 = _a_. 存在0，且满足 a + 0 = a 的属性。
+3. 1 exists and has the property _a_ ⋅ 1 = _a_. 存在1，且满足 a × 1 = a 的属性。
+4. If _a_ is in the set, _–a_ is in the set, which is defined as the value that makes _a_ + (–__a__) = 0. 如果 a 在集合中，那么 -a 也在集合中，定义为使 a + (- a) = 0 的值。
+5. If _a_ is in the set and is not 0, __a__^–1^ is in the set, which is defined as the value that makes _a_ ⋅ __a__^–1^ = 1. 如果 a 在集合中且不为0，那么 1/ a 也在集合中，定义为使 a × (1/ a) = 1 的值。
 
 Clearly, all of these are true: normal addition and multiplication apply for the first part, the additive and multiplicative identities 0 and 1 exist, –__x__ is the additive inverse, and 1/__x__ is the multiplicative inverse.
 
+很明显，这些都是正确的：正常的加法和乘法适用于第一部分，加法和乘法恒等式0和1存在，- x 是加法逆元，而 1/ x 是乘法逆元。
+
 Real numbers are easy to plot on a graph.
 For example, __y__^2^ = __x__^3^ + 7 can be plotted like <<secp256k1_over_real_numbers>>.
+
+实数在图上的绘制很容易。 例如，__y__^2^ = __x__^3^ + 7 可以绘制成 <<secp256k1_over_real_numbers>> 这样的图像。
 
 [[secp256k1_over_real_numbers]]
 .secp256k1 over real numbers
@@ -34,11 +44,15 @@ image::images/prbc_0209.png[secp256k1 Curve]
 It turns out we can use the point addition equations over any field, including the finite fields we learned about in <<chapter_finite_fields>>.
 The only difference is that we have to use the addition/subtraction/multiplication/division as defined in <<chapter_finite_fields>>, not the "normal" versions that the real numbers use.
 
-=== Elliptic Curves over Finite Fields
+事实证明，我们可以使用任何域上的点加法方程，包括我们在<<有限域>>那一章中学到的有限域。 唯一的区别是，我们必须使用<<有限域>>中定义的加法/减法/乘法/除法，而不是实数使用的“正常”版本。
+
+=== Elliptic Curves over Finite Fields 有限域上的椭圆曲线
 
 So((("elliptic curve cryptography", "elliptic curves over finite fields", id="ECCfinite03")))((("finite fields", "elliptic curves over", id="FFelliptic03"))) what does an elliptic curve over a finite field look like?
 Let's look at the equation __y__^2^ = __x__^3^ + 7 over _F_~103~.
 We can verify that the point (17,64) is on the curve by calculating both sides of the equation:
+
+那么，有限域上的椭圆曲线是什么样的呢？ 让我们看一个 _F_~103~上的方程 __y__^2^ = __x__^3^ + 7。 我们可以通过计算等式的两边来验证点 (17,64) 是否在曲线上：
 
 ++++
 <ul class="simplelist">
@@ -49,8 +63,12 @@ We can verify that the point (17,64) is on the curve by calculating both sides o
 
 We've verified that the point is on the curve using finite field math.
 
+我们已经使用有限域数学验证了该点在曲线上。
+
 [role="pagebreak-before"]
 Because we're evaluating the equation over a finite field, the plot of the equation looks vastly different (<<elliptic_curve_over_a_finite_field>>).
+
+由于我们是在有限域上评估方程，所以方程的图像看起来截然不同（<<有限域上的椭圆曲线>>）。
 
 [[elliptic_curve_over_a_finite_field]]
 .Elliptic curve over a finite field
@@ -61,14 +79,20 @@ This is not surprising since the points are discrete.
 About the only pattern is that the curve is symmetric right around the middle, because of the __y__^2^ term.
 The graph is not symmetric over the x-axis as in the curve over reals, but about halfway up the y-axis due to there not being negative numbers in a finite field.
 
+如你所见，这非常像是一系列的散点，而且这里没有平滑的曲线。 这并不奇怪，因为点都是离散的。 唯一的规律是，曲线在中间对称，这是由于 __y__^2^ 项。 由于有限域中没有负数，所以图形在y轴上并不像实数曲线那样关于x轴对称，而是大约在y轴的中间。
+
 What's amazing is that we can use the same point addition equations with the addition, subtraction, multiplication, division, and exponentiation as we defined them for finite fields, and everything still works.
 This may seem surprising, but abstract math has regularities like this despite being different from the traditional modes of calculation you may be familiar with.
 
+令人惊讶的是，我们可以使用相同的点加法方程，以及我们为有限域定义的加法、减法、乘法、除法和指数运算，一切仍然适用。 这可能看起来很奇怪，但是抽象数学具有这种规律性，尽管与您可能熟悉的传统计算方式不同。
+
 include::code-ch03/answers.py[tag=exercise1,indent=0]
 
-=== Coding Elliptic Curves over Finite Fields
+=== Coding Elliptic Curves over Finite Fields 在有限域上编码椭圆曲线
 
 Because we defined an elliptic curve point and defined the `+`, `-` ,`*` and `/` operators for finite fields, we can combine the two classes to create elliptic curve points over a finite field:
+
+因为我们定义了椭圆曲线点，并为有限域定义了 +，-，* 和 / 运算符，所以我们可以将这两个类结合起来创建有限域上的椭圆曲线点：
 
 [source,python]
 ----
@@ -76,6 +100,8 @@ include::code-ch03/examples.py[tag=example1]
 ----
 
 When initializing `Point`, we will run through this part of the code:
+
+在初始化 Point 时，我们将运行此代码的一部分：
 
 [source,python]
 ----
@@ -85,18 +111,24 @@ include::code-ch03/ecc.py[tag=source1]
 The addition (`+`), multiplication (`*`), exponentiation (`**`), and not equals (`!=`) operators here use the `__add__`, `__mul__`, `__pow__`, and `__ne__` methods from `FiniteField`, respectively, and _not_ the integer equivalents.
 Being able to do the same equation but with different definitions for the basic arithmetic operators is how we construct an elliptic curve cryptography library.
 
+这里的加法（+），乘法（*），指数（**）和不等（!=）运算符分别使用 `FiniteField` 中的 __add__，__mul__，__pow__ 和 __ne__ 方法，而不是整数的等价物。 能够在相同方程的情况下，为基本算术运算符提供不同的定义，这就是我们构建椭圆曲线密码库的方式。
+
 We've already coded the two classes that we need to implement elliptic curve points over a finite field.
 However, to check our work, it will be useful to create a test suite.
 We will do this using the results of Exercise 1:
+
+我们已经为在有限域上实现椭圆曲线点编码了所需的两个类。 然而，为了检查我们的工作，创建一个测试套件将非常有用。 我们将使用练习1的结果来完成这个任务：
 
 [source,python]
 ----
 include::code-ch03/ecc.py[tag=source2]
 ----
 <1> We pass in `FieldElement` objects to the `Point` class for initialization.
-This will, in turn, use all the overloaded math operations in `FieldElement`.
+This will, in turn, use all the overloaded math operations in `FieldElement`. 我们将 `FieldElement` 对象传递给 `Point` 类进行初始化。 这反过来将使用 `FieldElement` 中所有重载的数学运算。
 
 We can now run this test like so:
+
+现在，我们可以像这样运行此测试：
 
 [source,pycon]
 ----
@@ -109,11 +141,13 @@ Ran 1 test in 0.001s
 
 OK
 ----
-<1> `helper` is a module with some very useful utility functions, including the ability to run unit tests individually.((("", startref="ECCfinite03")))((("", startref="FFelliptic03")))
+<1> `helper` is a module with some very useful utility functions, including the ability to run unit tests individually.((("", startref="ECCfinite03")))((("", startref="FFelliptic03"))) helper 是一个包含一些非常有用的实用函数的模块，包括能够单独运行单元测试的能力。(((“”, startref=“ECCfinite03”)))(((“”, startref=“FFelliptic03”)))
 
-=== Point Addition over Finite Fields
+=== Point Addition over Finite Fields 有限域上的点加法
 
 We((("elliptic curve cryptography", "point addition over finite fields", id="ECCpoint03")))((("point addition", "over finite fields", id="PAfinite03"))) can use all the same equations over finite fields, including the linear equation:
+
+我们可以在有限域上使用相同的方程，包括线性方程：
 
 ++++
 <ul class="simplelist">
@@ -123,16 +157,25 @@ We((("elliptic curve cryptography", "point addition over finite fields", id="ECC
 
 It turns out that a "line" in a finite field is not quite what you'd expect (<<line_over_a_finite_field>>).
 
+事实上，有限域中的“直线”并不是你所期望的那样（<<有限域上的直线>>）。
+
 [[line_over_a_finite_field]]
 .Line over a finite field
 image::images/prbc_0303.png[Line over a finite field]
 
 The equation nevertheless works, and we can calculate what _y_ should be for a given _x_.
 
+方程仍然有效，我们可以计算出对于给定的_x_，_y_应该是多少。
+
 Remarkably, point addition works over finite fields as well.
 This is because elliptic curve point addition works over all fields!
 The same exact formulas we used to calculate point addition over reals work over finite fields.
 Specifically, when __x__~1~ ≠ __x__~2~:
+
+值得注意的是，点加法在有限域上同样适用。
+这是因为椭圆曲线点加法适用于所有字段！
+我们用于计算实数点加法的相同公式也适用于有限域。
+具体来说，当 __x__~1~ ≠ __x__~2~：
 
 ++++
 <ul class="simplelist">
@@ -146,6 +189,8 @@ Specifically, when __x__~1~ ≠ __x__~2~:
 
 And when __P__~1~ = __P__~2~:
 
+当 __P__~1~ = __P__~2~ 时：
+
 ++++
 <ul class="simplelist">
 <li><em>P</em><sub>1</sub> = (<em>x</em><sub>1</sub>,<em>y</em><sub>1</sub>), <em>P</em><sub>3</sub> = (<em>x</em><sub>3</sub>,<em>y</em><sub>3</sub>)</li>
@@ -158,9 +203,13 @@ And when __P__~1~ = __P__~2~:
 
 All of the equations for elliptic curves work over finite fields, which sets us up to create some cryptographic primitives.
 
-=== Coding Point Addition over Finite Fields
+所有椭圆曲线的方程都适用于有限域，这为我们创建一些密码学基本元素奠定了基础。
+
+=== Coding Point Addition over Finite Fields 在有限域上编码点加法
 
 Because we coded +FieldElement+ in such a way as to define `__add__`, `__sub__`, `__mul__`, `__truediv__`, `__pow__`, `__eq__`, and `__ne__`, we can simply initialize `Point` with `FieldElement` objects and point addition will((("", startref="ECCpoint03")))((("", startref="PAfinite03"))) work:
+
+由于我们以定义__add__，__sub__，__mul__，__truediv__，__pow__，__eq__和__ne__的方式编码了+FieldElement+，所以我们只需使用FieldElement对象初始化Point，点加法就可以正常工作：
 
 [source,python]
 ----
@@ -171,9 +220,11 @@ include::code-ch03/answers.py[tag=exercise2,indent=0]
 
 include::code-ch03/answers.py[tag=exercise3,indent=0]
 
-=== Scalar Multiplication for Elliptic Curves
+=== Scalar Multiplication for Elliptic Curves 椭圆曲线的标量乘法
 
 Because((("scalar multiplication", "for elliptic curves", id="SMelliptic03")))((("elliptic curve cryptography", "scalar multiplication for elliptic curves", id="ECCscalar03"))) we can add a point to itself, we can introduce some new notation:
+
+由于我们可以在椭圆曲线上将一个点加到它自己，因此我们可以引入一些新的符号表示：
 
 ++++
 <ul class="simplelist">
@@ -182,6 +233,8 @@ Because((("scalar multiplication", "for elliptic curves", id="SMelliptic03")))((
 ++++
 
 Similarly, because we have associativity, we can actually add the point again:
+
+同样，由于我们具有结合律，我们实际上可以再次添加这个点：
 
 ++++
 <ul class="simplelist">
@@ -194,7 +247,14 @@ This is what we call _scalar multiplication_.
 That is, we have a _scalar_ number in front of the point.
 We can do this because we have defined point addition and point addition is associative.
 
+我们可以按照意愿进行多次操作。
+这就是我们所说的_标量乘法_。
+也就是说，点前面有一个_标量_数字。
+我们之所以能这样做，是因为我们定义了点加法，而点加法是具有结合律的。
+
 One property of scalar multiplication is that it's really hard to predict without calculating (see <<scalar_multiplication_results_for_y_2_x_3_7>>).
+
+标量乘法的一个性质是，在没有计算的情况下，很难预测它的结果（参见<<标量乘法结果对于 _y_2_x_3_7>>）。
 
 [[scalar_multiplication_results_for_y_2_x_3_7]]
 .Scalar multiplication results for y^2^ = x^3^ + 7 over F~223~ for point (170,142)
@@ -205,10 +265,16 @@ You can see that this is a complete scattershot.
 This is because point addition is nonlinear and not easy to calculate.
 Performing scalar multiplication is straightforward, but doing the opposite, point division, is not.
 
+每个点都标记着我们添加这个点的次数。 你可以看到这完全是一个散弹图。 这是因为点加法是非线性的，不易计算。 执行标量乘法是直接的，但做相反的操作，即点除法，却不容易。
+
 This((("discrete log problem"))) is called the _discrete log problem_ and is the basis of elliptic curve cryptography.
+
+这个问题被称为离散对数问题，是椭圆曲线密码学的基础。
 
 Another property of scalar multiplication is that at a certain multiple, we get to the point at infinity (remember, the point at infinity is the additive identity or 0).
 If we imagine a point _G_ and scalar-multiply until we get the point at infinity, we end up with a set:
+
+标量乘法的另一个性质是，在某个倍数下，我们得到无穷远点（记住，无穷远点是加法恒等元或者0）。 如果我们想象一个点 _G_，并不断地进行标量乘法，直到我们得到无穷远点，我们最终得到一个集合：
 
 ++++
 <ul class="simplelist">
@@ -219,6 +285,9 @@ If we imagine a point _G_ and scalar-multiply until we get the point at infinity
 It turns out that this set is called a _group_, and because _n_ is finite, we have a _finite group_ (or more specifically, a _finite cyclic group_).
 Groups are interesting mathematically because they behave well with respect to addition:
 
+结果发现，这个集合被称为一个“群”，由于 _n_ 是有限的，所以我们有一个“有限群”（或者更具体地说，一个“有限循环群”）。
+群在数学上很有趣，因为它们在加法方面表现良好：
+
 ++++
 <ul class="simplelist">
 <li><em>G</em> + 4<em>G</em> = 5<em>G</em> or <em>aG</em> + <em>bG</em> = (<em>a</em> + <em>b</em>)<em>G</em></li>
@@ -227,13 +296,19 @@ Groups are interesting mathematically because they behave well with respect to a
 
 When we combine the fact that scalar multiplication is easy to do in one direction but hard in the other and the mathematical properties of a group, we have exactly what we need for elliptic curve cryptography.
 
-.Why Is This Called the Discrete Log Problem?
+当我们结合标量乘法在一个方向上容易执行但在另一个方向上困难的事实以及群的相关数学性质，我们就有了椭圆曲线密码学所需要的全部条件。
+
+.Why Is This Called the Discrete Log Problem? 为什么这被称为离散对数问题？
 ****
 You may be wondering why the problem of reversing scalar _multiplication_ is referred to as the discrete _log_ problem.
+
+你可能想知道为什么逆标量乘法的问题被称为离散对数问题。
 
 We called the operation between the points "addition," but we could easily have called it a point "operation."
 Typically, a new operation that you define in math is denoted with the dot operator (⋅).
 The dot operator is also used for multiplication, and it sometimes helps to think that way:
+
+我们称点之间的操作为“加法”，但我们很容易称之为点的“操作”。 通常，你在数学中定义的新操作是用点运算符（⋅）表示的。 点运算符也用于乘法，这样思考有时会有帮助：
 
 ++++
 <ul class="simplelist">
@@ -244,6 +319,8 @@ The dot operator is also used for multiplication, and it sometimes helps to thin
 When you do lots of multiplying, that's the same as exponentiation.
 Scalar multiplication when we called it "point addition" becomes scalar exponentiation when thinking "point multiplication":
 
+当你进行大量的乘法运算时，那就等同于指数运算。当我们把标量乘法称为“点加法”时，当我们思考“点乘法”时，它就变成了标量指数运算：  
+
 ++++
 <ul class="simplelist">
 <li><em>P</em><sup>7</sup> = <em>Q</em></li>
@@ -251,6 +328,8 @@ Scalar multiplication when we called it "point addition" becomes scalar exponent
 ++++
 
 The discrete log problem in this context is the ability to reverse this equation, which ends up being:
+
+在这个背景下，离散对数问题是指能够反转这个等式，最终结果是：  
 
 ++++
 <ul class="simplelist">
@@ -261,17 +340,23 @@ The discrete log problem in this context is the ability to reverse this equation
 The log equation on the left has no analytically calculable algorithm.
 That is, there is no known formula that you can plug in to get the answer generally.
 This is all a bit confusing, but it's fair to say that we could call the problem the "discrete point division" problem instead of the discrete log problem.
+
+左边的对数方程没有分析可计算的算法。
+也就是说，没有已知的公式可以让你普遍地插入得到答案。
+这有点令人困惑，但我们可以公平地说，我们可以将问题称为“离散点除法”问题，而不是离散对数问题。
 ****
 
 include::code-ch03/answers.py[tag=exercise4,indent=0]
 
-=== Scalar Multiplication Redux
+=== Scalar Multiplication Redux 标量乘法回顾
 
 Scalar multiplication is adding the same point to itself some number of times.
 The key to making scalar multiplication into public key cryptography is using the fact that scalar multiplication on elliptic curves is very hard to reverse.
 Note the previous exercise.
 Most likely, you calculated the point _s_ ⋅ (47,71) in __F__~223~ for _s_ from 1 until 21.
 Here are the results:
+
+标量乘法是将同一个点加上自身若干次。 将标量乘法转化为公钥密码学的关键在于利用椭圆曲线上标量乘法难以反转的事实。 请注意之前的练习。 很可能，您计算了从1到21的 _s_ 乘以 __F__~223~ 中的点 _s_ ⋅ (47,71)。 以下是结果：
 
 [source,python]
 ----
@@ -283,11 +368,15 @@ The _x_ coordinates don't always increase or decrease, and neither do the _y_ co
 About the only pattern is that between 10 and 11, the _x_ coordinates are equal (10 and 11 have the same _x_, as do 9 and 12, 8 and 13, and so on).
 This is due to the fact that 21 ⋅ (47,71) = 0.
 
+如果仔细观察数字，标量乘法没有明显的模式。 _x_ 坐标并不总是增加或减少，_y_ 坐标也是如此。 唯一的模式是在10和11之间，_x_ 坐标相等（10和11的 _x_ 相同，9和12，8和13等也是如此）。 这是因为21 ⋅ (47,71) = 0。
+
 [role="pagebreak-before"]
 Scalar multiplication looks really random, and that's what gives this equation _asymmetry_.
 An((("asymmetric problems"))) _asymmetric_ problem is one that's easy to calculate in one direction, but hard to reverse.
 For example, it's easy enough to calculate 12 ⋅ (47,71).
 But if we were presented with this:
+
+标量乘法看起来非常随机，这正是赋予这个方程不对称性。 一个不对称问题是在一个方向上容易计算，但难以反转。 例如，计算12 ⋅ (47,71)足够简单。 但如果我们面临这个问题：
 
 ++++
 <ul class="simplelist">
@@ -299,22 +388,32 @@ would we be able to solve for _s_?
 We can look up the results shown earlier, but that's because we have a small group.
 We'll see in <<definingCurveBC>> that when we have numbers that are a lot larger, discrete log becomes an intractable problem.((("", startref="ECCscalar03")))((("", startref="SMelliptic03")))
 
-=== Mathematical Groups
+我们能否解出_s_？ 我们可以查看之前展示的结果，但这仅仅是因为我们有一个小群体。 在<<definingCurveBC>>中，我们将看到当我们有更大的数字时，离散对数成为一个难以解决的问题。((("", startref="ECCscalar03")))((("", startref="SMelliptic03")))
+
+=== Mathematical Groups 数学群
 
 The((("elliptic curve cryptography", "mathematical groups", id="ECCmath03"))) preceding math (finite fields, elliptic curves, combining the two) was really to bring us to this point.
 What we actually want to generate for the purposes of public key cryptography are((("finite cyclic groups", "generating"))) finite cyclic groups, and it turns out that if we take a generator point from an elliptic curve over a finite field, we can generate a finite cyclic group.
+
+前面的数学((有限域、椭圆曲线、将两者结合))实际上是为了引出这个观点。 我们实际上想要生成的是有限循环群，用于公钥密码学。((“有限循环群”，“生成”))结果是，如果我们在有限域上的椭圆曲线上取一个生成器点，那么我们可以生成一个有限循环群。
 
 Unlike fields, groups have only a single operation.
 In our case, point addition is the operation.
 Groups also have a few other properties, like closure, invertibility, commutativity, and associativity.
 Lastly, we need the identity.
 
+与域不同，群只有一个运算。 在我们的情况下，点加法就是运算。 群还具有一些其他属性，例如封闭性、可逆性、交换性和结合性。 最后，我们需要标识。
+
 Let's look at each property, starting with that last one.
 
-==== Identity
+让我们从最后一个属性开始，逐个查看。
+
+==== Identity 标识
 
 If((("identity")))((("finite cyclic groups", "identity property"))) you haven't guessed by now, the identity is defined as the point at infinity, which is guaranteed to be in the group since we generate the group when we get to the point at infinity.
 So:
+
+如果你现在还没有猜到，那么标识定义为无穷远处的点，由于我们在到达无穷远处的点时生成群，所以这个点一定在群中。 所以：
 
 ++++
 <ul class="simplelist">
@@ -325,15 +424,19 @@ So:
 
 We call 0 the point at infinity because visually, it's the point that exists to help the math work out (<<vertical_line_intersects_a_third_time>>).
 
+我们将无穷远处的点称为0，因为从视觉上讲，它是为了使数学计算成立而存在的点（垂直线相交第三次）。
+
 [[vertical_line_intersects_a_third_time]]
 .Vertical line "intersects" a third time at the point at infinity
 [role="width-75"]
 image::images/prbc_0212.png[Vertical Line]
 
-==== Closure
+==== Closure 闭包
 
 This((("closure")))((("finite cyclic groups", "closure property"))) is perhaps the easiest property to prove since we generated the group in the first place by adding _G_ over and over.
 Thus, if we have two different elements that look like this:
+
+这个闭包属性可能是最易证明的性质，因为我们一开始是通过反复添加 _G_ 来生成群的。 因此，如果我们有两个不同的元素，它们看起来像这样：
 
 ++++
 <ul class="simplelist">
@@ -343,6 +446,8 @@ Thus, if we have two different elements that look like this:
 
 
 We know that the result is going to be:
+
+我们知道结果将会是：
 
 ++++
 <ul class="simplelist">
@@ -355,6 +460,10 @@ How do we know if this element is in the group?
 If _a+b < n_ (where _n_ is the order of the group), then we know it's in the group by definition.
 If _a_+_b_ >= _n_, then we know _a_ < _n_ and _b_ < _n_, so _a_+_b_ < 2__n__, so _a_+_b_–_n_ < _n_:
 
+我们如何确定这个元素是否在群中？
+如果 _a+b < n_ （其中_n_是群的大小），那么根据定义，我们知道它在群中。
+如果 _a+_b_ >= _n_，那么我们知道 _a_ < _n_ 且 _b_ < _n_，所以 _a_+_b_ < 2__n__，所以 _a_+_b_–_n_ < _n_：
+
 ++++
 <ul class="simplelist">
 <li>(<em>a</em> + <em>b</em> – <em>n</em>)<em>G</em> = <em>aG</em> + <em>bG</em> – <em>nG</em> = <em>aG</em> + <em>bG</em> – 0 = <em>aG</em> + <em>bG</em></li>
@@ -363,11 +472,17 @@ If _a_+_b_ >= _n_, then we know _a_ < _n_ and _b_ < _n_, so _a_+_b_ < 2__n__, so
 
 More generally, (__a__ + __b__)__G__ = ((__a__ + _b_) % __n__)__G__, where _n_ is the order of the group.
 
+更一般地说，(__a__ + __b__)__G__ = ((__a__ + _b_) % __n__)__G__，其中 _n_ 是群的大小。
+
 So we know that this element is in the group, proving closure.
 
-==== Invertibility
+所以我们知道这个元素在群中，证明了闭包性。
+
+==== Invertibility 可逆性
 
 Invertibility((("invertibility")))((("finite cyclic groups", "invertibility property"))) is easy to depict (<<each_point_is_invertible_by_taking_the_reflection_over_the_x_axis>>).
+
+可逆性((“可逆性”))((“有限循环群”，“可逆性属性”))很容易描述（<<通过取x轴的反射，每个点都是可逆的>>）。
 
 [[each_point_is_invertible_by_taking_the_reflection_over_the_x_axis]]
 .Each point is invertible by taking the reflection over the x-axis
@@ -377,10 +492,15 @@ image::images/prbc_0212.png[Vertical Line]
 Mathematically, we know that if _aG_ is in the group, (__n__ – __a__)__G__ is also in the group.
 You can add them together to get __aG__ + (__n__ – __a__)__G__ = (__a__ + __n__ – __a__)__G__ = _nG_ = 0.
 
+从数学上讲，我们知道如果 _aG_ 在群中，那么(__n__ – __a__)__G__ 也在群中。
+你可以将它们相加得到 __aG__ + (__n__ – __a__)__G__ = (__a__ + __n__ – __a__)__G__ = _nG_ = 0。
+
 [role="pagebreak-before"]
-==== Commutativity
+==== Commutativity 交换律
 
 We((("finite cyclic groups", "commutativity property")))((("commutativity"))) know from point addition that _A_ + _B_ = _B_ + _A_ (<<the_line_through_the_points_doesnt_change>>).
+
+我们知道((“有限循环群”，“交换律属性”))((“交换律”))从点加法中 _A_ + _B_ = _B_ + _A_（<<通过点的直线不改变>>）。
 
 [[the_line_through_the_points_doesnt_change]]
 .The line through the points doesn't change
@@ -389,8 +509,10 @@ image::images/prbc_0214.png[Point addition]
 
 This means that _aG_ + _bG_ = _bG_ + _aG_, which proves commutativity.
 
+这意味着 _aG_ + _bG_ = _bG_ + _aG_，这证明了交换律。
+
 [role="pagebreak-before"]
-==== Associativity
+==== Associativity 结合律
 
 We((("associativity")))((("finite cyclic groups", "associativity property"))) know from point addition that _A_ + (_B_ + _C_) = (_A_ + _B_) + _C_ (see Figures pass:[<a data-type="xref" data-xrefstyle="select:labelnumber"  href="#a_b_c_case_one">#a_b_c_case_one</a> and <a data-type="xref" data-xrefstyle="select:labelnumber" href="#a_b_c_case_two">#a_b_c_case_two</a>]).
 
@@ -406,12 +528,16 @@ image::images/prbc_0217.png[Case 2]
 
 Thus, _aG_ + (_bG_ + _cG_) = (_aG_ + _bG_) + _cG_, proving associativity.((("", startref="ECCmath03")))
 
+因此，_aG_ + (_bG_ + _cG_) = (_aG_ + _bG_) + _cG_，证明了结合律。
+
 include::code-ch03/answers.py[tag=exercise5,indent=0]
 
 [role="pagebreak-before"]
-=== Coding Scalar Multiplication
+=== Coding Scalar Multiplication 编码标量乘法
 
 What((("scalar multiplication", "coding for")))((("elliptic curve cryptography", "scalar multiplication coding"))) we're trying to do with Exercise 5 is this:
+
+我们在第5个练习中尝试做的事情是：
 
 [source,python]
 ----
@@ -421,6 +547,8 @@ include::code-ch03/examples.py[tag=example5]
 We want to be able to scalar-multiply the point with some number.
 Thankfully, there's((("&#x005F;&#x005F;rmul&#x005F;&#x005F; method"))) a method in Python called `__rmul__` that can be used to override the front multiplication.
 A naive implementation looks something like this:
+
+我们希望能够将点与某个数字进行标量乘法。 幸运的是，`Python` 中有一个名为 `__rmul__` 的方法，可以用来重写前乘法。 一个简单的实现看起来像这样：
 
 [source,python]
 ----
@@ -432,14 +560,18 @@ class Point:
             product += self
         return product
 ----
-<1> We start the `product` at 0, which in the case of point addition is the point at infinity.
-<2> We loop `coefficient` times and add the point each time.
+<1> We start the `product` at 0, which in the case of point addition is the point at infinity. 我们从0开始 `product`，这在点加法的情况下是无穷远处的点。
+<2> We loop `coefficient` times and add the point each time. 我们循环 `coefficient` 次，每次都加上这个点。
 
 This is fine for small coefficients, but what if we have a very large coefficient—that is, a number that's so large that we won't be able to get out of this loop in a reasonable amount of time?
 For example, a coefficient of 1 trillion is going to take a really long time.
 
+这对于小的系数是没问题的，但是如果我们的系数非常大，比如一个如此大的数字，以至于我们无法在合理的时间内从这个循环中出来，那该怎么办呢？例如，1万亿美元的系数将要花费非常长的时间。
+
 There's((("binary expansion"))) a cool technique called _binary expansion_ that allows us to perform multiplication in log~2~(_n_) loops, which dramatically reduces the calculation time for large numbers.
 For example, 1 trillion is 40 bits in binary, so we only have to loop 40 times for a number that's generally considered very large:
+
+有一种非常酷的技术叫做二进制扩展，它允许我们在log~2~(n)次循环中执行乘法，这大大缩短了大型数字的计算时间。例如，1万亿美元在二进制下是40位，所以对于通常被认为非常大的数字，我们只需要循环40次：
 
 [source,python]
 ----
@@ -448,40 +580,50 @@ class Point:
 include::code-ch03/ecc.py[tag=source3]
 ----
 <1> `current` represents the point that's at the current bit.
-The first time through the loop it represents 1 &#xd7; +self+; the second time it will be 2 &#xd7; +self+, the third time 4 &#xd7; +self+, then 8 &#xd7; +self+, and so on.
+The first time through the loop it represents 1 &#xd7; +self+; the second time it will be 2 &#xd7; +self+, the third time 4 &#xd7; +self+, then 8 &#xd7; +self+, and so on. 
 We double the point each time.
-In binary the coefficients are 1, 10, 100, 1000, 10000, etc.
-<2> We start the result at 0, or the point at infinity.
+In binary the coefficients are 1, 10, 100, 1000, 10000, etc. `current` 代表当前比特处的点。 第一次循环时，它代表1乘以+self+；第二次循环时，它将代表2乘以+self+；第三次循环时，它将代表4乘以+self+；然后是8乘以+self+，依此类推。 每次我们将点加倍。 在二进制中，系数是1、10、100、1000、10000等。
+<2> We start the result at 0, or the point at infinity. 我们从0开始结果，或者无限远处的点。
 <3> We are looking at whether the rightmost bit is a 1.
-If it is, then we add the value of the current bit.
-<4> We need to double the point until we're past how big the coefficient can be.
-<5> We bit-shift the coefficient to the right.
+If it is, then we add the value of the current bit. 我们查看最右边的比特是否为1。 如果是，那么我们加上当前比特的值。
+<4> We need to double the point until we're past how big the coefficient can be. 我们需要将点加倍，直到超过系数可能的大小。
+<5> We bit-shift the coefficient to the right. 我们将系数向右移位。
 
 This is an advanced technique. If you don't understand bitwise operators, think of representing the coefficient in binary and only adding the point where there are 1's.
 
+这是一种高级技术。如果你不理解位运算符，想象一下用二进制表示系数，只在有1的地方加上点。
+
 With `__add__` and `__rmul__`, we can start defining some more complicated elliptic curves.
 
+通过`__add__`和`__rmul__`，我们可以开始定义一些更复杂的椭圆曲线。
+
 [[definingCurveBC]]
-=== Defining the Curve for Bitcoin
+=== Defining the Curve for Bitcoin 定义比特币的曲线
 
 While((("elliptic curve cryptography", "secp256k1 curve", id="ECCsecp03")))((("secp256k1 curve", id="secp03")))((("elliptic curves", "secp256k1 curve", id="ECsecp03"))) we've been using relatively small primes for the sake of examples, we are not restricted to such small numbers.
 Small primes mean that we can use a computer to search through the entire group.
 If the group has a size of 301, the computer can easily do 301 computations to reverse scalar multiplication or break discrete log.
 
+尽管为了例子我们使用了相对较小的素数，但我们并不局限于这样的小数字。 小的素数意味着我们可以用计算机搜索整个群。 如果群的大小为301，计算机可以轻松地进行301次计算以反转标量乘法或破解离散对数。
+
 But what if we made the prime larger?
 It turns out that we can choose much larger primes than we've been using.
 The security of elliptic curve cryptography depends on computers _not_ being able to go through an appreciable fraction of the group.
 
-An elliptic curve for public key cryptography is defined with the following pass:[<span class="keep-together">parameters</span>]:
+但是如果我们将素数增大呢？ 事实证明，我们可以选择比我们迄今为止使用的更大的素数。 椭圆曲线密码学的安全性取决于计算机无法遍历群的相当大的部分。
 
-* We specify the _a_ and _b_ of the curve __y__^2^ = __x__^3^ + _ax_ + _b_.
-* We specify the prime of the finite field, _p_.
-* We specify the _x_ and _y_ coordinates of the generator point _G_.
-* We specify the order of the group generated by _G_, _n_.
+An elliptic curve for public key cryptography is defined with the following pass:[<span class="keep-together">parameters</span>]: 公钥密码学中的椭圆曲线定义为以下参数：
+
+* We specify the _a_ and _b_ of the curve __y__^2^ = __x__^3^ + _ax_ + _b_. 我们指定曲线的_a_和_b_，使得 __y__^2^ = __x__^3^ + _ax_ + _b_。
+* We specify the prime of the finite field, _p_. 我们指定有限域的素数 _p_。
+* We specify the _x_ and _y_ coordinates of the generator point _G_. 我们指定生成点 _G_ 的 _x_ 和 _y_ 坐标。
+* We specify the order of the group generated by _G_, _n_. 我们指定由 _G_ 生成的群的阶_n_。
 
 These numbers are known publicly and together form the cryptographic curve.
 There are many cryptographic curves and they have different security/convenience trade-offs, but the one we're most interested in is the one Bitcoin uses: secp256k1.
 The parameters for secp256k1 are these:
+
+这些数字是公开的，并且共同构成了密码学曲线。 有许多密码学曲线，它们具有不同的安全/便利性权衡，但是我们最感兴趣的是比特币使用的曲线：secp256k1。 secp256k1的参数如下：
 
 * _a_ = 0, _b_ = 7, making the equation __y__^2^ = __x__^3^ + 7
 * _p_ = 2^256^ – 2^32^ – 977
@@ -494,42 +636,58 @@ The parameters for secp256k1 are these:
 __G~x~__ refers to the _x_ coordinate of the point _G_ and __G~y~__ the _y_ coordinate.
 The numbers starting with 0x are hexadecimal numbers. 
 
+__G~x~_ 是指点 _G_ 的 _x_ 坐标，而 __G~y~_ 是指点 _G_ 的 _y_ 坐标。 以0x开头的数字是十六进制数。
+
 There are a few things to notice about this curve. First, the equation is relatively simple.
 Many curves have _a_ and _b_ values that are much bigger.
+
+关于这个曲线需要注意的几点。首先，方程相对简单。 许多曲线的 _a_ 和 _b_ 值要大得多。
 
 Second, _p_ is extremely close to 2^256^.
 This means that most numbers under 2^256^ are in the prime field, and thus any point on the curve has _x_ and _y_ coordinates that are expressible in 256 bits each.
 _n_ is also very close to 2^256^.
 This means any scalar multiple can also be expressed in 256 bits.
 
+其次，_p_ 非常接近2^256^。 这意味着2^256^以下的数字大多数在素数域中，因此曲线上的任何点都有 _x_ 和 _y_ 坐标，每个坐标都可以用256位表示。 _n_ 也非常接近2^256^。 这意味着任何标量倍数也可以用256位表示。
+
 Third, 2^256^ is a huge number (see sidebar).
 Amazingly, any number below 2^256^ can be stored in 32 bytes.
 This means that we can store the private key relatively easily.
 
-.How Big is 2^256^?
+第三，2^256^是一个非常大的数字（参见侧栏）。 令人惊讶的是，2^256^以下的任何数字都可以存储在32字节中。 这意味着我们可以相对容易地存储私钥。
+
+.How Big is 2^256^? 2^256^有多大？
 ****
 2^256^ doesn't seem that big because we can express it succinctly, but in reality, it is an enormous number.
 To give you an idea, here are some relative scales:
+
+2^256^看起来并不大，因为我们可以用简洁的方式表达它，但事实上，这是一个巨大的数字。 为了给您一个概念，这里有一些相对的规模：
 
 ++++
 <dl><dt class="plain">2<sup>256</sup> ~ 10<sup>77</sup></dt>
 <dd>
 <ul>
-<li>Number of atoms in and on Earth ~ 10<sup>50</sup></li>
-<li>Number of atoms in the solar system ~ 10<sup>57</sup></li>
-<li>Number of atoms in the Milky Way ~ 10<sup>68</sup></li>
-<li>Number of atoms in the universe ~ 10<sup>80</sup></li></ul>
+<li>Number of atoms in and on Earth ~ 10<sup>50</sup> 地球上的原子数量</li>
+<li>Number of atoms in the solar system ~ 10<sup>57</sup> 太阳系中的原子数量</li>
+<li>Number of atoms in the Milky Way ~ 10<sup>68</sup> 银河系中的原子数量</li>
+<li>Number of atoms in the universe ~ 10<sup>80</sup> 宇宙中的原子数量</li></ul>
 </dd></dl>
 ++++
 
 A trillion (10^12^) computers doing a trillion computations every trillionth (10^–12^) of a second for a trillion years is still less than 10^56^ computations.
 
+一万亿（10^12^）台计算机每万亿分之一（10^-12^）秒进行一万亿次计算，一万亿年下来，其计算次数仍然不到10^56^。
+
 Think of finding a private key this way: there are as many possible private keys in Bitcoin as there are atoms in a billion galaxies.
+
+想象一下用这种方法找到私钥：在比特币中，可能的私钥数量与一千亿个星系中的原子数量一样多。
 ****
 
-==== Working with secp256k1
+==== Working with secp256k1 在secp256k1上工作
 
 Since we know all of the parameters for secp256k1, we can verify in Python whether the generator point, _G_, is on the curve __y__^2^ = __x__^3^ + 7:
+
+既然我们知道 `secp256k1` 的所有参数，我们可以在 `Python` 中验证生成器点 _G_ 是否在曲线 __y__^2^ = __x__^3^ + 7 上：
 
 [source,python]
 ----
@@ -537,6 +695,8 @@ include::code-ch03/examples.py[tag=example6]
 ----
 
 Furthermore, we can verify in Python whether the generator point, _G_, has the order _n_:
+
+此外，我们还可以在 `Python` 中验证生成器点 _G_ 是否具有阶 _n_：
 
 [source,python]
 ----
@@ -546,6 +706,8 @@ include::code-ch03/examples.py[tag=example7]
 Since we know the curve we will work in, this is a good time to create a subclass in Python to work exclusively with the parameters for secp256k1.
 We'll define the equivalent `FieldElement` and `Point` objects, but specific to the secp256k1 curve.
 Let's start by defining the field we'll be working in:
+
+因为我们知道将要工作的曲线，所以这是一个在 `Python` 中创建一个子类的好时机，专门用于处理 `secp256k1` 的参数。 我们将定义等价的 `FieldElement` 和 `Point` 对象，但具体针对 `secp256k1` 曲线。 让我们从定义我们将要工作的域开始：
 
 [source,python]
 ----
@@ -557,7 +719,11 @@ include::code-ch03/ecc.py[tag=source5]
 We're subclassing the `FieldElement` class so we don't have to pass in _P_ all the time.
 We also want to display a 256-bit number consistently by filling 64 characters so we can see any leading zeros.
 
+我们继承了 `FieldElement` 类，这样我们就不需要在每次都传入 _P_。 我们也希望一致地显示一个256位的数字，通过填充64个字符，这样我们就可以看到任何前导零。
+
 Similarly, we((("S256Point class", "creating"))) can define a point on the secp256k1 curve and call it `S256Point`:
+
+同样，我们可以定义一个在 `secp256k1` 曲线上的点，并称之为 `S256Point`：
 
 [source,python]
 ----
@@ -567,10 +733,17 @@ include::code-ch03/ecc.py[tag=source7]
 ----
 <1> In case we initialize with the point at infinity, we need to let _x_ and _y_ through directly instead of using the `S256Field` class.
 
+如果我们用无穷远处的点初始化，我们需要直接通过 _x_ 和 _y_，而不是使用 `S256Field` 类。
+
 We now have an easier way to initialize a point on the secp256k1 curve, without having to define +a+ and +b+ every time like we have to with the `Point` class.
+
+现在，我们有一种更简单的方法来初始化 `secp256k1` 曲线上的点，无需像使用 `Point` 类时每次都定义 +a+ 和 +b+。
 
 We can also define `__rmul__` a bit more efficiently, since we know the order of the group, _n_.
 Since we're coding Python, we'll name this with a capital `N` to make it clear that `N` is a constant:
+
+由于我们知道群的阶 _n_，我们还可以更有效地定义 `__rmul__`：
+既然我们在编写 `Python` 代码，我们会用大写的 `N` 来命名，以表明 `N` 是一个常数：
 
 [source,python]
 ----
@@ -583,7 +756,11 @@ include::code-ch03/ecc.py[tag=source8]
 <1> We can mod by _n_ because _nG_ = 0.
 That is, every _n_ times we cycle back to zero or the point at infinity.
 
+我们可以模 _n_，因为 _nG_ = 0。 也就是说，每 _n_ 次我们循环回到零或者无穷远处的点。
+
 We can now define _G_ directly and keep it around since we'll be using it a lot going forward:
+
+现在，我们可以直接定义 _G_ 并将其保留下来，因为我们在后续会经常使用它：
 
 [source,python]
 ----
@@ -592,58 +769,84 @@ include::code-ch03/ecc.py[tag=source10]
 
 Now((("", startref="ECsecp03")))((("", startref="secp03")))((("", startref="ECCsecp03"))) checking that the order of _G_ is _n_ is trivial:
 
+现在，检查 _G_ 的阶是否为 _n_ 是简单的：
+
 [source,python]
 ----
 include::code-ch03/examples.py[tag=example8]
 ----
 
-=== Public Key Cryptography
+=== Public Key Cryptography 公钥密码学
 
 At((("elliptic curve cryptography", "public key cryptography")))((("public key cryptography", "asymmetric equation"))) last, we have the tools that we need to do public key cryptography operations.
 The key operation that we need is _P_ = _eG_, which is an asymmetric equation.
 We can easily compute _P_ when we know _e_ and _G_, but we cannot easily compute _e_ when we know _P_ and _G_.
 This is the discrete log problem described earlier.
 
+在上一节中，我们已经有了进行公钥密码学操作所需的工具。我们需要的关键操作是 _P_ = eG，这是一个非对称方程。当我们知道 _e_ 和 _G_ 时，我们可以很容易地计算 _P_，但我们无法很容易地计算 _e_，当我们知道 _P_ 和 _G_。这就是前面描述的离散对数问题。
+
 The difficulty of discrete log will be essential to understanding signing and verification algorithms.
+
+离散对数的难度将是我们理解签名和验证算法的关键。
 
 Generally, we call _e_ the _private key_ and _P_ the _public key_.
 Note here that the private key is a single 256-bit number and the public key is a coordinate (_x_,_y_), where _x_ and _y_ are _each_ 256-bit numbers.
 
-=== Signing and Verification
+通常，我们称 _e_ 为私钥，称 _P_ 为公钥。需要注意的是，私钥是一个256位的数字，公钥是一个坐标(_x_,_y_)，其中 _x_ 和 _y_ 都是256位的数字。
+
+=== Signing and Verification 签名和验证
 
 To((("elliptic curve cryptography", "signing and verification", id="ECCsign03")))((("signing and verification", "purpose of"))) set up the motivation for why signing and verification exists, imagine this scenario.
 You want to prove that you are a really good archer, like at the level where you can hit any target you want within 500 yards as opposed to being able to hit any particular target.
+
+为了设定签名和验证的动机，想象一下这个场景。你想证明你是一个非常好的弓箭手，比如你可以在500码内射中任何你想射中的目标，而不是只能射中某个特定的目标。
 
 Now, if someone could observe you and interact with you, proving this would be easy.
 Perhaps they would position your son 400 yards away with an apple on his head and challenge you to hit that apple with an arrow.
 You, being a very good archer, could do this and prove your expertise.
 The target, if specified by the challenger, makes your archery skill easy to verify.
 
+现在，如果有人能观察你并与你互动，证明这一点很容易。也许他们会把你的儿子放在400码远的地方，头上放一个苹果，然后挑战你用箭射中那个苹果。作为一个非常好的弓箭手，你可以做到这一点，证明你的专长。如果挑战者指定目标，那么你的射箭技能就很容易验证。
+
 Unfortunately, this doesn't scale very well.
 If, for example you wanted to prove this to 10 people, you would have to shoot 10 different arrows at 10 different targets from 10 different challenges.
 You could try to do something like have 10 people watch you shoot a single arrow, but since they can't all choose the target, they can never be sure that you're not just good at hitting one particular target instead of an arbitrary target.
 What we want is something that you can do once, that requires no interaction back and forth with the verifiers, but that still proves that you are indeed, a good archer that can hit _any_ target.
 
+不幸的是，这种方法扩展性不好。例如，如果你想向10个人证明这一点，你将不得不向10个不同的目标射出10支不同的箭，接受10个不同的挑战。你可以尝试让10个人观察你射出一支箭，但由于他们不能选择目标，他们永远无法确定你只是擅长射中一个特定的目标，而不是任意目标。我们需要的是一次性完成，不需要与验证者进行交互，但仍然能证明你确实是一个能射中任何目标的优秀弓箭手。
+
 If, for example, you simply shot an arrow into a target of your choosing, the people observing afterward wouldn't necessarily be convinced.
 After all, you might have painted the target around wherever your arrow happened to land.
 So what can you do?
+
+例如，如果你只是向自己选择的目标射出一支箭，那么观察你的人后来未必会被说服。毕竟，你可能会在箭落点周围画一个目标。那么你能做什么呢？
 
 Here's a very clever thing you can do.
 Inscribe the tip of the arrow with the position of the target that you're hitting ("apple on top of my son's head") and then hit that target with your arrow.
 Now anyone seeing the target can take an X-ray machine and look at the tip of the embedded arrow and see that the tip indeed says exactly where it was going to hit.
 The tip clearly had to be inscribed before the arrow was shot, so this can prove you are actually  a good archer (provided the actual target isn't just one that you've practiced hitting over and over).
 
+这里有一个非常聪明的做法。在箭头刻上你要射中的目标的位置（“我儿子头上的苹果”），然后射中那个目标。现在，任何看到目标的人都可以拿一台X光机，看看嵌入箭头的尖端，看看尖端是否确实表示了它将要射中的位置。箭头显然是在射出之前刻上的，所以这可以证明你实际上是一个优秀的弓箭手（前提是实际目标不是你反复练习射中的目标）。
+
 This is the same technique we're using with signing and verification, except what we're proving isn't that we're good archers, but that we know a secret number.
 We want to prove possession of the secret without revealing the secret itself.
 We do this by putting the target into our calculation and hitting that target.
 
+我们在签名和验证中使用的就是这种技术，只不过我们要证明的不是我们是优秀的弓箭手，而是我们知道一个秘钥数字。我们想要证明拥有秘钥，而不揭示秘钥本身。我们通过将目标纳入我们的计算并射中该目标来实现这一点。
+
 Ultimately this is going to be used in transactions, which will prove that the rightful owners of the secrets are spending the bitcoins.
 
-==== Inscribing the Target
+最终，这将被用于交易，证明比特币的秘钥所有者正在花费比特币。
+
+==== Inscribing the Target 刻目标
 
 The((("signing and verification", "signature algorithm")))((("signature algorithm")))((("Elliptic Curve Digital Signature Algorithm (ECDSA)")))((("ECDSA (Elliptic Curve Digital Signature Algorithm)"))) inscribing of the target depends on the _signature algorithm_, and in our case that algorithm is called the Elliptic Curve Digital Signature Algorithm, or ECDSA for short.
 
+刻目标取决于签名算法，而在我们的情况下，这个算法被称为椭圆曲线数字签名算法，简称 `ECDSA`。
+
 The secret in our case is _e_ satisfying the following:
+
+我们的秘钥是满足以下条件的 _e_：
 
 ++++
 <ul class="simplelist">
@@ -653,8 +856,12 @@ The secret in our case is _e_ satisfying the following:
 
 where _P_ is the public key and _e_ is the private key.
 
+其中 _P_ 是公钥，_e_ 是私钥。
+
 The target that we're going to aim at is a random 256-bit number, _k_.
 We then do this:
+
+我们将要瞄准的目标是一个随机的256位数字，_k_。 然后我们进行如下操作：
 
 ++++
 <ul class="simplelist">
@@ -667,7 +874,11 @@ _R_ is now the target that we're aiming for.
 In fact, we're only going to care about the _x_ coordinate of _R_, which we'll call _r_.
 You may have guessed already that _r_ here stands for _random_.
 
+_R_ 现在是我们瞄准的目标。 事实上，我们只关心 _R_ 的 _x_ 坐标，我们称之为 _r_。 你可能已经猜到，这里的 _r_ 代表 _random_（随机）。
+
 We claim at this point that the following equation is equivalent to the discrete log problem:
+
+我们在此声称，以下方程与离散对数问题等价：
 
 ++++
 <ul class="simplelist">
@@ -677,6 +888,8 @@ We claim at this point that the following equation is equivalent to the discrete
 
 where _k_ was chosen randomly, _u_,_v_ ≠ 0 can be chosen by the signer, and _G_ and _P_ are known. This is due to the fact that:
 
+其中 _k_ 是随机选择的，_u_,_v_ ≠ 0可以由签名者选择，而 _G_ 和 _P_ 是已知的。这是因为：
+
 ++++
 <ul class="simplelist">
 <li><em>uG</em> + <em>vP</em> = <em>kG</em> implies <em>vP</em> = (<em>k</em> – <em>u</em>)<em>G</em></li>
@@ -684,6 +897,8 @@ where _k_ was chosen randomly, _u_,_v_ ≠ 0 can be chosen by the signer, and _G
 ++++
 
 Since _v_ ≠ 0, we can divide by the scalar multiple _v_:
+
+由于 _v_ ≠ 0，我们可以除以标量倍数 _v_：
 
 ++++
 <ul class="simplelist">
@@ -694,6 +909,8 @@ Since _v_ ≠ 0, we can divide by the scalar multiple _v_:
 
 If we know _e_, we have:
 
+如果我们知道 _e_，那么我们有：
+
 ++++
 <ul class="simplelist">
 <li><em>eG</em> = ((<em>k</em> – <em>u</em>)/<em>v</em>)<em>G</em> or <em>e</em> = (<em>k</em> – <em>u</em>)/<em>v</em></li>
@@ -702,12 +919,18 @@ If we know _e_, we have:
 
 This means that any (_u_,_v_) combination that satisfies the preceding equation will suffice.
 
+这意味着任何满足前述方程的(_u_,_v_)组合都足够了。
+
 Now suppose we don't know _e_, but we can solve __uG + vP = kG__ with some (_u_,_v_) combination.
 Then __e = (k–u)/v__ gives a solution to _P_ = _eG_ while knowing only _P_ and _G_.
 In other words, we'd have broken the discrete log problem.
 
+现在假设我们不知道 _e_，但我们可以用一些(_u_,_v_)组合求解 __uG + vP = kG__。 那么 __e = (k–u)/v__ 给出了一个在只知道 _P_ 和 _G_ 的情况下解决 _P_ = _eG_ 的方案。 换句话说，我们已经破解了离散对数问题。
+
 This means to provide a correct _u_ and _v_, we either have to break the discrete log problem or know the secret _e_.
 Since we assume discrete log is hard, we can say _e_ is assumed to be known by the one who came up with _u_ and _v_.
+
+这意味着要提供正确的 _u_ 和 _v_，我们必须要么破解离散对数问题，要么知道秘钥 _e_。 由于我们假设离散对数是困难的，我们可以说是提出 _u_ 和 _v_ 的人假设知道 _e_。
 
 One subtle thing that we haven't talked about is that we have to incorporate the purpose of our shooting.
 This is a contract that gets fulfilled as a result of shooting at the target.
@@ -715,11 +938,15 @@ William Tell, for example, was shooting so that he could save his son (shoot the
 You can imagine there would be other reasons to hit the target and other "rewards" that the person hitting the target would receive.
 This has to be incorporated into our equations.
 
+我们还没有讨论的一个微妙之处是，我们必须把我们的射击目的纳入考虑。 这是一个在射击目标的过程中实现的合同。 例如，威廉·泰尔是为了救他的儿子而射击（射中目标，你就可以救你的儿子）。 你可以想象，射中目标可能有其他原因，击中目标的人会获得其他"奖励"。 这必须纳入我们的方程。
+
 In((("hashes", "signature hash")))((("signing and verification", "signature hash")))((("signature hash"))) signature/verification parlance, this is called the _signature hash_.
 A hash is a deterministic function that takes arbitrary data into data of fixed size.
 This is a fingerprint of the message containing the intent of the shooter, which anyone verifying the message already knows.
 We denote this with the letter _z_.
 This is incorporated into our _uG_ + _vP_ calculation this way:
+
+在签名/验证术语中，这被称为签名散列。 散列是一个确定性函数，它将任意数据转换为固定大小的数据。 这是包含射手意图的消息的指纹，任何验证消息的人都已知道。 我们用字母 _z_ 表示这个。 这是这样纳入我们的_uG_ + _vP_ 计算的：
 
 ++++
 <ul class="simplelist">
@@ -730,7 +957,11 @@ This is incorporated into our _uG_ + _vP_ calculation this way:
 Since _r_ is used in the calculation of _v_, we now have the tip of the arrow inscribed.
 We also have the intent of the shooter incorporated into _u_, so both the reason for shooting and the target that is being aimed at are now part of the equation.
 
+由于 _r_ 用于计算 _v_，所以我们现在有了箭头上的刻痕。 我们还将射手的目的纳入了 _u_，因此射击的原因和瞄准的目标现在都是方程的一部分。
+
 To make the equation work, we can calculate _s_:
+
+为了使方程成立，我们可以计算 _s_：
 
 ++++
 <ul class="simplelist">
@@ -745,7 +976,11 @@ To make the equation work, we can calculate _s_:
 
 This is the basis of the signature algorithm, and the two numbers in a signature are _r_ and _s_.
 
+这是签名算法的基础，签名中的两个数字是 _r_ 和 _s_。
+
 Verification is straightforward:
+
+验证很简单：
 
 ++++
 <ul class="simplelist">
@@ -755,10 +990,12 @@ Verification is straightforward:
 ++++
 
 [WARNING]
-.Why We Don't Reveal `k`
+.Why We Don't Reveal `k` 为什么我们不透露 `k`
 ====
 At this point, you might be wondering why we don't reveal _k_ and instead reveal the _x_ coordinate of _R_, or _r_.
 If we were to reveal _k_, then:
+
+在这个时候，你可能会想知道为什么我们不透露 _k_，而是透露 _R_ 的 _x_ 坐标，或者 _r_。 如果我们透露 _k_，那么：
 
 ++++
 <ul class="simplelist">
@@ -774,22 +1011,33 @@ If we were to reveal _k_, then:
 means that our secret would be revealed, which would defeat the whole purpose of the signature.
 We can, however, reveal _R_.
 
+意味着我们的秘钥将被揭示，这将抵消签名的整个目的。然而，我们可以透露 _R_。
+
 It's worth mentioning again: make sure you're using truly random numbers for _k_, as even accidentally revealing _k_ for a known signature is the equivalent of revealing your secret and losing your funds!
+
+再次值得提请注意：确保你为 _k_ 使用真正的随机数，因为即使意外透露已知签名的 _k_，也相当于透露你的秘钥并失去你的资金！
+
 ====
 
-==== Verification in Depth
+==== Verification in Depth 深入的验证过程
 
 Signatures((("signing and verification", "verification process"))) sign some fixed-length value (our "contract")—in our case, something that's 32 bytes.
 The fact that 32 bytes is 256 bits is not a coincidence, as the thing we're signing will be a scalar for _G_.
+
+签名验证一些固定长度的值（我们的"合约"）—— 在我们的例子中，是32字节长。 32字节等于256位并不是巧合，因为我们签名的对象将是_G_的标量。
 
 To guarantee that the thing we're signing is 32 bytes, we hash the document first.
 In Bitcoin, the hashing function is hash256, or two rounds of sha256.
 This guarantees the thing that we're signing is exactly 32 bytes.
 We will call the result of the hash the _signature hash_, or _z_.
 
+为了保证我们签名的对象是32字节，我们首先对文档进行哈希。 在比特币中，哈希函数是hash256，也就是两轮的sha256。 这保证了我们签名的对象恰好是32字节。 我们将哈希的结果称为签名哈希，或者 _z_。
+
 The signature that we are verifying has two components, (_r_,_s_).
 _r_ is the _x_ coordinate of some point _R_ that we'll come back to.
 The formula for _s_ is as above:
+
+我们要验证的签名有两个部分，(_r_,_s_)。 _r_ 是我们稍后会提到的某个点 _R_ 的 _x_ 坐标。 _s_ 的公式如上：
 
 ++++
 <ul class="simplelist">
@@ -799,7 +1047,11 @@ The formula for _s_ is as above:
 
 Keep in mind that we know _e_ (_P_ = _eG_, or what we're proving we know in the first place), we know _k_ (_kG_ = _R_, remember?), and we know _z_.
 
+要记住，我们知道 _e_（_P_ = _eG_，或者我们首先证明我们知道的东西），我们知道 _k_（_kG_ = _R_，记得吗？），我们知道 _z_。
+
 We will now construct _R_ = _uG_ + _vP_ by defining _u_ and _v_ this way:
+
+现在，我们将通过以下方式定义 _u_ 和 _v_ 来构造 _R_ = uG + vP：
 
 ++++
 <ul class="simplelist">
@@ -808,7 +1060,7 @@ We will now construct _R_ = _uG_ + _vP_ by defining _u_ and _v_ this way:
 </ul>
 ++++
 
-Thus:
+Thus: 因此：
 
 ++++
 <ul class="simplelist">
@@ -817,6 +1069,8 @@ Thus:
 ++++
 
 We know _s_ = (_z_ + _re_)/_k_, so:
+
+我们知道 _s_ = (_z_ + _re_)/_k_，所以：
 
 ++++
 <ul class="simplelist">
@@ -828,47 +1082,65 @@ We've successfully chosen _u_ and _v_ in such a way as to generate _R_ as we int
 Furthermore, we used _r_ in the calculation of _v_, proving we knew what _R_ would be.
 The only way we can know the details of _R_ beforehand is if we know _e_.
 
+我们成功地选择了 _u_ 和 _v_，以生成我们预期的 _R_。 此外，我们在计算 _v_ 时使用了 _r_，证明我们知道 _R_ 会是什么。 我们唯一能在事先知道 _R_ 的细节的方法就是我们知道 _e_。
+
 To wit, here are the steps:
 
-1. We are given (_r_,_s_) as the signature, _z_ as the hash of the thing being signed, and _P_ as the public key (or public point) of the signer.
-2. We calculate _u_ = __z__/__s__, _v_ = __r__/__s__.
-3. We calculate _uG_ + _vP_ = _R_.
-4. If __R__'s _x_ coordinate equals _r_, the signature is valid.
+具体步骤如下：
+
+1. We are given (_r_,_s_) as the signature, _z_ as the hash of the thing being signed, and _P_ as the public key (or public point) of the signer. 我们将(_r_,_s_)作为签名，_z_ 作为被签名事物的哈希，_P_ 作为签名者的公钥（或公点）。
+2. We calculate _u_ = __z__/__s__, _v_ = __r__/__s__. 我们计算 _u_ = __z__/__s__, _v_ = __r__/__s__。
+3. We calculate _uG_ + _vP_ = _R_. 我们计算 _uG_ + _vP_ = _R_。
+4. If __R__'s _x_ coordinate equals _r_, the signature is valid. 如果 __R__ 的 _x_ 坐标等于 _r_，则签名有效。
 
 [NOTE]
-.Why Two Rounds of sha256?
+.Why Two Rounds of sha256? 为什么需要两轮的sha256？
 ====
 The calculation of _z_ requires two rounds of sha256, or hash256.
 You may be wondering why there are two rounds when only one is necessary to get a 256-bit number.
 The reason is for security.
 
+计算 _z_ 需要两轮的sha256，或者hash256。 你可能会想知道为什么需要两轮，而只需要一轮就可以得到一个256位的数字。 原因是出于安全性。
+
 There is a well-known hash collision attack on SHA-1 called a _birthday attack_ that makes finding collisions much easier.
 https://security.googleblog.com/2017/02/announcing-first-sha1-collision.html[Google found a SHA-1 collision] using some modifications of a birthday attack and a lot of other things in 2017.
 Using SHA-1 twice, or _double SHA-1_, is the way to defeat or slow down some forms of this attack.
 
+有一种针对 `SHA-1` 的著名哈希碰撞攻击叫做生日攻击，这使得找到碰撞变得容易得多。 https://security.googleblog.com/2017/02/announcing-first-sha1-collision.html[Google在2017年找到了一个 SHA-1 的碰撞]，通过一些生日攻击的修改和其他很多东西。 使用 `SHA-1` 两次，或者双重 `SHA-1`，是击败或延缓这种攻击某些形式的方法。
+
 Two rounds of sha256 don't necessarily prevent all possible attacks, but doing two rounds is a defense against some potential pass:[<span class="keep-together">weaknesses</span>].
+
+两轮的 `sha256` 不一定能阻止所有可能的攻击，但是做两轮可以防御一些潜在弱点。
+
 ====
 
-==== Verifying a Signature
+==== Verifying a Signature 验证签名
 
 We((("signing and verification", "signature verification", id="SAVsign03"))) can now verify a signature using some of the primitives that we have:
+
+我们现在可以使用一些基本组件来验证签名：
 
 [source,python]
 ----
 include::code-ch03/examples.py[tag=example9]
 ----
-<1> Note that we use Fermat's little theorem for 1/_s_, since _n_ is prime.
+<1> Note that we use Fermat's little theorem for 1/_s_, since _n_ is prime. 注意，由于 _n_ 是质数，我们在这里使用费马小定理来计算 1/s。
 <2> _u_ = _z_/_s_.
 <3> _v_ = _r_/_s_.
 <4> _uG_ + _vP_ = (_r_,_y_).
+
 We need to check that the _x_ coordinate is _r_.
+
+我们需要检查 _x_ 坐标是否为 _r_。
 
 include::code-ch03/answers.py[tag=exercise6,indent=0]
 
-==== Programming Signature Verification
+==== Programming Signature Verification 编程验证签名
 
 We already have a class `S256Point`, which is the public point for the private key.
 We((("Signature class", "creating"))) create a `Signature` class that houses the _r_ and _s_ values:
+
+我们已经有一个 `S256Point` 类，它是私钥的公点。我们创建一个 `Signature` 类来存储 _r_ 和 _s_ 值：
 
 [source,python]
 ----
@@ -877,7 +1149,11 @@ include::code-ch03/ecc.py[tag=source11]
 
 We will be doing more with this class in <<chapter_serialization>>.
 
+我们将在<<章节序列化>>中对此类进行更多操作。
+
 We can now write the `verify` method on `S256Point` based on this:
+
+现在我们可以根据此目标在 `S256Point` 上编写 `verify` 方法：
 
 [source,python]
 ----
@@ -885,64 +1161,80 @@ class S256Point(Point):
     ...
 include::code-ch03/ecc.py[tag=source12]
 ----
-<1> `s_inv` (1/_s_) is calculated using Fermat's little theorem on the order of the group, _n_, which is prime.
+<1> `s_inv` (1/_s_) is calculated using Fermat's little theorem on the order of the group, _n_, which is prime. `s_inv`（1/_s_）使用费马小定理在群的阶 _n_ 上计算，_n_ 是质数。
 <2> _u_ = _z_/_s_.
-Note that we can mod by _n_ as that's the order of the group.
+Note that we can mod by _n_ as that's the order of the group. 请注意，我们可以模 _n_，因为那是群的阶。
 <3> _v_ = _r_/_s_.
-Note that we can mod by _n_ as that's the order of the group.
-<4> _uG_ + _vP_ should be _R_.
-<5> We check that the _x_ coordinate is _r_.
+Note that we can mod by _n_ as that's the order of the group. 请注意，我们可以模 _n_，因为那是群的阶。
+<4> _uG_ + _vP_ should be _R_. _uG_ + _vP_ 应该是 R。
+<5> We check that the _x_ coordinate is _r_. 我们检查 _x_ 坐标是否为 _r_。
 
 So, given a public key that is a point on the secp256k1 curve and a signature hash, _z_, we can verify whether a signature is valid or not.((("", startref="SAVsign03")))
 
-==== Signing in Depth
+所以，给定一个 `secp256k1` 曲线上的公钥和一个签名哈希 _z_，我们可以验证签名是否有效。
+
+==== Signing in Depth 签名的深入理解
 
 Given((("signing and verification", "signing process"))) that we know how verification should work, signing is straightforward.
 The only missing step is figuring out what _k_, and thus _R_ = _kG_, to use.
 We do this by choosing a random _k_.
 
+既然我们知道验证应该如何进行，签名过程就很简单了。唯一缺失的步骤是找出应该使用什么 _k_，从而得出 _R_ = _kG_。 我们通过选择一个随机的 _k_ 来实现这一点。
+
 The signing procedure is as follows:
 
-1. We are given _z_ and know _e_ such that _eG_ = _P_.
-2. Choose a random _k_.
-3. Calculate _R_ = _kG_ and _r_ = _x_ coordinate of _R_.
-4. Calculate _s_ = (_z_ + _re_)/_k_.
-5. Signature is (_r_,_s_).
+签名过程如下：
+
+1. We are given _z_ and know _e_ such that _eG_ = _P_. 我们已知 _z_ 并知道 _e_，使得 _eG_ = _P_。
+2. Choose a random _k_. 选择一个随机的 _k_。
+3. Calculate _R_ = _kG_ and _r_ = _x_ coordinate of _R_. 计算 _R_ = _kG_ 和 _r_ = _x_ 的 _x_ 坐标。
+4. Calculate _s_ = (_z_ + _re_)/_k_. 计算 _s_ = (_z_ + _re_)/_k_。
+5. Signature is (_r_,_s_). 签名是(_r_,_s_)。
 
 Note that the public key (pubkey) _P_ has to be transmitted to whoever wants to verify it, and _z_ must be known by the verifier.
 We'll see later that _z_ is computed and _P_ is sent along with the signature.
 
-==== Creating a Signature
+请注意，公钥（pubkey）_P_ 必须传输给想要验证它的人，而 _z_ 必须由验证者知道。 稍后我们会看到 _z_ 是计算出来的，而 _P_ 是与签名一起发送的。
+
+==== Creating a Signature 创建签名
 
 We((("signing and verification", "signature creation", id="SAVsig03"))) can now create a signature.
 
-.Be Careful with Random Number Generation
+我们现在可以创建一个签名。
+
+.Be Careful with Random Number Generation 小心随机数生成
 [WARNING]
 ====
 Note((("random number generation"))) that using something like the `random` library from Python to do cryptography is generally not a good idea.
 This library is for teaching purposes only, so please don't use any of the code explained to you here for production purposes.
+
+注意，像 `Python` 的 `random` 库这样的工具通常不适合用于密码学。 这个库仅用于教学目的，所以请勿将此处解释的任何代码用于生产目的。
 ====
 
 We do this using some of the primitives that we have:
+
+我们使用一些基本组件来实现这一目标：
 
 [source,pycon]
 ----
 include::code-ch03/examples.py[tag=example10]
 ----
 <1> This is an example of a "brain wallet," which is a way to keep the private key in your head without having to memorize something too difficult.
-Please don't use this for a real secret.
-<2> This is the signature hash, or hash of the message that we're signing.
-<3> We're going to use a fixed _k_ here for demonstration purposes.
-<4> _kG_ = (_r_,_y_), so we take the _x_ coordinate only.
+Please don't use this for a real secret. 这是一个“脑钱包”的例子，它是一种在不记住过于困难的内容的情况下将私钥保存在脑海中的方法。 请勿将此目标用于实际秘钥。
+<2> This is the signature hash, or hash of the message that we're signing. 这是签名哈希，或者是我们要签名的消息的哈希。
+<3> We're going to use a fixed _k_ here for demonstration purposes. 我们在这里将使用一个固定的_k_，以供演示目的。
+<4> _kG_ = (_r_,_y_), so we take the _x_ coordinate only. _kG_ = (_r_,_y_)，所以我们只取 _x_ 坐标。
 <5> _s_ = (_z_ + _re_)/_k_.
-We can mod by _n_ because we know this is a cyclical group of order _n_.
-<6> The public point needs to be known by the verifier.
+We can mod by _n_ because we know this is a cyclical group of order _n_.  我们知道这是一个循环群，阶数为 _n_，所以我们可以在 _n_ 上取模。 
+<6> The public point needs to be known by the verifier. 验证者需要知道公点。
 
 include::code-ch03/answers.py[tag=exercise7,indent=0]
 
-==== Programming Message Signing
+==== Programming Message Signing 编程信息签名
 
 To((("PrivateKey class", "creating"))) program message signing, we now create a `PrivateKey` class, which will house our secret:
+
+为了编程消息签名，我们现在创建一个 `PrivateKey` 类，它将包含我们的密钥：
 
 [source,python]
 ----
@@ -950,7 +1242,11 @@ include::code-ch03/ecc.py[tag=source13]
 ----
 <1> We keep around the public key, `self.point`, for convenience.
 
+我们为了方便保留公钥 `self.point`。
+
 We then create the `sign` method:
+
+然后我们创建 `sign` 方法：
 
 [source,python]
 ----
@@ -968,23 +1264,27 @@ class PrivateKey:
         return Signature(r, s) # <6>
 ----
 <1> `randint` chooses a random integer from ++[0,__n__)++.
-Please don't use this function in production, because the random number from this library is not nearly random enough.
-<2> _r_ is the _x_ coordinate of _kG_.
-<3> We use Fermat's little theorem again, and _n_, which is prime.
+Please don't use this function in production, because the random number from this library is not nearly random enough. `randint`` 从 ++[0,__n__)++ 中选择一个随机整数。请勿在生产环境中使用此函数，因为此库生成的随机数远未足够随机。
+<2> _r_ is the _x_ coordinate of _kG_. _r_ 是 _kG_ 的 _x_ 坐标。
+<3> We use Fermat's little theorem again, and _n_, which is prime. 我们再次使用费马小定理，_n_ 是质数。
 <4> _s_ = (_z_ + _re_)/_k_.
-<5> It turns out that using the low-_s_ value will get nodes to relay our transactions.
-This is for malleability reasons.
-<6> We return a `Signature` object from the class defined earlier.
+<5> It turns out that using the low-_s_ value will get nodes to relay our transactions.  
+This is for malleability reasons. 结果证明，使用低 _s_ 值可以让节点中继我们的交易。这是为了防止篡改。
+<6> We return a `Signature` object from the class defined earlier. 我们从之前定义的类返回一个 `Signature` 对象。
 
 [role="pagebreak-before less_space"]
-.Importance of a Unique `k`
+.Importance of a Unique `k` 唯一 `k` 的重要性
 ****
 There's an important rule in signatures that utilize a random component like we have here: the _k_ needs to be unique per signature.
 That is, it cannot get reused.
 In fact, a _k_ that's reused will result in you revealing your secret!
 Why?
 
+在我们这里的签名中，有一个重要的规则：随机组件 _k_ 需要每个签名都是唯一的。 也就是说，它不能被重复使用。 实际上，重复使用 _k_ 将会导致你泄露你的秘钥！ 为什么？
+
 If our secret is _e_ and we are reusing _k_ to sign __z__~1~ and __z__~2~:
+
+如果我们的秘钥是 _e_ ，并且我们重复使用 _k_ 来签署 __z__~1~ 和 __z__~2~：
 
 ++++
 <ul class="simplelist">
@@ -1001,8 +1301,13 @@ If our secret is _e_ and we are reusing _k_ to sign __z__~1~ and __z__~2~:
 If anyone sees both signatures, they can use this formula and find our secret!
 The https://arstechnica.com/gaming/2010/12/ps3-hacked-through-poor-implementation-of-cryptography/[PlayStation 3 hack] back in 2010 was due to the reuse of the _k_ value in multiple signatures.
 
+如果有人看到这两个签名，他们可以使用这个公式找到我们的秘钥！2010年的https://arstechnica.com/gaming/2010/12/ps3-hacked-through-poor-implementation-of-cryptography/[PlayStation 3黑客事件]就是因为多个签名中重复使用了 _k_ 值。
+
 To combat this, there is a deterministic _k_ generation standard that uses the secret and _z_ to create a unique, deterministic _k_ every time.
 The specification is in https://tools.ietf.org/html/rfc6979[RFC 6979] and the code changes to look like this:
+
+为了防止这种情况，有一种确定性 _k_ 生成标准，它使用秘钥和 _z_ 每次都创建一个唯一的确定性 _k_。规范在https://tools.ietf.org/html/rfc6979[RFC 6979]中，代码更改如下：
+
 
 [source,python]
 ----
@@ -1011,23 +1316,31 @@ class PrivateKey:
 include::code-ch03/ecc.py[tag=source14]
 ----
 <1> We are using the deterministic _k_ instead of a random one.
-Everything else about `sign` remains the same.
-<2> This algorithm returns a candidate that's suitable.
+Everything else about `sign` remains the same. 我们使用确定性 _k_ 而不是随机 _k_。关于 `sign` 的其他一切都不变。
+<2> This algorithm returns a candidate that's suitable. 这个算法返回一个合适的候选值。
 
 A deterministic _k_ will be unique with very high probability.
 This is because sha256 is collision-resistant, and no collisions have been found to date.
+
+确定性 _k_ 将具有非常高的唯一性概率。这是因为 `sha256` 具有抗碰撞性，到目前为止还没有发现碰撞。
 
 Another benefit from a testing perspective is that the signature for a given _z_ and the same private key will be the same every time.
 This makes debugging much easier and unit tests a lot easier to write.
 In addition, transactions that use deterministic _k_ will create the same transaction every time, as the signature will not change.
 This makes transactions less malleable (more on that in <<chapter_segwit>>).((("", startref="MTelipcurcrypt03")))((("", startref="SAVsig03")))((("", startref="ECCsign03")))
 
+从测试的角度看，另一个好处是，对于给定的 _z_ 和相同的私钥，每次签名都是相同的。这使得调试更容易，单元测试也更易于编写。此外，使用确定性 _k_ 的交易每次都会创建相同的交易，因为签名不会改变。这使得交易更不易被篡改（关于这个在<<chapter_segwit>>中会有更多的讨论）。(((“”, startref=“MTelipcurcrypt03”)))(((“”, startref=“SAVsig03”)))(((“”, startref=“ECCsign03”)))
+
 ****
 
-### Conclusion
+### Conclusion 结论
 
 We've covered elliptic curve cryptography and can now prove that we know a secret by signing something. We can also verify that the person with the secret actually signed a message.
 Even if you don't read another page in this book, you've learned to implement what was once considered https://en.wikipedia.org/wiki/Export_of_cryptography_from_the_United_States["weapons-grade munitions"].
 This is a major step in your journey and will be essential for the rest of the book!
 
+我们已经介绍了椭圆曲线密码学，现在可以通过签名来证明我们知道一个秘钥。我们也可以验证拥有秘钥的人是否实际上签署了一个信息。 即使你不再阅读这本书的其他内容，你已经学会了实现曾经被认为是https://en.wikipedia.org/wiki/Export_of_cryptography_from_the_United_States[“武器级弹药”]的东西。 这是你旅程中的一个重要步骤，对于书的其余部分来说至关重要！
+
 We now turn to serializing a lot of these structures so that we can store them on disk and send them over the network.
+
+现在我们将转向序列化这些结构，以便我们可以在磁盘上存储它们并将其发送到网络上。
