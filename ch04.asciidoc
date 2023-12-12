@@ -1,6 +1,6 @@
 [[chapter_serialization]]
 
-== Serialization
+== Serialization 序列化
 
 [.lead]
 We've((("mathematical tools", "serialization", id="MTserial04"))) created a lot of classes thus far, including `PrivateKey`, `S256Point`, and `Signature`.
@@ -9,51 +9,74 @@ This is where serialization comes into play.
 We want to communicate or store a `S256Point` or a `Signature` or a `PrivateKey`.
 Ideally, we want to do this efficiently, for reasons we'll see in <<chapter_networking>>.
 
-=== Uncompressed SEC Format
+到目前为止，我们已经创建了许多类，包括 `PrivateKey`、`S256Point` 和 `Signature`。 现在我们需要开始考虑如何将这些对象传输到网络上的其他计算机，甚至传输到磁盘。 这就是序列化的用武之地。 我们希望传输或存储一个 `S256Point`、一个 `Signature` 或一个 `PrivateKey`。 理想情况下，我们希望高效地完成这些工作，原因我们在 <<chapter_networking>> 中会看到。
+
+=== Uncompressed SEC Format 未压缩的 SEC 格式
 
 We'll((("S256Point class", "serialization of")))((("serialization", "uncompressed SEC format")))((("SEC serialization format", "uncompressed format"))) start with the `S256Point` class, which is the public key class.
 Recall that the public key in elliptic curve cryptography is really a coordinate in the form of (_x_,_y_).
 How can we serialize this data?
 
+我们将从 `S256Point` 类开始，这是公钥类。 回想一下，椭圆曲线密码学中的公钥实际上是一个坐标，形式为 (_x_,_y_)。 我们如何序列化这些数据？
+
 It turns out there's already a standard for serializing ECDSA public keys, called((("Standard for Efficient Cryptography", see="SEC format"))) _Standards for Efficient Cryptography_ (SEC)—and as the word "Efficient" in the name suggests, it has minimal overhead.
 There are two forms of SEC format that we need to be concerned with: uncompressed and compressed. We'll begin with the former, and look at the compressed format in the next section.
 
+事实上，已经有一个用于序列化 `ECDSA` 公钥的标准，称为(((“Standard for Efficient Cryptography”, see=“SEC format”))) Standards for Efficient Cryptography (SEC) —— 正如名字中的“Efficient”一词所暗示的，它具有最小的开销。 我们需要关注两种 SEC 格式：未压缩和压缩。我们将从前者开始，然后在下一节中查看压缩格式。
+
 Here is how the uncompressed SEC format for a given point _P_ = (_x_,_y_) is generated:
 
-1. Start with the prefix byte, which is `0x04`.
-2. Next, append the _x_ coordinate in 32 bytes as a big-endian integer.
-3. Next, append the _y_ coordinate in 32 bytes as a big-endian integer.
+下面是生成给定点 _P_ = (_x_,_y_) 的未压缩 SEC 格式的步骤：
+
+1. Start with the prefix byte, which is `0x04`. 以前缀字节开始，值为 `0x04`。
+2. Next, append the _x_ coordinate in 32 bytes as a big-endian integer. 接下来，将 _x_ 坐标作为大端整数附加 32 个字节。
+3. Next, append the _y_ coordinate in 32 bytes as a big-endian integer. 接下来，将 _y_ 坐标作为大端整数附加 32 个字节。
 
 The uncompressed SEC format is shown in <<uncompressed_sec_format>>.
 
+未压缩的 SEC 格式如图 <<uncompressed_sec_format>> 所示。
+
 [[uncompressed_sec_format]]
-.Uncompressed SEC format
+.Uncompressed SEC format 未压缩的 SEC 格式
 image::images/prbc_0401.png[Uncompressed SEC format]
 
 [NOTE]
-.Big- and Little-Endian
+.Big- and Little-Endian 大端和小端编码
 ====
 The((("serialization", "big- and little-endian encodings")))((("big-endian encoding")))((("little-endian encoding"))) motivation for big- and little-endian encodings is storing a number on disk.
 A number under 256 is easy enough to encode, as a single byte (2^8^) is enough to hold it.
 When it's bigger than 256, how do we serialize the number to bytes?
 
+大端和小端编码的动机是将数字存储在磁盘上。 小于256的数字很容易编码，因为一个字节（2^8^）就足够容纳它。 当数字大于256时，我们如何将数字序列化为字节？
+
 Arabic numerals are read left to right.
 A number like 123 is 100 + 20 + 3 and not 1 + 20 + 300.
 This is what we call big-endian, because the "big end" starts first.
 
+阿拉伯数字是从左到右读取的。 像123这样的数字是100 + 20 + 3，而不是1 + 20 + 300。 这就是我们所说的大端，因为“大端”首先开始。
+
 Computers can sometimes be more efficient using the opposite order, or little-endian—that is, starting with the little end first.
+
+计算机有时使用相反的顺序，或小端，可能会更有效，即首先从小端开始。
 
 Since computers work in bytes, which have 8 bits, we have to think in base 256.
 This means that a number like 500 looks like `01f4` in big-endian—that is, 500 = 1 &#xd7; 256 + 244 (`f4` in hexadecimal).
 The same number looks like `f401` in little-endian.
 
+由于计算机处理的是字节，每个字节有8位，我们必须以256为基数进行思考。 这意味着像500这样的数字在大端中看起来像 `01f4`，即500 = 1 × 256 + 244（在十六进制中为f4）。 同样的数字在小端中看起来像 `f401`。
+
 Unfortunately, some serializations in Bitcoin (like the SEC format _x_ and _y_ coordinates) are big-endian, while others (like the transaction version number in <<chapter_tx_parsing>>) are little-endian.
 This book will let you know which ones are big- versus little-endian.
+
+不幸的是，比特币中的一些序列化（如SEC格式的 _x_ 和 _y_ 坐标）是大端的，而其他一些（如<<事务解析章节>>中的事务版本号）是小端的。 这本书将告诉您哪些是大端与小端。
+
 ====
 
 Creating the uncompressed SEC format serialization is pretty straightforward.
 The trickiest part is converting a 256-bit number into 32 bytes, big-endian.
 Here's how this is done in code:
+
+创建未压缩的 SEC 格式序列化非常直接。 最棘手的部分是将256位数字转换为32字节的大端。 下面是代码中如何实现这一点的：
 
 [source,python]
 ----
@@ -65,7 +88,7 @@ class S256Point(Point):
             + self.y.num.to_bytes(32, 'big')  # <1>
 ----
 <1> In Python 3, you can convert a number to bytes using the `to_bytes` method.
-The first argument is how many bytes it should take up and the second argument is the endianness (see the preceding note).
+The first argument is how many bytes it should take up and the second argument is the endianness (see the preceding note). 在Python 3中，您可以使用 `to_bytes` 方法将数字转换为字节。 第一个参数是它应该占据的字节数，第二个参数是字节序（参见前面的注释）。
 
 include::code-ch04/answers.py[tag=exercise1,indent=0]
 
@@ -73,17 +96,25 @@ include::code-ch04/answers.py[tag=exercise1,indent=0]
 
 Recall((("serialization", "compressed SEC format")))((("SEC serialization format", "compressed format"))) that for any _x_ coordinate, there are at most two _y_ coordinates due to the __y__^2^ term in the elliptic curve equation (<<the_two_possible_values_for_y_are_where_this_vertical_line_intersects_the_curve>>).
 
+回忆一下，由于椭圆曲线方程中的 __y__^2^ 项，对于任何 _x_ 坐标，最多有两个 _y_ 坐标（参见<<这个垂直线与曲线相交的地方>>）。
+
 [role="width-90"]
 [[the_two_possible_values_for_y_are_where_this_vertical_line_intersects_the_curve]]
 .The two possible values for y are where this vertical line intersects the curve
 image::images/prbc_0212.png[Elliptic Curve Vertical Line]
 
+y的可能值为这个垂直线与曲线相交的地方 image::images/prbc_0212.png[椭圆曲线垂直线]
+
 It turns out that even over a finite field, we have the same symmetry.
+
+结果表明，即使在有限域上，我们也有相同的对称性。
 
 This is because for any (_x_,_y_) that satisfies __y__^2^ = __x__^3^ + __ax__ + __b__, (_x_,–__y__) also satisfies the equation.
 Furthermore, in a finite field, –__y__ % _p_ = (_p_ – _y_) % _p_.
 Or, more accurately, if (_x_,_y_) satisfies the elliptic curve equation, (_x_,_p_ – _y_) also satisfies the equation.
 These are the only two solutions for a given _x_, as shown, so if we know _x_, we know the _y_ coordinate has to be either _y_ or _p_ – _y_.
+
+这是因为对于任何满足 __y__^2^ = __x__^3^ + __ax__ + __b__ 的(_x_,_y_)，(_x_,–__y__)也满足方程。 此外，在有限域中，–__y__ % _p_ = (_p_ – _y_) % _p_。 或者更准确地说，如果(_x_,_y_)满足椭圆曲线方程，(_x_,_p_ – _y_)也满足方程。 对于给定的 _x_，这些是唯一的两个解，因此如果我们知道 _x_，我们知道 _y_ 坐标必须是 _y_ 或 _p_ – y。
 
 Since _p_ is a prime number greater than 2, we know that _p_ is odd.
 Thus, if _y_ is even, pass:[<span class="keep-together"><em>p</em> – <em>y</em></span>] (odd minus even) will be odd.
@@ -92,13 +123,17 @@ In other words, between _y_ and _p_ – _y_, exactly one will be even and one wi
 This is something we can use to our advantage to shorten the uncompressed SEC format: we can provide the _x_ coordinate and the evenness of the _y_ coordinate.
 We call this the _compressed SEC format_ because of how the _y_ coordinate is compressed into a single byte (namely, whether it's even or odd).
 
+由于 _p_ 是一个大于2的质数，我们知道 _p_ 是奇数。 因此，如果 _y_ 是偶数，那么 (p – y)（奇数减去偶数）将是奇数。 如果 _y_ 是奇数，p – _y_ 将是偶数。 换句话说，在 _y_ 和 _p_ – _y_ 之间，正好有一个是偶数，一个是奇数。 这是我们利用压缩未压缩 SEC 格式的一个优势：我们可以提供 _x_ 坐标和 _y_ 坐标的偶性。 我们称这个格式为 _compressed SEC format，因为 _y_ 坐标被压缩成一个字节（即，它是偶数还是奇数）。
+
 Here is the serialization of the compressed SEC format for a given point _P_ = (_x_,_y_):
 
-1. Start with the prefix byte.
-If _y_ is even, it's `0x02`; otherwise, it's `0x03`.
-2. Next, append the _x_ coordinate in 32 bytes as a big-endian integer.
+这里是一个给定点 _P_ = (_x_,_y_) 的压缩SEC格式的序列化：
 
-The compressed SEC format is shown in <<compressed_sec_format>>.
+1. Start with the prefix byte.
+If _y_ is even, it's `0x02`; otherwise, it's `0x03`. 以前缀字节开始。 如果 _y_ 是偶数，则为 `0x02`；否则，为 `0x03`。
+2. Next, append the _x_ coordinate in 32 bytes as a big-endian integer. 接下来，将 _x_ 坐标作为大端整数附加32个字节。
+
+The compressed SEC format is shown in <<compressed_sec_format>>. 压缩 SEC 格式如图<<compressed_sec_format>>所示。
 
 [[compressed_sec_format]]
 .Compressed SEC format
@@ -106,6 +141,8 @@ image::images/prbc_0403.png[Compressed SEC format]
 
 Again, the procedure is pretty straightforward.
 We can update the `sec` method to handle compressed SEC keys:
+
+再次，这个过程非常简单。 我们可以更新 `sec` 方法以处理压缩的SEC密钥：
 
 [source,python]
 ----
@@ -117,10 +154,16 @@ include::code-ch04/ecc.py[tag=source1]
 The big advantage of the compressed SEC format is that it only takes up 33 bytes instead of 65 bytes.
 This is a big savings when amortized over millions of transactions.
 
+压缩 SEC 格式的最大优点是，它只占用33个字节，而不是65个字节。 当分摊到数百万笔交易时，这是一个很大的节省。
+
 At this point, you may be wondering how you can analytically calculate _y_ given the _x_ coordinate.
 This requires us to calculate a square root in a finite field.
 
+此时，您可能想知道如何根据 _x_ 坐标来解析计算 _y_。 这需要我们在有限域中计算平方根。
+
 Stated mathematically:
+
+从数学上讲：
 
 ++++
 <ul class="simplelist">
@@ -131,7 +174,11 @@ Stated mathematically:
 It turns out that if the finite field prime _p_ % 4 = 3, we can do this rather easily.
 Here's how.
 
+事实证明，如果有限域的素数 _p_ % 4 = 3，我们可以相当容易地做到这一点。下面是方法。
+
 First, we know:
+
+首先，我们知道：
 
 ++++
 <ul class="simplelist">
@@ -141,6 +188,8 @@ First, we know:
 
 which implies:
 
+这意味着：
+
 ++++
 <ul class="simplelist">
 <li>(<em>p</em> + 1) % 4 = 0</li>
@@ -149,7 +198,11 @@ which implies:
 
 That is, (__p__ + 1)/4 is an integer.
 
+也就是说，(p + 1)/4 是一个整数。
+
 By definition:
+
+根据定义：
 
 ++++
 <ul class="simplelist">
@@ -160,6 +213,7 @@ By definition:
 We are looking for a formula to calculate _w_.
 From Fermat's little theorem:
 
+我们正在寻找一个计算 _w_ 的公式。根据费马小定理：  
 
 ++++
 <ul class="simplelist">
@@ -169,6 +223,8 @@ From Fermat's little theorem:
 
 which means:
 
+这意味着：  
+
 ++++
 <ul class="simplelist">
 <li><em>w</em><sup>2</sup> = <em>w</em><sup>2</sup> ⋅ 1 = <em>w</em><sup>2</sup> ⋅ <em>w</em><sup><em>p</em>–1</sup> = <em>w</em><sup>(<em>p</em>+1)</sup></li>
@@ -176,6 +232,8 @@ which means:
 ++++
 
 Since _p_ is odd (recall _p_ is prime), we know we can divide (_p_+1) by 2 and still get an integer, implying:
+
+由于 _p_ 是奇数（回想一下 _p_ 是素数），我们知道我们可以将 (_p_+1) 除以 2，仍然得到一个整数，这意味着：  
 
 ++++
 <ul class="simplelist">
@@ -185,6 +243,8 @@ Since _p_ is odd (recall _p_ is prime), we know we can divide (_p_+1) by 2 and s
 
 Now we can use (_p_+1)/4 being an integer this way:
 
+现在我们可以利用 (_p_+1)/4 是一个整数的这个性质：  
+
 ++++
 <ul class="simplelist">
 <li><em>w</em> = <em>w</em><sup>(<em>p</em>+1)/2</sup> = <em>w</em><sup>2(<em>p</em>+1)/4</sup> = (<em>w</em><sup>2</sup>)<sup>(<em>p</em>+1)/4</sup> = <em>v</em><sup>(<em>p</em>+1)/4</sup></li>
@@ -193,6 +253,8 @@ Now we can use (_p_+1)/4 being an integer this way:
 
 So our formula for finding the square root becomes:
 
+所以，我们找到平方根的公式变为：
+
 ++++
 <ul class="simplelist">
 <li>if <em>w</em><sup>2</sup> = <em>v</em> and <em>p</em> % 4 = 3, <em>w</em> = <em>v</em><sup>(<em>p</em>+1)/4</sup></li>
@@ -200,6 +262,8 @@ So our formula for finding the square root becomes:
 ++++
 
 It turns out that the _p_ used in secp256k1 is such that _p_ % 4 == 3, so we can use this formula:
+
+事实证明，secp256k1 中使用的 _p_ 满足 _p_ % 4 == 3，因此我们可以使用这个公式：  
 
 ++++
 <ul class="simplelist">
@@ -211,7 +275,12 @@ It turns out that the _p_ used in secp256k1 is such that _p_ % 4 == 3, so we can
 That will be one of the two possible __w__'s; the other will be _p_ – _w_.
 This is due to taking the square root means that both the positive and negative will work.
 
+这将是最可能的两个 __w__ 之一；另一个将是 _p_ – _w_。
+这是因为取平方根意味着正数和负数都将有效。
+
 We can add this as a general method in the +S256Field+ class:
+
+我们可以在 +S256Field+ 类中将其添加为一个通用方法：
 
 [source,python]
 ----
@@ -222,46 +291,58 @@ include::code-ch04/ecc.py[tag=source2]
 
 When we get a serialized SEC pubkey, we can write a `parse` method to figure out which _y_ we need:
 
+当我们获得一个序列化的 SEC 公钥时，我们可以编写一个 `parse` 方法来确定我们需要哪个 _y_。
+
 [source,python]
 ----
 class S256Point:
 ...
 include::code-ch04/ecc.py[tag=source3]
 ----
-<1> The uncompressed SEC format is pretty straightforward.
-<2> The evenness of the _y_ coordinate is given in the first byte.
-<3> We take the square root of the right side of the elliptic curve equation to get _y_.
-<4> We determine evenness and return the correct point.
+<1> The uncompressed SEC format is pretty straightforward. 未压缩的SEC格式非常简单。
+<2> The evenness of the _y_ coordinate is given in the first byte. _y_ 坐标的偶性在第一个字节中给出。
+<3> We take the square root of the right side of the elliptic curve equation to get _y_. 我们取椭圆曲线方程右侧的平方根来得到 _y_。
+<4> We determine evenness and return the correct point. 我们确定偶性并返回正确的点。
 
 include::code-ch04/answers.py[tag=exercise2,indent=0]
 
-=== DER Signatures
+=== DER Signatures DER 签名
 
 Another((("serialization", "DER Signature format")))((("Signature class", "serialization of")))((("DER (Distinguished Encoding Rules) Signature format")))((("signing and verification", "serializing signatures"))) class that we need to learn to serialize is `Signature`.
 Much like the SEC format, it needs to encode two different numbers, `r` and `s`.
 Unfortunately, unlike `S256Point`, `Signature` cannot be compressed as `s` cannot be derived solely from `r`.
 
+另一个我们需要学习的序列化类是 `Signature`。 与SEC格式类似，它需要编码两个不同的数字，`r` 和 `s`。 不幸的是，与 `S256Point` 不同，`Signature` 不能被压缩，因为 `s` 不能仅从 `r` 中推导出来。
+
 The((("Distinguished Encoding Rules (DER)"))) standard for serializing signatures (and lots of other things, for that matter) is called Distinguished Encoding Rules (DER) format. DER format was used by Satoshi to serialize signatures.
 This was most likely because the standard was already defined in 2008, was supported in the OpenSSL library (used in Bitcoin at the time), and was easy enough to adopt, rather than creating a new standard.
 
+用于序列化签名的区分编码规则（DER）标准称为区分编码规则（DER）格式。`DER` 格式是 `Satoshi` 用于序列化签名的格式。 这很可能是因为该标准在2008年已经定义，得到了 `OpenSSL` 库（当时比特币所使用）的支持，而且易于采用，而不是创建一个新的标准。
+
 DER signature format is defined like this:
 
-1. Start with the `0x30` byte.
-2. Encode the length of the rest of the signature (usually `0x44` or `0x45`) and append.
-3. Append the marker byte, `0x02`.
-4. Encode `r` as a big-endian integer, but prepend it with the `0x00` byte if `r`'s first byte &ge; `0x80`.
+DER签名格式定义如下：
+
+1. Start with the `0x30` byte. 以 `0x30` 字节开始。
+2. Encode the length of the rest of the signature (usually `0x44` or `0x45`) and append. 编码签名其余部分的长度（通常为 `0x44` 或 `0x45` ），并附加。
+3. Append the marker byte, `0x02`. 附加标记字节，`0x02`。
+4. Encode `r` as a big-endian integer, but prepend it with the `0x00` byte if `r`'s first byte &ge; `0x80`. 
 Prepend the resulting length to `r`.
-Add this to the result.
-5. Append the marker byte, `0x02`.
+Add this to the result. 将 `r` 编码为大端整数，但如果 `r` 的第一个字节大于等于 `0x80`，则在其前添加 `0x00` 字节。 将生成的长度附加到 `r`。 将其添加到结果中。
+5. Append the marker byte, `0x02`. 附加标记字节，`0x02`。
 6. Encode `s` as a big-endian integer, but prepend with the `0x00` byte if `s`'s first byte &ge; `0x80`.
 Prepend the resulting length to `s`.
-Add this to the result.
+Add this to the result. 将 `s` 编码为大端整数，但如果 `s` 的第一个字节大于等于 `0x80`，则在其前添加 `0x00` 字节。 将生成的长度附加到 `s`。 将其添加到结果中。
 
 The rules for #4 and #6 with the first byte starting with something greater than or equal to `0x80` are because DER is a general encoding and allows for negative numbers to be encoded.
 The first bit being 1 means that the number is negative.
 All numbers in an ECDSA signature are positive, so we have to prepend with `0x00` if the first bit is 1, which is equivalent to first byte &ge; `0x80`.
 
+对于第4步和第6步，当第一个字节以大于或等于 `0x80` 的值开始时，DER 是一种通用编码，允许负数编码。 第一个位为1表示数字为负数。 ECDSA 签名中的所有数字都是正数，所以我们如果第一个位是1，需要附加 `0x00`，这相当于第一个字节大于等于 `0x80`。
+
 The DER format is shown in <<der_format>>.
+
+DER 格式显示在 <<der_format>> 中。
 
 [[der_format]]
 .DER format
@@ -272,7 +353,11 @@ It's also possible the first byte could be &ge; +0x80+, so #4 can be at most 33 
 However, if `r` is a relatively small number, it could be less than 32 bytes.
 The same goes for `s` and #6.
 
+因为我们知道 `r` 是一个256位的整数，所以 `r` 将最多表示为32个大端字节。 也可能第一个字节大于等于 `0x80`，所以第4步最多为33个字节。 然而，如果 `r` 是一个相对较小的数字，它可能小于32个字节。 对于 `s` 和第6步也是一样。
+
 Here's how this is coded in Python:
+
+在 `Python` 中，这是这样编码的：
 
 [source,python]
 ----
@@ -282,17 +367,23 @@ include::code-ch04/ecc.py[tag=source4]
 ----
 <1> In Python 3, you can convert a list of numbers to the byte equivalents using `bytes([some_integer1, some_integer2])`.
 
+在 `Python 3` 中，您可以使用 `bytes([some_integer1, some_integer2])` 将数字列表转换为字节等价物。
+
 Overall, this is an inefficient way to encode `r` and `s` as there are at least 6 bytes that aren't strictly necessary.
+
+总的来说，这是一种编码 `r` 和 `s` 的低效方法，因为至少有6个字节并不是严格必要的。
 
 include::code-ch04/answers.py[tag=exercise3,indent=0]
 
-=== Base58
+=== Base58 Base58 编码
 
 In((("serialization", "Base58")))((("Base58", id="base58"))) the early days of Bitcoin, bitcoins were assigned to public keys specified in SEC format (uncompressed) and then were redeemed using DER signatures.
 For reasons we'll get to in <<chapter_script>>, using this particular very simple script turned out to be both wasteful for storing unspent transaction outputs (UTXOs) and a little less secure than the scripts in more prominent use now.
 For now, we'll go through what addresses are and how they are encoded.
 
-==== Transmitting Your Public Key
+在比特币的早期，比特币被分配到以SEC格式（未压缩）指定的公钥，然后通过DER签名进行赎回。 至于原因，我们将在后续章节中介绍。使用这种非常简单的脚本既浪费了存储未消费交易输出（UTXO）的空间，又不如现在更常用的脚本安全。 现在，我们将介绍地址是什么以及如何编码。
+
+==== Transmitting Your Public Key 传输您的公钥
 
 In((("serialization", "transmitting public keys")))((("public key cryptography", "transmitting public keys"))) order for Alice to pay Bob, she has to know where to send the money.
 This is true not just in Bitcoin, but for any method of payment.
@@ -300,29 +391,43 @@ Since Bitcoin is a digital bearer instrument, the address can be something like 
 Unfortunately, SEC format, especially uncompressed, is a bit long (65 or 33 bytes).
 Furthermore, the 65 or 33 bytes are in binary format—not something that's easy to read, at least raw.
 
+为了让Alice给Bob付款，她必须知道要把钱发送到哪里。这不仅对比特币而言是正确的，对于任何支付方式也是如此。 由于比特币是一种数字持有工具，地址可以是类似于公钥密码体制中的公钥。 不幸的是，SEC格式（尤其是未压缩的）有点长（65或33字节）。 此外，这65或33字节是二进制格式——至少原始情况下不太容易阅读。
+
 There are three major considerations.
 The first is that the public key be readable (easy to hand-write and not too difficult to mistake, say, over the phone).
 The second is that it's short (not so long that it's cumbersome).
 The third is that it's secure (so it's harder to make mistakes).
 
+有三个主要考虑因素。 第一个是公钥的可读性（易于手写且不容易出错，比如在电话中）。 第二个是长度短（不至于太长而造成不便）。 第三个是安全性（因此更难出错）。
+
 So how do we get readability, compression, and security?
 If we express the SEC format in hexadecimal (4 bits per character), it's double the length (130 or 66 characters).
 Can we do better?
+
+那么我们如何实现可读性、压缩和安全呢？ 如果我们将 SEC 格式表示为十六进制（4位/字符），那么长度将加倍（130或66个字符）。 我们能做得更好吗？
 
 We((("Base64"))) can use something like Base64, which can express 6 bits per character. This results in 87 characters for uncompressed SEC and 44 characters for compressed SEC.
 Unfortunately, Base64 is prone to mistakes, as a lot of letters and numbers look similar (`0` and `O`, `l` and `I`, `-` and `_`).
 If we remove these characters, we can achieve a result that has good readability and decent compression (around 5.86 bits per character).
 Lastly, we can add a checksum at the end to ensure that mistakes are easy to detect.
 
+我们可以使用类似于Base64的东西，它可以表示6位/字符。这导致未压缩的SEC为87个字符，压缩的SEC为44个字符。 不幸的是，Base64容易出错，因为很多字母和数字看起来都很相似（`0` 和 `O`，`l` 和 `I`，`-` 和 `_`）。 如果我们移除这些字符，我们可以实现一个具有良好的可读性和相当压缩比（约5.86位/字符）的结果。 最后，我们可以在末尾添加一个校验和，以确保容易检测到错误。
+
 This construction is called _Base58_.
 Instead of hexadecimal (base 16) or Base64, we're encoding numbers in Base58.
 
+这种构造称为 _Base58_。 我们不是用十六进制（基数16）或Base64，而是用Base58对数字进行编码。
+
 The actual mechanics of doing the Base58 encoding are as follows.
+
+实际的 Base58 编码过程如下。
 
 All numbers, uppercase letters, and lowercase letters are utilized, except for the aforementioned `0/O` and `l/I`.
 That leaves us with 10 + 26 + 26 – 4 = 58.
 Each of these characters represents a digit in Base58.
 We can encode with a function that does exactly this:
+
+所有数字、大写字母和小写字母都得到利用，除了前述的 `0/O` 和 `l/I`。 这给我们留下了10 + 26 + 26 - 4 = 58。 这些字符每一个在Base58中代表一个数字。 我们可以用以下函数进行编码：
 
 [source,python]
 ----
@@ -330,44 +435,56 @@ include::code-ch04/helper.py[tag=source1]
 ...
 include::code-ch04/helper.py[tag=source2]
 ----
-<1> The purpose of this loop is to determine how many of the bytes at the front are 0 bytes.
-We want to add them back at the end.
-<2> This is the loop that figures out what Base58 digit to use.
+<1> The purpose of this loop is to determine how many of the bytes at the front are 0 bytes. 
+We want to add them back at the end. 这个循环的目的是确定前端有多少个0字节。 我们希望将它们加回到末尾。
+<2> This is the loop that figures out what Base58 digit to use. 这是确定使用哪个Base58数字的循环。
 <3> Finally, we prepend all the zeros that we counted at the front, because otherwise they wouldn't show up as prefixed ones.
-This annoyingly happens with pay-to-pubkey-hash (p2pkh); more on that in <<chapter_script>>.
+This annoyingly happens with pay-to-pubkey-hash (p2pkh); more on that in <<chapter_script>>. 最后，我们将前面计算出的所有零附加到开头，因为否则它们不会显示为前缀。 这在支付公钥哈希（p2pkh）上非常令人烦恼；关于这一点，请参阅<<脚本章节>>。
 
 This function will take any bytes in Python 3 and convert them to Base58.
 
+这个函数将 Python 3 中的任何字节转换为 Base58。
+
 [NOTE]
-.Why Base58 Is on the Way Out
+.Why Base58 Is on the Way Out 为什么 Base58 正在被淘汰
 ====
 Base58 has been used for a long time, and while it does make it somewhat easier than something like Base64 to communicate, it's not really that convenient.
 Most people prefer to copy and paste the addresses, and if you've ever tried to communicate a Base58 address vocally, you know it can be a nightmare.
 
+Base58 已经被使用了很长时间，虽然它确实比类似 Base64 的东西更容易进行通信，但它并不是那么方便。 大多数人更喜欢复制和粘贴地址，如果你曾经尝试过口头传达 Base58 地址，你就会知道这可以是一场噩梦。
+
 What's((("Bech32 standard")))((("BIP (Bitcoin Improvement Proposals)", "BIP0173"))) much better is the new Bech32 standard, which is defined in BIP0173.
 Bech32 uses a 32-character alphabet that's just numbers and lowercase letters, except `1`, `b`, `i`, and `o`.
 Thus far, it's only used for Segwit (<<chapter_segwit>>).((("", startref="base58")))
+
+什么是更好的是新的 Bech32 标准，它在 BIP0173 中定义。 Bech32 使用一个32个字符的字母表，只包含数字和 lowercase 字母，除了 `1`、`b`、`i` 和 `o`。 到目前为止，它只用于 Segwit（<<segwit 章节>>）。
 ====
 
 [role="pagebreak-before"]
 include::code-ch04/answers.py[tag=exercise4,indent=0]
 
-==== Address Format
+==== Address Format 地址格式
 
 The((("serialization", "address format")))((("address format"))) 264 bits from compressed SEC format are still a bit too long, not to mention a bit less secure (see <<chapter_script>>).
 To both shorten the address and increase security, we can use the ripemd160 hash.
 
+直接使用SEC格式的264位仍然有点太长，更不用说安全性稍低（参见<<脚本章节>>）。 为了缩短地址并提高安全性，我们可以使用 ripemd160 哈希。
+
 By not using the SEC format directly, we can go from 33 bytes to 20 bytes, shortening the address significantly.
 Here is how a Bitcoin address is created:
 
-1. For mainnet addresses, start with the prefix `0x00`, for testnet `0x6f`.
-2. Take the SEC format (compressed or uncompressed) and do a sha256 operation followed by the ripemd160 hash operation, the combination of which is called a hash160 operation.
-3. Combine the prefix from #1 and resulting hash from #2.
-4. Do a hash256 of the result from #3 and get the first 4 bytes.
-5. Take the combination of #3 and #4 and encode it in Base58.
+通过不直接使用SEC格式，我们可以从33字节减少到20字节，显著缩短地址。 下面是一个比特币地址的创建过程：
+
+1. For mainnet addresses, start with the prefix `0x00`, for testnet `0x6f`. 对于主网地址，以 `0x00` 为前缀，测试网则以 `0x6f` 为前缀。
+2. Take the SEC format (compressed or uncompressed) and do a sha256 operation followed by the ripemd160 hash operation, the combination of which is called a hash160 operation. 使用SEC格式（压缩或未压缩），进行 `sha256` 运算，然后进行 `ripemd160` 哈希运算，这两个运算的组合称为 `hash160` 运算。
+3. Combine the prefix from #1 and resulting hash from #2. 将第1步的前缀和第2步得到的结果哈希组合在一起。
+4. Do a hash256 of the result from #3 and get the first 4 bytes. 对第3步的结果进行 hash256 运算，得到前4个字节。
+5. Take the combination of #3 and #4 and encode it in Base58. 将第3步和第4步的结果组合在一起，并使用Base58进行编码。
 
 The result of step 4 of this process is called the _checksum_.
 We can do steps 4 and 5 in one go this way:
+
+此过程第4步的结果称为校验和。 我们可以这样一次性完成第4步和第5步：
 
 [source,python]
 ----
@@ -375,22 +492,28 @@ include::code-ch04/helper.py[tag=source3]
 ----
 
 [NOTE]
-.What Is Testnet?
+.What Is Testnet? 什么是测试网？
 ====
 Testnet((("testnet"))) is a parallel Bitcoin network that's meant to be used by developers.
 The coins on there are not worth anything and the proof-of-work required to find a block is relatively easy.
 The mainnet chain as of this writing has around 550,000 blocks, while testnet has significantly more (around 1,450,000 blocks).
+
+测试网是一个与比特币主网平行的网络，用于开发者。 上面的代币没有任何价值，找到区块所需的证明工作量相对简单。 截至本文撰写时，主网链大约有550,000个区块，而测试网则有显著更多（大约1,450,000个区块）。
 ====
 
 ((("ripemd160 operation")))((("sha256 operation")))((("hash160 operation")))We can implement the hash160 operation in _helper.py_:
+
+我们可以在_helper.py_中实现hash160运算：
 
 [source,python]
 ----
 include::code-ch04/helper.py[tag=source4]
 ----
-<1> Note that `hashlib.sha256(s).digest` does the sha256 and the wrapper around it does the ripemd160.
+<1> Note that `hashlib.sha256(s).digest` does the sha256 and the wrapper around it does the ripemd160. 注意，hashlib.sha256(s).digest完成了sha256，包裹在周围的代码完成了ripemd160。
 
 We can also update `S256Point` with `hash160` and `address` methods:
+
+我们还可以使用 `hash160` 和 `address` 方法更新 `S256Point`：
 
 [source,python]
 ----
@@ -401,26 +524,34 @@ include::code-ch04/ecc.py[tag=source5]
 
 include::code-ch04/answers.py[tag=exercise5,indent=0]
 
-==== WIF Format
+==== WIF Format WIF 格式
 
 The((("serialization", "WIF format")))((("WIF (Wallet Import Format)"))) private key in our case is a 256-bit number.
 Generally, we are not going to need to serialize our secret that often, as it doesn't get broadcast (that would be a bad idea!).
 That said, there are instances where you may want to transfer your private key from one wallet to another—for example, from a paper wallet to a software wallet.
 
+在我们的情况下，私钥是一个256位的数字。 通常，我们不会经常需要序列化我们的秘密，因为它不会广播（那是个坏主意！）。 话虽如此，有些时候你可能需要将你的私钥从一个钱包转移到另一个钱包，例如，从纸钱包转移到软件钱包。
+
 For this purpose, you can use Wallet Import Format (WIF).
 WIF is a serialization of the private key that's meant to be human-readable.
 WIF uses the same Base58 encoding that addresses use.
 
+为此，你可以使用钱包导入格式（WIF）。 WIF是私钥的一种序列化，旨在供人阅读。 WIF使用与地址相同的Base58编码。
+
 Here is how the WIF format is created:
 
-1. For mainnet private keys, start with the prefix `0x80`, for testnet `0xef`.
-2. Encode the secret in 32-byte big-endian.
-3. If the SEC format used for the public key address was compressed, add a suffix of `0x01`.
-4. Combine the prefix from #1, serialized secret from #2, and suffix from #3.
-5. Do a hash256 of the result from #4 and get the first 4 bytes.
-6. Take the combination of #4 and #5 and encode it in Base58.
+下面是 WIF 格式的创建过程：
+
+1. For mainnet private keys, start with the prefix `0x80`, for testnet `0xef`. 对于主网私钥，以 `0x80` 为前缀，测试网则以 `0xef` 为前缀。
+2. Encode the secret in 32-byte big-endian. 将密钥编码为32字节的 big-endian。
+3. If the SEC format used for the public key address was compressed, add a suffix of `0x01`. 如果用于公钥地址的SEC格式是压缩的，添加一个 `0x01` 的后缀。
+4. Combine the prefix from #1, serialized secret from #2, and suffix from #3. 将第1步的前缀、第2步的序列化密钥和第3步的后缀组合在一起。
+5. Do a hash256 of the result from #4 and get the first 4 bytes. 对第4步的结果进行hash256运算，得到前4个字节。
+6. Take the combination of #4 and #5 and encode it in Base58. 将第4步和第5步的结果组合在一起，并使用Base58进行编码。
 
 We((("PrivateKey class", "serialization of"))) can now create the `wif` method on the `PrivateKey` class:
+
+我们可以在 `PrivateKey` 类上创建一个 `wif` 方法：
 
 [source,python]
 ----
@@ -431,7 +562,7 @@ include::code-ch04/ecc.py[tag=source6]
 
 include::code-ch04/answers.py[tag=exercise6,indent=0]
 
-=== Big- and Little-Endian Redux
+=== Big- and Little-Endian Redux 大端和小端重奏
 
 It((("serialization", "big- and little-endian encodings")))((("big-endian encoding")))((("little-endian encoding"))) will be very useful to know how big- and little-endian are done in Python, as the next few chapters will be parsing and serializing numbers to and from big-/little-endian quite a bit.
 In particular, Satoshi used a lot of little-endian for Bitcoin and unfortunately, there's no easy-to-learn rule for where little-endian is used and where big-endian is used.
@@ -439,6 +570,8 @@ Recall that SEC format uses big-endian encoding, as do addresses and WIF.
 From <<chapter_tx_parsing>> onward, we will use little-endian encoding a lot more.
 For this reason, we turn to the next two exercises.
 The last exercise of this section is to create a testnet address for yourself.
+
+在Python中如何实现大端和小端对于接下来的几章将解析和大端/little-endian序列化数字将非常有用。 特别是，中本聪在比特币中使用了大量的小端，不幸的是，没有容易学习的规则来确定何时使用小端和何时使用大端。 回想一下，SEC 格式使用大端编码，地址和 WIF 也是如此。 从<<tx_parsing 章节>>开始，我们将使用更多的小端编码。 为此，我们转向接下来的两个练习。 本节的最后一个练习是为自己创建一个测试网地址。
 
 include::code-ch04/answers.py[tag=exercise7,indent=0]
 
@@ -450,7 +583,11 @@ Go to a https://faucet.programmingbitcoin.com[testnet faucet] and send some test
 If you succeeded, congrats!
 You're now the proud owner of some testnet coins!((("", startref="MTserial04")))
 
-=== Conclusion
+去一个 https://faucet.programmingbitcoin.com[testnet水龙头]，将一些测试网硬币发送到那个地址（它应该以 `m` 或 `n` 开头，否则就有问题）。 如果你成功了，恭喜！ 你现在拥有一些测试网硬币！(((“”, startref=“MTserial04”)))
+
+=== Conclusion 结论
 
 In this chapter we learned how to serialize a lot of different structures that we created in the previous chapters.
 We now turn to parsing and understanding transactions.
+
+在本章中，我们学会了如何序列化在前面章节中创建的各种不同结构。 现在我们转向解析和理解交易。
