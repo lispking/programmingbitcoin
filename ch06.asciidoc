@@ -1,33 +1,43 @@
 [[chapter_script]]
 
-== Script
+== Script 脚本
 
 [.lead]
 The((("locking/unlocking mechanism")))((("unlocking/locking mechanism"))) ability to lock and unlock coins is the mechanism by which we transfer bitcoin.
 _Locking_ is giving some bitcoins to some entity.
 _Unlocking_ is spending some bitcoins that you have received.
 
+锁定/解锁机制是指我们通过比特币进行转账的机制。 锁定 是将一些比特币给予某个实体。 解锁 是花费你收到的比特币。
+
 In((("smart contract language"))) this chapter we examine this locking/unlocking mechanism, which is often called a _smart contract_.
 Elliptic curve cryptography (<<chapter_elliptic_curve_cryptography>>) is used by Script to validate that a transaction was properly authorized (<<chapter_tx_parsing>>).
 Script essentially allows people to prove that they have the right to spend certain UTXOs.
 We're getting a little ahead of ourselves, though, so let's start with how Script works and go from there.
 
-=== Mechanics of Script
+在本章中，我们将研究这种锁定/解锁机制，通常称为 智能合约 。 椭圆曲线密码学（<<椭圆曲线密码学章节>>）被 Script 用于验证交易是否经过适当授权（<<tx解析章节>>）。 Script 使人们能够证明他们有权花费特定的 UTXO。 尽管如此，我们还是先了解一下 Script 的工作原理，然后再深入讲解。
+
+=== Mechanics of Script 脚本（Script）的运作机制
 
 If((("Script", "mechanics of"))) you are confused about what a smart contract is, don't worry.
 "Smart contract" is a fancy way of saying "programmable," and the "smart contract language" is simply a programming language.
 In Bitcoin, Script is the smart contract language, or the programming language used to express the conditions under which bitcoins are pass:[<span class="keep-together">spendable</span>].
+
+如果你对智能合约感到困惑，不要担心。 "智能合约"是"可编程"的另一种说法，"智能合约语言"只是一种编程语言。 在比特币中，Script 是智能合约语言，或者用于表达比特币花费条件的编程语言。
 
 Bitcoin((("Forth"))) has the digital equivalent of a contract in Script.
 Script is a stack-based language similar to Forth.
 It's intentionally limited in the sense that it avoids certain features.
 Specifically, Script avoids any mechanism for loops and is therefore not Turing complete.
 
+比特币（Bitcoin）在 Script 中具有合同的数字等价物。 Script 是一种类似于 Forth 的栈式语言。 它有意地受到限制，因为它避免了一些功能。 具体来说，Script 避免了任何循环机制，因此不是图灵完备的。
+
 [NOTE]
-.Why Bitcoin Isn't Turing Complete
+.Why Bitcoin Isn't Turing Complete 为什么比特币不是图灵完备的
 ====
 Turing completeness((("Turing completeness"))) in a programming language essentially means that the program has the ability to loop.
 Loops are a useful construct in programming, so you may be wondering at this point why Script doesn't have the ability to loop.
+
+图灵完备（Turing completeness）在编程语言中本质上表示程序具有循环能力。 循环是编程中有用的构造，因此你可能会想知道为什么 Script 没有循环能力。
 
 There are a lot of reasons for this, but let's start with program execution.
 Anyone can create a Script program that every full node on the network executes.
@@ -39,10 +49,15 @@ This would be a large systematic vulnerability, and protecting against this vuln
 Ethereum,((("Ethereum"))) which has Turing completeness in its smart contract language, Solidity, handles this problem by forcing contracts to pay for program execution with something called "gas."
 An infinite loop will exhaust whatever gas is in the contract because, by definition, it will run an infinite number of times.
 
+这其中有很多原因，但让我们从程序执行开始讲起。 任何人都可以创建一个 Script 程序，该程序在整个网络中的每个完整节点上执行。 如果 Script 是图灵完备的，则循环可能永远执行下去。 这将导致验证节点进入并永远无法离开该循环。 这将是通过拒绝服务（DoS）攻击攻击网络的一种简单方法。 一个具有无限循环的 Script 程序可能会摧毁比特币！ 这将是一个大型系统漏洞，避免这种漏洞是图灵完备性被回避的主要原因之一。 以太坊（Ethereum），在其智能合约语言 Solidity 中具有图灵完备性，通过强制合约使用“气体”为程序执行付费来解决此问题。 一个无限循环将耗尽合约中的所有气体，因为定义上，它将运行无数次。
+
 Another reason to avoid Turing completeness is because smart contracts with Turing completeness are very difficult to analyze.
 A Turing-complete smart contract's execution conditions are very difficult to enumerate, and thus it's easy to create unintended behavior, causing bugs.
 Bugs in a smart contract mean that the coins are vulnerable to being unintentionally spent, which means the contract participants could lose money.
 Such bugs are not just theoretical: this was the major problem in the DAO (Decentralized Autonomous Organization), a Turing-complete smart contract that ended with the Ethereum Classic hard fork.
+
+避免图灵完备性的另一个原因是因为具有图灵完备性的智能合约非常难以分析。 图灵完备智能合约的执行条件非常难以枚举，因此很容易产生意外行为，导致错误。 智能合约中的错误意味着硬币可能被意外花费，这意味着合约参与者可能会损失钱财。 这种错误不仅仅是理论上的：这是 DAO （去中心化自治组织）的主要问题，这是一个以以太坊经典硬分叉为结局的图灵完备智能合约。
+
 ====
 
 Transactions assign bitcoins to a _locking_ script.
@@ -50,18 +65,26 @@ The locking script is what's specified in the ScriptPubKey field (see <<chapter_
 You can think of this as a lockbox where some money is deposited that only a particular key can open.
 The money inside, of course, can only be accessed by the owner who has the key.
 
+交易将比特币分配给一个 锁定 脚本。 锁定脚本是在 ScriptPubKey 字段中指定的（参见<<tx解析章节>>）。 你可以将此目标锁定的盒子，其中一些钱存放在只有特定密钥才能打开的锁中。 当然，盒子里的钱只能由拥有密钥的所有者访问。
+
 The unlocking of the lockbox is done in the ScriptSig field (see <<chapter_tx_parsing>>); this proves ownership of the locked box, which authorizes spending of the funds.
 
+解锁锁盒在ScriptSig字段中完成（参见<<tx解析章节>>）；这证明了锁盒的所有权，授权使用资金。
+
 [role="pagebreak-before"]
-=== How Script Works
+=== How Script Works 脚本（Script）如何工作
 
 Script((("Script", "operation of"))) is a programming language, and like most programming languages, it processes one command at a time.
 The commands operate on a stack of elements.
 There are two possible types of commands: elements and operations.
 
+Script 是一种编程语言，与大多数编程语言一样，它一次处理一个命令。 命令在元素堆上操作。 有两种可能的命令类型：元素和操作。
+
 Elements are data.
 Technically, processing an element pushes that element onto the stack. Elements are byte strings of length 1 to 520.
 A typical element might be a DER signature or a SEC pubkey (<<elements_chap_six>>).
+
+元素是数据。 技术上，处理元素将元素推送到堆栈上。元素是长度为1到520的字节字符串。 一个典型的元素可能是DER签名或SEC公钥（<<元素_chap_six>>）。
 
 [[elements_chap_six]]
 .Elements
@@ -70,42 +93,55 @@ image::images/prbc_0601.png[Script Elements]
 Operations do something to the data (<<operations_chap_six>>).
 They consume zero or more elements from the processing stack and push zero or more elements back to the stack.
 
+操作对数据进行某些操作（<<操作_chap_six>>）。
+它们从处理栈中消耗零个或多个元素，并将零个或多个元素推回到栈中。
+
 [[operations_chap_six]]
 .Operations
 image::images/prbc_0602.png[Script Operations]
 
 A((("OP_DUP operation"))) typical operation is `OP_DUP` (<<op_dup_duplicates_the_top_element>>), which will duplicate the top element (consuming 0) and push the new element to the stack (pushing 1).
 
+一个典型的操作是OP_DUP（<<op_dup_duplicates_the_top_element>>），它将复制栈顶元素（消耗0）并将新元素推送到栈中（推送1）。
+
 [[op_dup_duplicates_the_top_element]]
-.OP_DUP duplicates the top element
+.OP_DUP duplicates the top element .OP_DUP 复制栈顶元素
 image::images/prbc_0603.png[OP_DUP]
 
 After all the commands are evaluated, the top element of the stack must be nonzero for the script to resolve as valid.
 Having no elements in the stack or the top element being 0 would resolve as invalid.
 Resolving as invalid means that the transaction that includes the unlocking script is not accepted on the network.
 
-=== Example Operations
+在所有命令评估完毕后，要使脚本解析为有效，栈顶元素必须非零。 栈中没有元素或栈顶元素为0将解析为无效。 解析为无效意味着包含解锁脚本的交易在网络上不被接受。
+
+=== Example Operations 示例操作
 
 There((("Script", "example operations")))((("OP_HASH160 operation"))) are many other operations besides `OP_DUP`.
 `OP_HASH160` (<<op_hash160_does_a_sha256_followed_by_ripemd160_to_the_top_element>>) does a sha256 followed by a ripemd160 (aka a hash160) to the top element of the stack (consuming 1) and pushes a new element to the stack (pushing 1).
 Note in the diagram that `y = hash160(x)`.
 
+除了OP_DUP，还有许多其他操作。 OP_HASH160（<<op_hash160_does_a_sha256_followed_by_ripemd160_to_the_top_element>>) 对栈顶元素执行sha256，然后执行ripemd160（也称为hash160）（消耗1），并将新元素推送到栈中（推送1）。 请注意，在图中 `y = hash160(x)`。
+
 [[op_hash160_does_a_sha256_followed_by_ripemd160_to_the_top_element]]
-.OP_HASH160 does a sha256 followed by ripemd160 to the top element
-image::images/prbc_0604.png[OP_HASH160]
+.OP_HASH160 does a sha256 followed by ripemd160 to the top element 
+image::images/prbc_0604.png[OP_HASH160] OP_HASH160 对栈顶元素执行sha256，然后执行ripemd160
 
 Another((("OP_CHECKSIG operation"))) very important operation is `OP_CHECKSIG` (<<op_checksig_checks_if_the_signature_for_the_pubkey_is_valid_or_not>>).
 `OP_CHECKSIG` consumes two elements from the stack, the first being the pubkey and the second being a signature, and examines whether the signature is good for the given pubkey.
 If so, `OP_CHECKSIG` pushes a 1 to the stack; otherwise, it pushes a 0 to the stack.
 
+另一个非常重要的操作是OP_CHECKSIG（<<op_checksig_checks_if_the_signature_for_the_pubkey_is_valid_or_not>>）。 OP_CHECKSIG 从栈中消耗两个元素，第一个是公钥，第二个是签名，并检查签名是否适用于给定的公钥。 如果是，OP_CHECKSIG 将1推送到栈中；否则，它将0推送到栈中。
+
 [[op_checksig_checks_if_the_signature_for_the_pubkey_is_valid_or_not]]
 .OP_CHECKSIG checks if the signature for the pubkey is valid or not
-image::images/prbc_0605.png[OP_CHECKSIG]
+image::images/prbc_0605.png[OP_CHECKSIG] 检查公钥的签名是否有效
 
-==== Coding Opcodes
+==== Coding Opcodes 编码操作码
 
 We can now code `OP_DUP`, given a stack.
 `OP_DUP` simply duplicates the top element of the stack:
+
+现在我们可以为给定的栈编写 `OP_DUP`。 `OP_DUP` 只是将栈顶元素复制：
 
 [source,python]
 ----
@@ -117,16 +153,20 @@ OP_CODE_FUNCTIONS = {
 ...
 }
 ----
-<1> We have to have at least one element to duplicate; otherwise, we can't execute this opcode.
-<2> This is how we duplicate the top element of the stack.
-<3> `118 = 0x76`, which is the code for `OP_DUP`.
+<1> We have to have at least one element to duplicate; otherwise, we can't execute this opcode. 我们必须至少有一个元素来复制；否则，我们无法执行这个操作码。
+<2> This is how we duplicate the top element of the stack. 这就是我们复制栈顶元素的方法。
+<3> `118 = 0x76`, which is the code for `OP_DUP`. `118 = 0x76`，这是 `OP_DUP` 的代码。
 
 Note that we return a Boolean with this opcode, as a way to tell whether the operation was successful.
 A failed operation automatically fails script evaluation.
 
+请注意，我们通过返回一个布尔值来表示此操作码是否成功。 失败的操作会自动导致脚本评估失败。
+
 [role="pagebreak-after"]
 Here's((("OP_HASH256 operation"))) another one, for `OP_HASH256`.
 This opcode will consume the top element, perform a hash256 operation on it, and push the result onto the stack:
+
+这是另一个操作码，用于 `OP_HASH256`。 此操作码将消耗栈顶元素，对其执行 `hash256` 操作，并将结果推送到栈上：
 
 [source,python]
 ----
@@ -141,12 +181,14 @@ OP_CODE_FUNCTIONS = {
 
 include::code-ch06/answers.py[tag=exercise1,indent=0]
 
-=== Parsing the Script Fields
+=== Parsing the Script Fields 解析脚本字段
 
 Both((("Script", "parsing script fields", id="Sparsing06"))) the ScriptPubKey and ScriptSig are parsed the same way.
 If the byte is between `0x01` and `0x4b` (whose value we call _n_), we read the next _n_ bytes as an element.
 Otherwise, the byte represents an operation, which we have to look up.
 Here are some operations and their byte codes:
+
+ScriptPubKey 和 ScriptSig 都是用相同的方式解析。 如果字节在 0x01 和 0x4b 之间（我们称之为 _n_ 的值），则读取接下来的 _n_ 个字节作为元素。 否则，该字节表示一个操作，我们需要查找。 以下是某些操作及其字节码：
 
 * `0x00` - `OP_0`
 * `0x51` - `OP_1`
@@ -157,7 +199,7 @@ Here are some operations and their byte codes:
 * `0xac` - `OP_CHECKSIG`
 
 [NOTE]
-.Elements Longer Than 75 Bytes
+.Elements Longer Than 75 Bytes 长度超过75字节的元素
 ====
 You might be wondering what would happen if you had an element with a length greater than `0x4b` (75 in decimal).
 There((("OP_PUSHDATA1 operation")))((("OP_PUSHDATA2 operation")))((("OP_PUSHDATA4 operation"))) are three specific opcodes for handling such elements: `OP_PUSHDATA1`, `OP_PUSHDATA2`, and `OP_PUSHDATA4`.
@@ -165,19 +207,34 @@ There((("OP_PUSHDATA1 operation")))((("OP_PUSHDATA2 operation")))((("OP_PUSHDATA
 `OP_PUSHDATA2` means that the next 2 bytes contain how many bytes we need to read for the element.
 `OP_PUSHDATA4` means that the next 4 bytes contain how many bytes we need to read for the element.
 
+您可能想知道如果元素的长度大于 0x4b（十进制中的75）会发生什么。 有三个特定的操作码用于处理此类元素：OP_PUSHDATA1、OP_PUSHDATA2 和 OP_PUSHDATA4。
+OP_PUSHDATA1 表示下一个字节包含我们需要读取多少字节来获取元素。
+OP_PUSHDATA2 表示接下来的2个字节包含我们需要读取多少字节来获取元素。
+OP_PUSHDATA4表示接下来的4个字节包含我们需要读取多少字节来获取元素。
+
 Practically speaking, this means if we have an element that's between 76 and 255 bytes inclusive, we use `OP_PUSHDATA1` ++<__1-byte length of the element__>++ ++<__element__>++.
 For anything between 256 bytes and 520 bytes inclusive, we use `OP_PUSHDATA2` ++<__2-byte length of the element in little-endian__>++ ++<__element__>++.
 Anything larger than 520 bytes is not allowed on the network, so `OP_PUSHDATA4` is unnecessary, though `OP_PUSHDATA4` ++<__4-byte length of the element in little-endian, but value less than or equal to 520__>++ ++<__element__>++ is still legal.
 
+实际上，这意味着如果元素的长度在76到255字节（含）之间，我们使用 OP_PUSHDATA1 ++<1-byte length of the element>++ ++<element>++。 
+对于长度在256字节到520字节（含）之间的元素，我们使用 OP_PUSHDATA2 ++<2-byte length of the element in little-endian>++ ++<element>++。 
+大于520字节的元素在网络上是不允许的，因此 OP_PUSHDATA4 是不必要的，尽管 OP_PUSHDATA4 ++<4-byte length of the element in little-endian, but value less than or equal to 520>++ ++<element>++仍然是合法的。
+
 It is possible to encode a number below 76 using `OP_PUSHDATA1` or a number below 256 using `OP_PUSHDATA2` or even any number below 521 using `OP_PUSHDATA4`.
 However, these are considered nonstandard transactions, meaning most Bitcoin nodes (particularly those running Bitcoin Core software) will not relay them.
+
+可以使用 `OP_PUSHDATA1` 编码小于76的数字，使用 `OP_PUSHDATA2` 编码小于256的数字，甚至使用 `OP_PUSHDATA4` 编码小于521的任何数字。 然而，这些被认为是非标准交易，意味着大多数比特币节点（尤其是运行比特币核心软件的节点）不会转发它们。
 ====
 
 There are many more opcodes, which are coded in _op.py_, and the full list can be found at https://en.bitcoin.it/wiki/Script[].
 
-==== Coding a Script Parser and Serializer
+还有许多其他操作码，它们在 `_op.py_` 中编码，完整列表可以在 https://en.bitcoin.it/wiki/Script[]找到。
+
+==== Coding a Script Parser and Serializer 编写脚本解析器和序列化器
 
 Now that we know how Script works, we can write a script parser:
+
+现在我们知道了 Script 的工作原理，我们可以编写一个脚本解析器：
 
 [source,python]
 ----
@@ -185,19 +242,21 @@ include::code-ch06/script.py[tag=source1]
     ...
 include::code-ch06/script.py[tag=source2]
 ----
-<1> Each command is either an opcode to be executed or an element to be pushed onto the stack.
-<2> Script serialization always starts with the length of the entire script.
-<3> We parse until the right amount of bytes are consumed.
-<4> The byte determines if we have an opcode or element.
-<5> This converts the byte into an integer in Python.
-<6> For a number between 1 and 75 inclusive, we know the next +n+ bytes are an pass:[<span class="keep-together">element</span>].
-<7> 76 is `OP_PUSHDATA1`, so the next byte tells us how many bytes to read.
-<8> 77 is `OP_PUSHDATA2`, so the next two bytes tell us how many bytes to read.
-<9> We have an opcode that we store.
-<10> The script should have consumed exactly the length of bytes we expected; otherwise, we raise an error.
+<1> Each command is either an opcode to be executed or an element to be pushed onto the stack. 每个命令要么是要执行的指令，要么是要推送到栈上的元素。
+<2> Script serialization always starts with the length of the entire script. 脚本序列化总是从整个脚本的长度开始。
+<3> We parse until the right amount of bytes are consumed. 我们一直解析，直到消耗了正确的字节数。
+<4> The byte determines if we have an opcode or element. 字节决定我们是得到指令还是元素。
+<5> This converts the byte into an integer in Python. 这将字节转换为Python中的整数。
+<6> For a number between 1 and 75 inclusive, we know the next +n+ bytes are an pass:[<span class="keep-together">element</span>]. 对于在1到75（含）之间的数字，我们知道接下来的+n+字节是一个元素。
+<7> 76 is `OP_PUSHDATA1`, so the next byte tells us how many bytes to read. 76是OP_PUSHDATA1，所以下一个字节告诉我们需要读取多少字节。
+<8> 77 is `OP_PUSHDATA2`, so the next two bytes tell us how many bytes to read. 77是OP_PUSHDATA2，所以接下来的两个字节告诉我们需要读取多少字节。 
+<9> We have an opcode that we store. 我们有一个指令，我们将其存储起来。
+<10> The script should have consumed exactly the length of bytes we expected; otherwise, we raise an error. 脚本应该恰好消耗我们期望的字节数；否则，我们抛出一个错误。
 
 [role="pagebreak-before"]
 We can similarly write a script serializer:
+
+我们可以类似地编写一个脚本序列化器：
 
 [source,python]
 ----
@@ -205,16 +264,18 @@ class Script:
 ...
 include::code-ch06/script.py[tag=source3]
 ----
-<1> If the command is an integer, we know that's an opcode.
-<2> If the length is between 1 and 75 inclusive, we encode the length as a single byte.
-<3> For any element with length from 76 to 255, we put `OP_PUSHDATA1` first, then encode the length as a single byte, followed by the element.
-<4> For an element with a length from 256 to 520, we put `OP_PUSHDATA2` first, then encode the length as two bytes in little endian, followed by the element.
-<5> Any element longer than 520 bytes cannot be serialized.
-<6> Script serialization starts with the length of the entire script.
+<1> If the command is an integer, we know that's an opcode. 如果命令是整数，我们知道那是一个指令。
+<2> If the length is between 1 and 75 inclusive, we encode the length as a single byte. 如果长度在1到75（含）之间，我们将长度编码为一个字节。 
+<3> For any element with length from 76 to 255, we put `OP_PUSHDATA1` first, then encode the length as a single byte, followed by the element. 对于长度从76到255的任何元素，我们首先放置 OP_PUSHDATA1，然后将长度编码为一个字节，接着是元素。
+<4> For an element with a length from 256 to 520, we put `OP_PUSHDATA2` first, then encode the length as two bytes in little endian, followed by the element. 对于长度从256到520的元素，我们首先放置OP_PUSHDATA2，然后将长度编码为两个字节的小端字节序，接着是元素。
+<5> Any element longer than 520 bytes cannot be serialized. 长度超过520个字节的任何元素都无法进行序列化。 
+<6> Script serialization starts with the length of the entire script. 脚本序列化从整个脚本的长度开始。
 
 Note that both the parser and the serializer were used in <<chapter_tx_parsing>>, for parsing/serializing the ScriptSig and ScriptPubKey fields.((("", startref="Sparsing06")))
 
-=== Combining the Script Fields
+请注意，解析器和序列化器都在<<章节6.5>>中使用了，用于解析/序列化 ScriptSig 和 ScriptPubKey 字段。
+
+=== Combining the Script Fields 组合脚本字段
 
 The((("Script", "combining script fields"))) +Script+ object represents the command set that requires evaluation.
 To evaluate a script, we need to combine the ScriptPubKey and ScriptSig fields.
@@ -222,6 +283,12 @@ The lockbox (ScriptPubKey) and the unlocking mechanism (ScriptSig) are in _diffe
 Specifically, the lockbox is where the bitcoins are received, and the unlocking script is where the bitcoins are spent.
 The input in the spending transaction _points to the receiving transaction_.
 Essentially, we have a situation like <<scriptpubkey_and_scriptsig>>.
+
+Script对象表示需要评估的命令集。 
+要评估一个脚本，我们需要组合ScriptPubKey和ScriptSig字段。 
+锁盒（ScriptPubKey）和解锁机制（ScriptSig）位于不同的交易中。 
+具体来说，锁盒是接收比特币的地方，解锁脚本是将比特币花费的地方。 花费交易中的输入指向接收交易。 
+本质上，我们有一个类似于<<scriptpubkey_and_scriptsig>>的情况。
 
 [[scriptpubkey_and_scriptsig]]
 .Combining the ScriptPubKey and ScriptSig
@@ -232,10 +299,14 @@ To evaluate the two together, we take the commands from the ScriptSig and Script
 The commands from the ScriptSig go on top of all the commands from the ScriptPubKey.
 Instructions are processed one at a time until no commands are left to be processed (or the script fails).
 
-==== Coding the Combined Instruction Set
+在花费交易中，输入字段包含一个指向接收交易的指针。接收交易中的 ScriptPubKey 字段定义了锁定的比特币的条件，而花费交易中的 ScriptSig 字段提供了满足这些条件的证据。通过组合这两个字段，我们可以评估脚本是否满足锁定的比特币的条件，从而决定是否允许花费。
+
+==== Coding the Combined Instruction Set 编码组合指令集
 
 The evaluation of a script requires that we take the ScriptSig and ScriptPubKey, combine them into a single command set, and execute the commands.
 To do this, we require a way to combine the scripts:
+
+脚本的评估要求我们将 ScriptSig 和 ScriptPubKey 组合成一个单一的命令集，并执行这些命令。 为此，我们需要一种组合脚本的方法：
 
 [source,python]
 ----
@@ -243,9 +314,11 @@ class Script:
 ...
 include::code-ch06/script.py[tag=source4]
 ----
-<1> We are combining the command set to create a new, combined +Script+ object.
+<1> We are combining the command set to create a new, combined +Script+ object. 我们正在组合命令集以创建一个新的，组合的+Script+对象。
 
 We will use this ability to combine scripts for evaluation later in this chapter.
+
+我们将在本章后面使用这个组合脚本的能力进行评估。
 
 === Standard Scripts
 

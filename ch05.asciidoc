@@ -1,12 +1,14 @@
 [[chapter_tx_parsing]]
 
-== Transactions
+== Transactions 交易
 
 [.lead]
 Transactions((("transactions", "overview of", id="Tover05"))) are at the heart of Bitcoin.
 Transactions, simply put, are value transfers from one entity to another.
 We'll see in <<chapter_script>> how "entities" in this case are really smart contracts—but we're getting ahead of ourselves.
 Let's first look at what transactions in Bitcoin are, what they look like, and how they are parsed.
+
+交易是比特币的核心。 简单来说，交易就是一个实体向另一个实体转移价值。 我们将在<<script 章节>>中看到，在这种情况下，“实体”实际上是智能合约 —— 但我们有点提前了。 首先，让我们看看比特币中的交易是什么，它们长什么样子，以及如何解析它们。
 
 === Transaction Components
 
