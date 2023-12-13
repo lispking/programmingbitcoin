@@ -1,45 +1,61 @@
 [[chapter_blocks]]
-== Blocks
+== Blocks 区块
 
 [.lead]
 Transactions((("blocks", "purpose of"))) transfer bitcoins from one party to another and are unlocked, or authorized, by signatures.
 This ensures that the sender authorized the transaction, but what if the sender sends the same coins to multiple people? The owner of a lockbox may try to spend the same output twice. This((("double-spending, preventing"))) is called the _double-spending problem_.
 Much like being given a check that has the possibility of bouncing, the receiver needs to be assured that the transaction is valid.
 
+交易((("blocks", "purpose of")))将比特币从一个当事人转移到另一个当事人，并通过签名解锁或授权。 这确保了发送方授权了交易，但如果发送方将相同的硬币发送给多个人呢？锁盒的所有者可能会尝试花费相同的输出两次。这((("double-spending, preventing")))称为 _双花问题_。 就像收到一张可能会跳票的支票一样，接收方需要确保交易是有效的。
+
 This is where a major innovation of Bitcoin comes in, with _blocks_.
 Think of blocks as a way to order transactions.
 If we order transactions, a double-spend can be prevented by making any later, conflicting transaction invalid.
 This is the equivalent to accepting the earlier transaction as the valid one.
 
+这时，比特币的一个重大创新 —— 区块，就派上用场了。 将区块视为一种对交易进行排序的方式。 如果我们按顺序排列交易，双花可以通过使任何后来的冲突交易无效来防止。 这相当于接受较早的交易作为有效的交易。
+
 Implementing this rule would be easy (earliest transaction is valid, subsequent transactions that conflict are invalid) if we could order transactions one at a time.
 Unfortunately, that would require nodes on the network to agree on which transaction is supposed to be next and would cause a lot of transmission overhead in coming to consensus.
 We could also order large batches of transactions, maybe once per day, but that wouldn't be very practical as transactions would settle only once per day and not have finality before then.
+
+如果我们可以一次处理一笔交易，实现这个规则将非常简单（最早的交易有效，后续冲突的交易无效）。 不幸的是，这将需要网络上的节点就下一个交易达成一致，并在达成共识时产生很多传输开销。 我们也可以批量处理大量交易，也许每天一次，但这并不实用，因为交易将仅每天结算一次，在此之前没有最终性。
 
 Bitcoin finds a middle ground between these extremes by settling every 10 minutes in batches of transactions.
 These batches of transactions are what we call blocks.
 In this chapter we'll review how to parse blocks and how to check the proof-of-work.
 We'll start with a special transaction called the coinbase transaction, which is the first transaction of every block.
 
-=== Coinbase Transactions
+比特币在每个区块中找到10分钟结算一批交易的折中方案。 这些交易批次就是我们所说的区块。 在本章中，我们将介绍如何解析区块以及如何检查工作量证明。 我们将从一种特殊的交易开始，叫做coinbase交易，这是每个区块的第一笔交易。
+
+=== Coinbase Transactions Coinbase交易
 
 Coinbase transactions((("blocks", "coinbase transactions")))((("coinbase transactions"))) have nothing to do with the US company of the same name.
 Coinbase is the required first transaction of every block and is the only transaction allowed to bring bitcoins into existence.
 The((("block rewards"))) coinbase transaction's outputs are kept by whomever the mining entity designates and usually include all the transaction fees of the other transactions in the block as well as something called the _block reward_.
 
+Coinbase交易((("blocks", "coinbase transactions")))((("coinbase transactions")))与美国同名的公司没有任何关系。 Coinbase是每个区块必需的第一笔交易，是唯一允许将比特币引入存在的交易。 该((("block rewards"))) coinbase交易的输出由矿工实体指定的人保留，通常包括区块中其他交易的所有交易费用以及所谓的“区块奖励”。
+
 The coinbase transaction is what makes it worthwhile for a miner to mine.
 <<coinbase_transaction>> shows what a coinbase transaction looks like.
 
+Coinbase 交易是使矿工采矿值得的原因。 <<coinbase_transaction>>展示了 coinbase 交易的样子。
+
 [[coinbase_transaction]]
-.Coinbase transaction
+.Coinbase transaction Coinbase 交易
 image::images/prbc_0901.png[Coinbase transaction]
 
 The transaction structure is no different from that of other transactions on the Bitcoin network, with a few exceptions:
 
-1. Coinbase transactions must have exactly one input.
-2. The one input must have a previous transaction of 32 bytes of `00`.
-3. The one input must have a previous index of `ffffffff`.
+交易结构与其他比特币网络上的交易没有任何不同，除了以下几点例外：
+
+1. Coinbase transactions must have exactly one input. Coinbase 交易必须恰好有一个输入。
+2. The one input must have a previous transaction of 32 bytes of `00`. 一个输入必须有一个32字节的00的前一笔交易。
+3. The one input must have a previous index of `ffffffff`. 一个输入必须有一个ffffffff的前索引。
 
 These three conditions determine whether a transaction is a coinbase transaction or not.
+
+这三个条件决定了交易是否为coinbase交易。
 
 include::code-ch09/answers.py[tag=exercise1,indent=0]
 
@@ -48,10 +64,14 @@ include::code-ch09/answers.py[tag=exercise1,indent=0]
 The coinbase transaction has no previous output that it's spending, so the input is not unlocking anything.
 So what's in the ScriptSig?
 
+Coinbase 交易没有前一个输出可供花费，所以输入并没有解锁任何东西。 那么 ScriptSig 里有什么呢？
+
 The ScriptSig of the coinbase transaction is set by whoever mined the transaction.
 The main restriction is that the ScriptSig has to be at least 2 bytes and no longer than 100 bytes.
 Other than those restrictions and BIP0034 (described in the next section), the ScriptSig can be anything the miner wants as long as the evaluation of the ScriptSig by itself, with no corresponding ScriptPubKey, is valid.
 Here is the ScriptSig for the genesis block's coinbase transaction:
+
+Coinbase 交易的 ScriptSig 由完成交易挖矿的人设定。 主要限制是 ScriptSig 必须至少2字节，且不超过100字节。 除了这些限制和 BIP0034（在下一节中描述）以外，只要 ScriptSig 自身的评估有效（没有相应的ScriptPubKey），ScriptSig 可以是矿工想要的任何东西。 这是创世区块的 coinbase 交易的 ScriptSig：
 
 ```
 4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c
@@ -59,6 +79,8 @@ Here is the ScriptSig for the genesis block's coinbase transaction:
 ```
 
 This ScriptSig was composed by Satoshi and contains a message that we can read:
+
+这个ScriptSig是由Satoshi创建的，包含一条我们可以阅读的信息：
 
 [source,python]
 ----
@@ -69,18 +91,26 @@ This was the headline from the _Times_ of London on January 3, 2009.
 This proves that the genesis block was created some time _at or after_ that date, and not _before_.
 Other coinbase transactions' ScriptSigs contain similarly arbitrary data.
 
+这是2009年1月3日《伦敦时报》的头条新闻。 这证明了创世区块是在那个日期 _或之后_ 创建的，而不是 _之前_。 其他 coinbase 交易的 ScriptSigs 也包含类似任意数据。
+
 [[BIP0034]]
 ==== BIP0034
 
 BIP0034((("BIP (Bitcoin Improvement Proposals)", "BIP0034"))) regulates the first element of the ScriptSig of coinbase transactions.
 This was due to a network problem where miners were using the _same_ coinbase transaction for different blocks.
 
+BIP0034((("BIP (Bitcoin Improvement Proposals)", "BIP0034"))) 规定了coinbase交易ScriptSig的第一个元素。 这是由于一个网络问题，矿工们在不同区块中使用_相同_的coinbase交易。
+
 The coinbase transaction being the same byte-wise means that the transaction IDs are also the same, since the hash256 of the transaction is deterministic.
 To prevent transaction ID duplication, Gavin Andresen authored BIP0034, which is a soft-fork rule that adds the height of the block being mined into the first element of the coinbase ScriptSig.
+
+coinbase 交易字节级相同意味着交易ID也相同，因为交易的 hash256 是确定的。 为了防止交易ID重复，Gavin Andresen 编写了 BIP0034，这是一个软分叉规则，将开采区块的高度添加到 coinbase ScriptSig 的第一个元素中。
 
 The height is interpreted as a little-endian integer and must equal the height of the block (that is, the number of blocks since the genesis block).
 Thus, a coinbase transaction cannot be byte-wise the same across different blocks, since the block height will differ.
 Here's how we can parse the height from the coinbase transaction in <<coinbase_transaction>>:
+
+高度被解释为小端整数，必须等于区块的高度（即自创世区块以来的区块数量）。 因此，coinbase 交易不能在不同的区块之间字节级相同，因为区块高度将不同。 这是我们如何从<<coinbase_transaction>>中的 coinbase 交易解析高度：
 
 [source,python]
 ----
@@ -91,22 +121,26 @@ A coinbase transaction reveals the block it was in!
 Coinbase transactions in different blocks are required to have different ScriptSigs and thus different transaction IDs.
 This rule continues to be needed as it would otherwise allow the duplicate coinbase transaction IDs across multiple blocks.
 
+一个 coinbase 交易揭示了它所在的区块！ 不同区块中的 coinbase 交易必须有不同的 ScriptSigs，从而有不同的交易ID。 这个规则仍然需要，否则将允许在多个区块之间重复 coinbase 交易ID。
+
 include::code-ch09/answers.py[tag=exercise2,indent=0]
 
-=== Block Headers
+=== Block Headers 区块头
 
 Blocks((("blocks", "headers versus full blocks"))) are batches of transactions, and the block header is metadata about the transactions included in a block.
 The block header as shown in <<parsed_block>> consists of:
 
-* Version
-* Previous block
-* Merkle root
-* Timestamp
-* Bits
-* Nonce
+区块((("blocks", "headers versus full blocks")))是交易批次，区块头是关于包含在区块中的交易的元数据。 如<<parsed_block>>所示的区块头由以下内容组成：
+
+* Version 版本
+* Previous block 上一个区块
+* Merkle root Merkle根
+* Timestamp 时间戳
+* Bits 位
+* Nonce 随机数
 
 [[parsed_block]]
-.Parsed block
+.Parsed block 解析区块
 image::images/prbc_0902.png[Block parsing]
 
 The block header is the metadata for the block.
@@ -116,8 +150,12 @@ As of this writing there are roughly 550,000 blocks, or ~45 MB in block headers.
 The entire blockchain, on the other hand, is roughly 200 GB, so the headers are roughly .023% of the size.
 The fact that headers are so much smaller is an important feature, as we'll see when we look at simplified payment verification in <<chapter_spv>>.
 
+区块头是区块的元数据。 与交易不同，区块头中的每个字段都有固定的长度，如<<parsed_block>>所列； 一个区块头正好占80个字节。 截至本文撰写，大约有550,000个区块，或者约45MB的区块头。 另一方面，整个区块链大约有200GB，所以头部大约是.023%的大小。 正如我们在<<chapter_spv>>中看到简化支付验证时，头部如此之小是一个重要的特性。
+
 Like the transaction ID, the block ID is the hex representation of the hash256 of the header interpreted in little-endian.
 The block ID is interesting:
+
+如同交易ID，区块ID是按小端解释的header hash256的十六进制表示。 区块ID很有趣：
 
 ----
 include::code-ch09/examples.py[tag=example3]
@@ -127,7 +165,11 @@ This ID is what gets put into `prev_block` for a block building on top of this o
 For now, notice that the ID starts with a lot of zeros.
 We'll come back to this in <<proof_f_work>>, after we take a closer look at the fields in the block header.
 
+这个ID是放在构建在此区块之上的区块的prev_block中的。 目前，请注意ID以很多零开始。 我们将在<<proof_f_work>>之后回来解决这个问题，之后我们将更仔细地查看区块头中的字段。
+
 We can start coding a `Block` class based on what we already know:
+
+我们可以根据已知信息开始编写一个Block类：
 
 [source,python]
 ----
@@ -140,7 +182,7 @@ include::code-ch09/answers.py[tag=exercise4,indent=0]
 
 include::code-ch09/answers.py[tag=exercise5,indent=0]
 
-==== Version
+==== Version 版本
 
 _Version_ in normal((("blocks", "versions")))((("version numbers", "of blocks"))) software refers to a particular set of features.
 For a block, this is similar, in the sense that the version field reflects the capabilities of the software that produced the block.
@@ -149,15 +191,23 @@ Version 2 meant that the software was ready for BIP0034, which introduced the co
 Version 3 meant that the software was ready for((("BIP (Bitcoin Improvement Proposals)", "BIP0066"))) BIP0066, which enforced strict DER encoding.
 Version 4 meant that the software was ready for((("BIP (Bitcoin Improvement Proposals)", "BIP0065"))) BIP0065, which specified((("OP_CHECKLOCKTIMEVERIFY operation"))) `OP_CHECKLOCKTIMEVERIFY`.
 
+在普通软件中，_版本_ 指的是一组特定的功能。 对于区块，这个概念类似，版本字段反映了产生该区块的软件的能力。 在过去，这被用作指示矿工准备部署的单个特性的方式。 版本2表示软件已准备好实施本章前面提到的BIP0034，即coinbase交易区块高度功能。 版本3表示软件已准备好实施BIP0066，严格实施DER编码。 版本4表示软件已准备好实施BIP0065，指定OP_CHECKLOCKTIMEVERIFY操作。
+
 Unfortunately, the incremental increase in version number meant that only one feature was signaled on the network at a time.
 To alleviate this, the developers came up with((("BIP (Bitcoin Improvement Proposals)", "BIP0009"))) BIP0009, which allows up to 29 different features to be signaled at the same time.
+
+不幸的是，版本号的递增意味着网络上一次只能信号一个特性。 为了缓解这个问题，开发者们提出了BIP0009，允许同时信号多达29个不同的特性。
 
 The way BIP0009 works is by fixing the first 3 bits of the 4-byte (32-bit) header to be `001` to indicate that the miner is using BIP0009.
 The first 3 bits have to be `001`, as that forces older clients to interpret the version field as a number greater than or equal to 4, which was the last version number that was used pre-BIP0009.
 
+BIP0009的工作方式是将4字节（32位）头部的第一个3位固定为001，表示矿工正在使用BIP0009。 第一个3位必须是001，因为这会迫使旧客户端将版本字段解释为一个大于或等于4的数字，这是在BIP0009之前使用的最后一个版本号。
+
 This means that in hexadecimal, the first character will always be 2 or 3.
 The other 29 bits can be assigned to different soft-fork features for which miners can signal readiness.
 For example, bit 0 (the rightmost bit) can be flipped to 1 to signal readiness for one soft fork, bit 1 (the second bit from the right) can be flipped to 1 to signal readiness for another, bit 2 (the third bit from the right) can be flipped to 1 to signal readiness for another, and so on.
+
+这意味着在十六进制中，第一个字符总是2或3。 其他29位可以分配给不同的软分叉特性，矿工可以表示准备就绪。 例如，位0（最右边的位）可以翻转成1，表示准备就绪的一个软分叉，位1（从右边数第二个位）可以翻转成1，表示准备就绪的另一个软分叉，位2（从右边数第三个位）可以翻转成1，表示准备就绪的另一个软分叉，依此类推。
 
 BIP0009 requires that 95% of blocks signal readiness in a given 2,016-block epoch (the period for a difficulty adjustment; more on that later in this chapter) before the soft fork feature gets activated on the network.
 Soft forks that used BIP0009 as of this writing have been((("BIP (Bitcoin Improvement Proposals)", "BIP0068")))((("BIP (Bitcoin Improvement Proposals)", "BIP0112")))((("BIP (Bitcoin Improvement Proposals)", "BIP0113"))) BIP0068/BIP0112/BIP0113 (`OP_CHECKSEQUENCEVERIFY` and related changes) and((("BIP (Bitcoin Improvement Proposals)", "BIP0141"))) BIP0141 (Segwit).
@@ -165,17 +215,21 @@ These BIPs used bits 0 and 1 for signaling, respectively.
 BIP0091((("BIP (Bitcoin Improvement Proposals)", "BIP0091"))) used something like BIP0009 but with an 80% threshold and a smaller block period, so it wasn't strictly using BIP0009.
 Bit 4 was used to signal BIP0091.
 
+BIP0009要求在给定的2016个区块周期（难度调整周期；本章后面会详细介绍）中，95%的区块表示准备就绪，然后网络上的软分叉特性才能激活。 截至本文撰写时，使用BIP0009的软分叉有BIP0068/BIP0112/BIP0113（OP_CHECKSEQUENCEVERIFY和相关更改）和BIP0141（隔离见证）。 这些BIP分别使用了位0和位1进行信号。 BIP0091使用了类似于BIP0009的方法，但阈值设置为80%，区块周期较小，因此它并不是严格使用BIP0009。 位4用于表示BIP0091。
+
 Checking for these features is relatively straightforward:
+
+检查这些特性相对简单：
 
 [source,python]
 ----
 include::code-ch09/examples.py[tag=example4]
 ----
 <1> The `>>` operator((("&gt;&gt; (right bit-shift) operator")))((("right bit-shift (&gt;&gt;) operator"))) is the right bit-shift operator, which throws away the rightmost 29 bits, leaving just the top 3 bits.
-The `0b001` is a way of writing a number in binary in Python.
+The `0b001` is a way of writing a number in binary in Python. >>运算符((("&gt;&gt; (right bit-shift) operator")))((("right bit-shift (&gt;&gt;) operator")))是右移运算符，它丢弃了最右边的29位，只留下了最上面的3位。 0b001是Python中表示二进制数的一种方式。
 <2> The `&` operator is the "bitwise and" operator.
-In our case, we right-shift by 4 bits first and then check that the rightmost bit is 1.
-<3> We shift 1 to the right because BIP0141 was assigned to bit 1.
+In our case, we right-shift by 4 bits first and then check that the rightmost bit is 1. &运算符是"按位与"运算符。 在我们的情况下，我们首先将4位右移，然后检查最右边的位是否为1。
+<3> We shift 1 to the right because BIP0141 was assigned to bit 1. 我们将1右移，因为BIP0141被分配到了位1。
 
 include::code-ch09/answers.py[tag=exercise6,indent=0]
 
@@ -190,10 +244,14 @@ This is why the data structure is called a _blockchain_.
 Blocks link back all the way to the very first block, or the _genesis block_.
 The previous block field ends in a bunch of `00` bytes, which we will discuss more later in this chapter.
 
+所有((("blocks", "blockchain data structure")))((("blockchain data structure")))((("genesis block")))区块都必须指向一个前一个区块。这就是为什么这个数据结构被称为区块链。区块一直追溯到第一个区块，也就是（“genesis block”）。
+
 ==== Merkle Root
 
 The((("Merkle root")))((("blocks", "Merkle root"))) Merkle root encodes all the ordered transactions in a 32-byte hash.
 We will discuss how this is important for simplified payment verification (SPV) clients and how they can use the Merkle root along with data from the server to get a proof of inclusion in <<chapter_spv>>.
+
+((("Merkle root")))((("blocks", "Merkle root")))Merkle 根将所有有序的交易编码为 32 字节的哈希。我们将在本章后面讨论这对于简化支付验证 (SPV) 客户端的重要性以及他们如何使用 Merkle 根和服务器数据来获取包含证明，具体在 <<chapter_spv>>。
 
 ==== Timestamp
 
@@ -202,27 +260,41 @@ Unix timestamps are the number of seconds since January 1, 1970.
 This timestamp is used in two places: for validating timestamp-based locktimes on transactions included in the block and for calculating a new bits/target/difficulty every 2,016 blocks.
 The((("BIP (Bitcoin Improvement Proposals)", "BIP0113"))) locktimes were at one point used directly for transactions within a block, but BIP0113 changed the behavior to not use the current block's timestamp directly, but((("median-time-past (MTP)"))) the median time past (MTP) of the past 11 blocks.
 
+((("blocks", "timestamps")))((("timestamps")))((("Unix-style timestamps")))时间戳是一个占用 4 字节的 Unix 风格的时间戳。Unix 时间戳是从 1970 年 1 月 1 日开始的秒数。这个时间戳在两个地方使用：验证包含在区块中的基于时间戳的交易锁定期限以及每 2,016 个区块计算一个新的位/目标/难度。
+
+BIP (Bitcoin Improvement Proposals) BIP0113 锁定期限在某个时候直接用于区块内的交易，但 BIP0113 改变了行为，不再直接使用当前区块的时间戳，而是使用过去 11 个区块的中位数时间（MTP）。
+
 [NOTE]
-.Will Bitcoin Overflow on the Timestamp?
+.Will Bitcoin Overflow on the Timestamp? 比特币的时间戳字段会溢出吗？
 ====
 Bitcoin's timestamp field in the block header is 4 bytes, or 32 bits.
 This means that once the Unix timestamp exceeds 2^32^ – 1, there is no room to go further.
 2^32^ seconds is roughly 136 years, which means that this field will have no more room in 2106 (136 years after 1970).
 
+比特币区块头中的时间戳字段是 4 字节，或 32 位。这意味着一旦 Unix 时间戳超过 2^32^-1，就没有更多的空间。2^32^ 秒大约是 136 年，这意味着这个字段在 2106 年（1970 年后的 136 年）将没有更多的空间。
+
 Many people mistakenly believe that we only have until 68 years after 1970, or 2038, but that's only when the field is a signed integer (2^31^ seconds is 68 years), so we get the benefit of that extra bit, giving us until 2106.
 
+许多人错误地认为我们只能在 1970 年后的 68 年，即 2038 年之前，但那只是当字段是有符号整数时（2^31^ 秒是 68 年），所以我们得到了额外的那个比特的好处，让我们一直到 2106 年。
+
 In 2106, the block header will need some sort of fork as the timestamp in the block header will no longer continuously increase.
+
+在 2106 年，区块头将需要某种类型的分叉，因为区块头中的时间戳将不再持续增加。
 ====
 
-==== Bits
+==== Bits 比特
 
 Bits((("blocks", "Bits field"))) is a field that encodes the proof-of-work necessary in this block.
 This will be discussed more in the next section.
+
+比特((("blocks", "Bits field")))是一个字段，用于编码在此区块中必要的工作量证明。 这将在下一节中详细介绍。
 
 ==== Nonce
 
 Nonce((("blocks", "nonce field")))((("nonce field"))) stands for "number used only once," or _n-once_.
 This number is what is changed by miners when looking for proof-of-work.
+
+Nonce((("blocks", "nonce field")))((("nonce field"))) 代表“仅使用一次的数字”，或 _n-once_。 这个数字是在寻找工作量证明时由矿工更改的。
 
 [[proof_f_work]]
 === Proof-of-Work
@@ -232,6 +304,8 @@ Finding a proof-of-work gives a miner the right to put the attached block into t
 As proof-of-work is very rare, this is not an easy task.
 But because proof-of-work is objective and easy to verify, anyone can be a miner if they so choose.
 
+工作量证明是((("blocks", "looking for proof-of-work")))((("proof-of-work", "function of")))保障比特币安全的过程，从深层面上，允许比特币的分散式开采。 找到工作量证明使矿工有权将附着的区块放入区块链。 由于工作量证明非常罕见，这并不是一项简单的任务。 但是，因为工作量证明是客观且易于验证的，任何人都可以选择成为矿工。
+
 Proof-of-work((("mining"))) is called "mining" for a very good reason.
 Like with physical mining, there is something that miners are searching for.
 A typical gold mining operation processes 45 tons of dirt and rock before accumulating 1 oz of gold.
@@ -239,12 +313,18 @@ This is because gold is very rare.
 However, once gold is found, it's very easy to verify that the gold is real.
 There are chemical tests, touchstones, and many other ways to tell relatively cheaply whether the thing found is gold.
 
+工作量证明((("mining")))被称为“挖矿”是有很好的理由的。 与物理挖矿一样，矿工们在寻找某种东西。 一个典型的黄金开采作业处理45吨的泥土和岩石，才能积累1盎司的黄金。 这是因为黄金非常罕见。 然而，一旦发现黄金，验证黄金的真实性就非常容易了。 有化学测试，试金石，以及许多其他相对便宜的方法来判断找到的东西是否为黄金。
+
 Similarly, proof-of-work is a number that provides a very rare result.
 To find a proof-of-work, the miners on the Bitcoin network have to churn through the numerical equivalent of dirt and rock.
 Like with gold, verifying proof-of-work is much cheaper than actually finding it.
 
+同样，工作量证明是一个产生非常罕见结果的数字。 要在比特币网络上找到工作量证明，矿工们必须通过数值上的泥土和岩石。 与黄金一样，验证工作量证明比实际找到它要便宜得多。
+
 So what is proof-of-work?
 Let's look at the hash256 of the block header we saw before to find out:
+
+那么，什么是工作量证明呢？ 让我们查看之前看到的区块头的hash256，以找出：
 
 ```
 020000208ec39428b17323fa0ddec8e887b4a7c53b8c0a0a220cfd000000000000000000
@@ -255,7 +335,7 @@ e93c0118a4ffd71d
 ----
 include::code-ch09/examples.py[tag=example5]
 ----
-<1> We are purposefully printing this number as 64 hexadecimal digits to show how small it is in 256-bit terms.
+<1> We are purposefully printing this number as 64 hexadecimal digits to show how small it is in 256-bit terms. 我们故意将这个数字打印为64个十六进制数字，以显示它在256位术语中有多小。
 
 sha256 is known to generate uniformly distributed values.
 Given this, we can treat two rounds of sha256, or hash256, as a random number.
@@ -268,31 +348,53 @@ On average, 10^22^ (or 10 trillion trillion) random 256-bit numbers have to be g
 In other words, we need to calculate 10^22^ in hashes on average to find one this small.
 Getting back to the analogy, the process of finding proof-of-work requires us to process around 10^22^ numerical bits of dirt and rock to find our numerical gold nugget.
 
-==== How a Miner Generates New Hashes
+已知sha256可以生成均匀分布的值。
+
+基于这一点，我们可以将两轮sha256，或hash256，视为一个随机数。
+
+任何随机256位数字如此小的概率非常小。 256位数字的第一个比特为0的概率为0.5，前两个比特为00的概率为0.25，前三个比特为000的概率为0.125，以此类推。 请注意，刚才展示的十六进制中的每个0代表四个0-比特。
+
+在这种情况下，我们有前73个比特为0，其概率为0.5^73^，或者说大约为10^22^中的1。 这真的是非常小的概率。
+
+平均而言，需要生成10^22^（或10万亿亿）个随机256位数字才能找到如此小的数字。
+
+换句话说，我们平均需要计算10^22^哈希才能找到这么小的数字。 回到类比，找到工作量证明的过程需要我们处理大约10^22^个数字比特的泥土和岩石才能找到我们的数字金块。
+
+==== How a Miner Generates New Hashes 矿工如何生成新的哈希值
 
 Where((("proof-of-work", "generating new hashes")))((("hashes", "generating new"))) does the miner get new numerical dirt to process to see if it satisfies proof-of-work?
 This is where the nonce field comes in.
 The miners can change the nonce field at will to change the hash of the block header.
+
+矿工在生成新的哈希值时，需要处理新的数字“泥土”以满足工作量证明的要求。这时，nonce 字段就派上用场了。矿工可以随意更改 nonce 字段，从而改变区块头的哈希值。
 
 Unfortunately, the 4 bytes or 32 bits of the nonce field (or 2^32^ possible nonces that a miner can try) is insufficient for the required proof-of-work.
 Modern ASIC equipment can calculate way more than 2^32^ different hashes per second.
 The((("AntMiner S9"))) AntMiner S9, for example, calculates 12 terahashes per second (Th/s).
 That is approximately 2^43^ hashes per second, which means that the entire nonce space can be consumed in just 0.0003 seconds.
 
+不幸的是，nonce字段的4个字节或32位（或矿工可以尝试的2^32^个可能的nonce）不足以满足所需的工作量证明。现代ASIC设备每秒可以计算出远远超过2^32^个不同的哈希值。以AntMiner S9为例，每秒可以计算12太哈希（Th/s）。这大约是2^43^个哈希值每秒，意味着整个nonce空间在仅仅0.0003秒内就可以被消耗完。
+
 What miners can do when the nonce field is exhausted is change the coinbase transaction, which then changes the Merkle root, giving miners a fresh nonce space each time.
 The other option is to roll the version field or use overt ASICBOOST.
 The mechanics of how the Merkle root changes whenever any transaction in the block changes will be discussed in <<chapter_spv>>.
 
-==== The Target
+当nonce字段耗尽时，矿工可以更改coinbase交易，从而改变Merkle根，使矿工每次都有一个新鲜的nonce空间。另一个选择是滚动版本字段或使用显式ASICBOOST。将在<<章节_spv>>中讨论Merkle根在任何区块中的交易更改时的工作机制。
+
+==== The Target 目标
 
 Proof-of-work((("proof-of-work", "targets")))((("targets"))) is the requirement that the hash of every block header in Bitcoin must be below a certain target.
 The _target_ is a 256-bit number that is computed directly from the bits field (in our example, +e93c0118+).
 The target is very small compared to an average 256-bit number.
 
+工作量证明的目标是要求比特币中每个区块头的哈希值必须低于某个目标值。这个目标是一个256位的数字，它直接从位字段（在我们的示例中，+e93c0118+）计算得出。与平均256位数字相比，目标非常小。
+
 The bits field is actually two different numbers.
 The first is the exponent, which is the last byte.
 The second is the coefficient, which is the other three bytes in little-endian.
 The formula for calculating the target from these two numbers is:
+
+位字段实际上是由两个不同的数字组成。第一个是指数，即最后一个字节。第二个是系数，即小端序中的其他三个字节。从这两个数字计算目标值的公式如下：
 
 ++++
 <div data-type="equation">
@@ -307,26 +409,34 @@ The formula for calculating the target from these two numbers is:
 
 This is how we calculate the target given the bits field in Python:
 
+这就是我们在Python中根据位字段计算目标的方法：
+
 [source,pycon]
 ----
 include::code-ch09/examples.py[tag=example6]
 ----
-<1> We are purposefully printing this number as 64 hexadecimal digits to show how small the number is in 256-bit terms.
+<1> We are purposefully printing this number as 64 hexadecimal digits to show how small the number is in 256-bit terms. 我们故意将这个数字打印为64个十六进制数字，以显示它在256位术语中有多小。
 
 A valid proof-of-work is a hash of the block header that, when interpreted as a little-endian integer, is below the target number.
 Proof-of-work hashes are exceedingly rare, and the process of mining is the process of finding one of these hashes.
 To find a single proof-of-work with the preceding target, the network as a whole must calculate 3.8 &#215; 10^21^ hashes, which, when this block was found, could be done roughly every 10 minutes.
 To give this number some context, the best GPU mining card in the world would need to run for 50,000 years on average to find a single proof-of-work below this target.
 
+一个有效的工作量证明是一个区块头的哈希值，当它被解释为一个小端整数时，它的数值低于目标数值。工作量证明的哈希值非常罕见，而挖矿的过程就是找到这样一个哈希值的过程。要找到具有前一个目标的工作量证明，整个网络必须计算出3.8 × 10^21^个哈希值，当这个区块被发现时，大约每10分钟就可以完成一次。 为了给这个数字提供一些背景信息，世界上最好的GPU挖矿卡平均需要运行50,000年才能找到低于这个目标的一个工作量证明。
+
 We can check that this block header's hash satisfies the proof-of-work as follows:
+
+我们可以通过以下方式检查这个区块头哈希值是否满足工作量证明：
 
 [source,python]
 ----
 include::code-ch09/examples.py[tag=example7]
 ----
-<1> `target` is calculated above.
+<1> `target` is calculated above. target是上面计算出来的。
 
 We can see that the proof-of-work is lower by lining up the numbers in 64 hex pass:[<span class="keep-together">characters</span>]:
+
+我们可以看到，通过将数字对齐到64个十六进制字符，工作量证明的值低于目标值：
 
 ----
 TG: 0000000000000000013ce9000000000000000000000000000000000000000000
@@ -336,14 +446,18 @@ ID: 0000000000000000007e9e4c586439b0cdbe13b1370bdd9435d76a644d047523
 
 include::code-ch09/answers.py[tag=exercise9,indent=0]
 
-==== Difficulty
+==== Difficulty 难度
 
 Targets((("proof-of-work", "difficulty"))) are hard for human beings to comprehend. The target is the number that the hash must be below, but as humans, it's not easy to see the difference between a 180-bit number and a 190-bit number.
 The first is a thousand times smaller, but from looking at targets, such large numbers are not easy to contextualize.
 
+目标值((("proof-of-work", "difficulty")))对于人类来说很难理解。目标值是哈希值必须低于的数值，但对于人类来说，很难看出180位数字和190位数字之间的差别。 第一个数字是一千倍的小，但是从目标值来看，这样大的数字不容易进行上下文比较。
+
 To make different targets easier to compare, the concept of _difficulty_ was born.
 The trick is that difficulty is inversely proportional to the target, to make comparisons easier.
 The specific formula is:
+
+为了使不同的目标值更容易比较，"难度"这个概念应运而生。难度与目标值成反比，使得比较更容易。具体的公式如下：
 
 ++++
 <div data-type="equation">
@@ -357,6 +471,8 @@ The specific formula is:
 
 The code looks like this:
 
+代码看起来是这样的：
+
 [source,python]
 ----
 include::code-ch09/examples.py[tag=example8]
@@ -367,22 +483,30 @@ This gives us context for how difficult mainnet currently is.
 The difficulty can be thought of as how much more difficult mining is now than it was at the start.
 The mining difficulty in the preceding code is roughly 888 billion times harder than when Bitcoin started.
 
+比特币创世区块的难度为1。 这为我们提供了目前主网难度如何的上下文。难度可以理解为现在挖矿比一开始的时候困难了多少倍。 前述代码中的挖矿难度比比特币开始时大约困难了8880亿倍。
+
 Difficulty is often shown in block explorers and Bitcoin price charting services, as it's a much more intuitive way to understand the effort required to create a new block.
+
+难度通常在区块浏览器和比特币价格图表服务中显示，因为这是理解创建新区块所需的努力的一个更直观的方式。
 
 include::code-ch09/answers.py[tag=exercise10,indent=0]
 
-==== Checking That the Proof-of-Work Is Sufficient
+==== Checking That the Proof-of-Work Is Sufficient 检查工作量证明是否足够
 
 We((("proof-of-work", "validity"))) already learned that proof-of-work can be calculated by computing the hash256 of the block header and interpreting this as a little-endian integer.
 If this number is lower than the target, we have a valid proof-of-work.
 If not, the block is not valid as it doesn't have proof-of-work.
 
+我们已经了解到，可以通过计算区块头的hash256并将其解释为小端整数来计算工作量证明。如果这个数字低于目标值，那么我们就有一个有效的工作量证明。如果不是，那么这个区块就是无效的，因为它没有工作量证明。
+
 include::code-ch09/answers.py[tag=exercise11,indent=0]
 
-==== Difficulty Adjustment
+==== Difficulty Adjustment 难度调整
 
 In((("blocks", "difficulty adjustment period")))((("difficulty adjustment period")))((("proof-of-work", "difficulty adjustment period"))) Bitcoin, each group of 2,016 blocks is called a _difficulty adjustment period_.
 At the end of every difficulty adjustment period, the target is adjusted according to this pass:[<span class="keep-together">formula</span>]:
+
+在比特币中，每2016个区块组成的一组被称为一个“难度调整周期”。在每个难度调整周期结束时，目标值根据以下公式进行调整：
 
 ++++
 <ul class="simplelist">
@@ -397,49 +521,62 @@ The((("time_differential number"))) __time_differential__ is calculated so that 
 This way, the new target cannot change more than four times in either direction.
 That is, the target will be reduced or increased by four times at the most.
 
+时间差数值 __time_differential__ 是这样计算的：如果它大于8周，那么使用8周；如果它小于3.5天，那么使用3.5天。这样，新目标在任何一个方向上的变化都不能超过四倍。也就是说，目标值最多只能增加或减少四倍。
+
 If each block took on average 10 minutes to create, 2,016 blocks should take 20,160 minutes.
 There are 1,440 minutes per day, which means that 2,016 blocks will take 20,160 / 1,440 = 14 days to create.
 The effect of the difficulty adjustment is that block times are regressed toward the mean of 10 minutes per block.
 This means that long-term, blocks will always go toward 10-minute blocks even if a lot of hashing power has entered or left the network.
 
+如果每个区块平均需要10分钟来创建，那么2016个区块需要20160分钟。每天有1440分钟，这意味着2016个区块需要20160 / 1440 = 14天来创建。难度调整的影响是，区块时间会回归到每个区块10分钟的平均值。这意味着从长远来看，即使有很多哈希能力进入或离开网络，区块也会始终倾向于10分钟的区块。
+
 The new bits calculation should be using the timestamp field of the last block of each of the current and previous difficulty adjustment periods.
 Satoshi unfortunately had another off-by-one error here, as the timestamp differential calculation looks at the first and last blocks of the 2,016-block difficulty adjustment period instead.
 The time differential is therefore the difference of blocks that are 2,015 blocks apart instead of 2,016 blocks apart.
 
+新的位数计算应该使用当前和前一个难度调整周期中最后一个区块的时间戳字段。不幸的是，中本聪在这里又犯了一个错误，因为时间差计算是查看2016个区块难度调整周期中的第一个和最后一个区块，而不是最后一个区块。因此，时间差是相隔2015个区块的差，而不是相隔2016个区块的差。
+
 We can code this formula like so:
+
+我们可以这样编写这个公式：
 
 [source,python]
 ----
 include::code-ch09/examples.py[tag=example9]
 ----
-<1> Note that `TWO_WEEKS = 60*60*24*14` is the number of seconds in 2 weeks: 60 seconds &#xd7; 60 minutes &#xd7; 24 hours &#xd7; 14 days.
-<2> This makes sure that if it took more than 8 weeks to find the last 2,015 blocks, we don't decrease the difficulty too much.
-<3> This makes sure that if it took less than 3.5 days to find the last 2,015 blocks, we don't increase the difficulty too much.
+<1> Note that `TWO_WEEKS = 60*60*24*14` is the number of seconds in 2 weeks: 60 seconds &#xd7; 60 minutes &#xd7; 24 hours &#xd7; 14 days. 注意，TWO_WEEKS = 60*60*24*14 是2周内的秒数：60秒 × 60分钟 × 24小时 × 14天。 
+<2> This makes sure that if it took more than 8 weeks to find the last 2,015 blocks, we don't decrease the difficulty too much. 这确保了如果找到最后2015个区块需要超过8周的时间，我们不会过度降低难度。
+<3> This makes sure that if it took less than 3.5 days to find the last 2,015 blocks, we don't increase the difficulty too much. 这确保了如果找到最后2015个区块需要少于3.5天的时间，我们不会过度增加难度。
 
 Note that we only need the headers to calculate what the next block's target should be.
 Once we have the target, we can convert the target to bits.
 The inverse operation looks like this:
 
+注意，我们只需要区块头就可以计算出下一个区块的目标值。一旦我们有了目标值，我们可以将目标值转换为位数。逆运算如下：
+
 [source,python]
 ----
 include::code-ch09/helper.py[tag=source1]
 ----
-<1> Get rid of all the leading zeros.
+<1> Get rid of all the leading zeros. 去掉所有前导零。
 <2> The bits format is a way to express really large numbers succinctly and can be used with both negative and positive numbers.
 If the first bit in the coefficient is a 1, the bits field is interpreted as a negative number.
-Since the target is always positive for us, we shift everything over by 1 byte if the first bit is 1.
-<3> The exponent is how long the number is in base 256.
-<4> The coefficient is the first three digits of the base 256 number.
-<5> The coefficient is in little-endian and the exponent goes last in the bits format.
+Since the target is always positive for us, we shift everything over by 1 byte if the first bit is 1. 位数格式是一种简洁地表示非常大的数字的方式，可用于正数和负数。 如果系数的第一个位是1，则将位数字段解释为负数。由于我们的目标值总是正数，所以如果第一个位是1，我们将所有内容向右移动1个字节。 
+<3> The exponent is how long the number is in base 256. 指数是以256为基数的数字的长度。
+<4> The coefficient is the first three digits of the base 256 number. 系数是256基数数字的前三个数字。
+<5> The coefficient is in little-endian and the exponent goes last in the bits format. 系数是小端，指数在位数格式中最后出现。
 
 If the block doesn't have the correct bits calculated using the difficulty adjustment formula, then we can safely reject that block.
+
+如果区块不使用难度调整公式计算正确的位数，那么我们可以安全地拒绝该区块。
 
 include::code-ch09/answers.py[tag=exercise12,indent=0]
 
 include::code-ch09/answers.py[tag=exercise13,indent=0]
 
-=== Conclusion
+=== Conclusion 结论
 
 We've learned how to calculate proof-of-work, how to calculate the new bits for a block after a difficulty adjustment period, and how to parse coinbase transactions.
 We'll now move on to networking in <<chapter_networking>> on our way to the block header field we haven't covered, the Merkle root, in <<chapter_spv>>.
 
+我们已经学会了如何计算工作量证明，如何计算难度调整周期后的区块的新位数，以及如何解析coinbase交易。接下来，我们将前往<<chapter_networking>>的联网部分，然后是<<chapter_spv>>中尚未涉及的区块头字段，Merkle根。
