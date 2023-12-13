@@ -1,21 +1,31 @@
 [[chapter_networking]]
-== Networking
+== Networking 网络连接
 
 [.lead]
 The((("peer-to-peer network", seealso="networking")))((("networking", "basics of"))) peer-to-peer network that Bitcoin runs on is what gives it a lot of its robustness. More than 65,000 nodes are running on the network as of this writing and are communicating constantly.
+
+比特币运行的点对点网络（请参阅“网络基础知识”）是其健壮性的关键所在。截至本书撰写时，网络上已有超过65,000个节点在不断地进行通信。
 
 The Bitcoin network is a((("broadcast networks", seealso="networking")))((("gossip networks", seealso="networking"))) broadcast network, or gossip network.
 Every node is announcing different transactions, blocks, and peers that it knows about.
 The protocol is rich and has a lot of features that have been added to it over the years.
 
+比特币网络是一个广播网络（请参阅“网络基础知识”）或闲聊网络。每个节点都在宣布它所知道的不同交易、区块和同伴。这个协议非常丰富，并且多年来已经添加了许多功能。
+
 One thing to note about the networking protocol is that it is not consensus-critical.
 The same data can be sent from one node to another using some other protocol and the blockchain itself will not be affected.
 
+关于网络协议需要注意的是，它并非共识关键。相同的数据可以使用其他协议从一个节点发送到另一个节点，而区块链本身不会受到影响。
+
 With that in mind, we'll work in this chapter toward requesting, receiving, and validating block headers using the network protocol.
 
-=== Network Messages
+考虑到这一点，我们将在本章中研究如何使用网络协议请求、接收和验证区块头。
+
+=== Network Messages 网络消息
 
 All((("networking", "network messages"))) network messages look like <<network_message_or_the_envelope_that_contains_the_actual_payload>>.
+
+所有的（请参阅“网络消息”）网络消息看起来像<<网络消息或包含实际有效载荷的信封>>。
 
 The((("networking", "network magic"))) first 4 bytes are always the same and are referred to as the _network magic_.
 Magic bytes((("magic bytes"))) are common in network programming as the communication is asynchronous and can be intermittent.
@@ -25,13 +35,17 @@ You would not want a Bitcoin node to connect to a((("Litecoin nodes"))) Litecoin
 Thus, a Litecoin node has a different magic.
 Bitcoin testnet also has a different magic, `0b110907`, as opposed to the Bitcoin mainnet magic, `f9beb4d9`.
 
+前4个字节总是相同的，被称为网络魔数（请参阅“网络魔数”）。在异步且可能间歇的网络编程中，魔数字节非常常见。魔数字节给消息的接收者提供了一个在通信被中断（例如，手机信号丢失）时的起始位置。它们还有助于识别网络。例如，您不希望比特币节点连接到（请参阅“莱特币节点”）莱特币节点。因此，莱特币节点具有不同的魔数。比特币测试网也有一个不同的魔数，0b110907，与比特币主网魔数f9beb4d9不同。
+
 [[network_message_or_the_envelope_that_contains_the_actual_payload]]
-.A network message—the envelope that contains the actual payload
+.A network message—the envelope that contains the actual payload 网络消息 —— 包含实际有效载荷的信封
 image::images/prbc_1001.png[Network Message]
 
 The next 12 bytes are the command field, or a description of what the payload actually carries.
 There are many different commands; an exhaustive list can be seen in the https://en.bitcoin.it/wiki/Protocol_documentation[documentation].
 The command field is meant to be human-readable and this particular message is the byte string "version" in ASCII with 0-byte padding.
+
+下一个12个字节是命令字段，或者是描述有效载荷实际内容的描述。有许多不同的命令；详尽的列表可以在 https://en.bitcoin.it/wiki/Protocol_documentation[文档]中查看。命令字段是为了让人容易理解的，这个特定的消息是ASCII中的字节字符串“version”，后面跟着0字节填充。
 
 The next 4 bytes are the length of the payload in little-endian.
 As we saw in Chapters pass:[<a data-type="xref" href="#chapter_tx_parsing" data-xrefstyle="select:labelnumber">#chapter_tx_parsing</a> and 
@@ -39,12 +53,18 @@ As we saw in Chapters pass:[<a data-type="xref" href="#chapter_tx_parsing" data-
 2^32^ is about 4 billion, so payloads can be as big as 4 GB, though the reference client rejects any payloads over 32 MB.
 In the message in Figure 10-1, our payload is 101 bytes.
 
+接下来的4个字节是以小端方式表示的有效载荷长度。正如我们在第#chapter_tx_parsing和#chapter_blocks章中所看到的，有效载荷的长度是必要的，因为有效载荷是可变的。2^32^大约是40亿，所以有效载荷可以达到4GB的大小，尽管参考客户端会拒绝任何超过32MB的有效载荷。在图10-1中的消息中，我们的有效载荷是101字节。
+
 The((("checksum algorithm"))) next 4 bytes are the checksum field.
 The checksum algorithm is something of an odd choice, as it's the first 4 bytes of the hash256 of the payload.
 It's an odd choice because networking protocol checksums are normally designed to have error-correcting capability and hash256 has none.
 That said, hash256 is common in the rest of the Bitcoin protocol, which is probably the reason it's used here.
 
+下一个4个字节是校验和字段（请参阅“校验和算法”）。校验和算法是一个有些奇特的choice，因为它是有效载荷的hash256的前4个字节。这是一个奇特的选择，因为网络协议校验和通常是为了具有纠错能力而设计的，而hash256没有这种能力。话虽如此，hash256在比特币协议的其余部分中非常常见，这可能是它在这里被使用的原因。
+
 The code to handle network messages requires us to create a new class:
+
+处理网络消息的代码需要我们创建一个新类：
 
 [source,python]
 ----
@@ -57,10 +77,12 @@ include::code-ch10/answers.py[tag=exercise2,indent=0]
 
 include::code-ch10/answers.py[tag=exercise3,indent=0]
 
-=== Parsing the Payload
+=== Parsing the Payload 解析有效载荷
 
 Each((("networking", "parsing payloads"))) command has a separate payload specification.
 <<parsed_version_chap_ten>> is the parsed payload for `version`.
+
+每个（请参阅“解析有效载荷”）命令都有自己的有效载荷规范。<<解析后的版本>>是version的解析有效载荷。
 
 [[parsed_version_chap_ten]]
 .Parsed version
@@ -68,21 +90,33 @@ image::images/prbc_1002.png[Version Message]
 
 The fields are meant to give enough information for two nodes to be able to pass:[<span class="keep-together">communicate</span>].
 
+这些字段旨在为两个节点提供足够的信息，以便它们能够进行通信。
+
 The first field is the network protocol version, which specifies what messages may be communicated.
 The service field gives information about what capabilities are available to connecting nodes.
 The timestamp field is 8 bytes (as opposed to 4 bytes in the block header) and is the Unix timestamp in little-endian.
+
+第一个字段是网络协议版本，它指定可以传输哪些消息。服务字段提供了连接节点的可用功能信息。时间戳字段是8个字节（与区块头的4个字节相反），它是小端格式的Unix时间戳。
 
 IP addresses can be IPv6, IPv4, or OnionCat (a mapping of TOR's `.onion` addresses to IPv6).
 If IPv4, the first 12 bytes are `00000000000000000000ffff` and the last 4 bytes are the IP.
 The port is 2 bytes in big-endian. The default on mainnet is 8333, which maps to `208d` in big-endian hex.
 
+IP地址可以是IPv6、IPv4或OnionCat（将TOR的.onion地址映射到IPv6）。如果是IPv4，前12个字节是00000000000000000000ffff，最后4个字节是IP地址。端口是2个字节的大端格式。主网上的默认端口是8333，映射到大端十六进制的208d。
+
 A nonce is a number used by a node to detect a connection to itself.
 The user agent identifies the software being run.
 The height or latest block field helps the other node know which block a node is synced up to.
 
+nonce是一个由节点用于检测连接到自身的数字。用户代理标识正在运行的软件。高度或最新区块字段帮助另一个节点知道节点同步到的哪个区块。
+
 Relay is used for Bloom filters, which we'll get to in <<chapter_bloom_filters>>.
 
+中继用于Bloom过滤器，我们将在<<Bloom过滤器章节>>中介绍。
+
 Setting some reasonable defaults, our `VersionMessage` class looks like this:
+
+设定一些合理的默认值，我们的VersionMessage类看起来像这样：
 
 [source,python]
 ----
@@ -91,25 +125,33 @@ include::code-ch10/network.py[tag=source2]
 
 At this point, we need a way to serialize this message.
 
+此时，我们需要一种将此消息序列化的方法。
+
 include::code-ch10/answers.py[tag=exercise4,indent=0]
 
-=== Network Handshake
+=== Network Handshake 网络握手
 
 The((("handshakes")))((("networking", "network handshakes"))) network handshake is how nodes establish communication:
 
- * A wants to connect to B and sends a version message.
- * B receives the version message, responds with a verack message, and sends its own version message.
- * A receives the version and verack messages and sends back a verack message.
- * B receives the verack message and continues communication.
+网络握手是节点建立通信的方式：
+
+ * A wants to connect to B and sends a version message. A想连接到B，并发送一个版本消息。
+ * B receives the version message, responds with a verack message, and sends its own version message. B收到版本消息，用verack消息回应，并发送自己的版本消息。
+ * A receives the version and verack messages and sends back a verack message. A收到版本和verack消息，并回送一个verack消息。
+ * B receives the verack message and continues communication. B收到verack消息并继续通信。
 
 Once the handshake is finished, A and B can communicate however they want.
 Note that there is no authentication here, and it's up to the nodes to verify all data that they receive.
 If a node sends a bad transaction or block, it can expect to get banned or disconnected.
 
-=== Connecting to the Network
+握手完成后，A和B可以按他们希望的任何方式进行通信。请注意，这里没有身份验证，节点需要验证它们收到的所有数据。如果一个节点发送了一个错误的交易或区块，它可能会被禁止或断开连接。
+
+=== Connecting to the Network 连接到网络
 
 Network communication((("networking", "connecting to networks"))) is tricky due to its asynchronous nature.
 To experiment, we can establish a connection to a node on the network synchronously:
+
+由于网络通信的异步性，网络通信变得复杂。为了进行实验，我们可以同步地建立一个与网络上的节点的连接：
 
 [source,python]
 ----
@@ -128,17 +170,21 @@ To experiment, we can establish a connection to a node on the network synchronou
 ...     print(new_message)
 ----
 <1> This is a server I've set up for testnet.
-The testnet port is 18333 by default.
+The testnet port is 18333 by default. 这是我为了测试网络设置的一个服务器。 默认情况下，测试网络的端口是18333。
 <2> We create a stream to be able to read from the socket.
-A stream made this way can be passed to all the parse methods.
-<3> The first step of the handshake is to send a version message.
-<4> We now send the message in the right envelope.
-<5> This line will read any messages coming in through our connected socket.
+A stream made this way can be passed to all the parse methods. 我们创建一个流，以便能够从套接字中读取。 以这种方式创建的流可以传递给所有的解析方法。 
+<3> The first step of the handshake is to send a version message. 握手的第一个步骤是发送一个版本消息。
+<4> We now send the message in the right envelope. 我们现在将消息发送到正确的信封中。
+<5> This line will read any messages coming in through our connected socket. 这条线将通过我们连接的套接字读取传入的任何消息。
 
 Connecting in this way, we can't send until we've received and can't respond intelligently to more than one message at a time.
 A more robust implementation would use an asynchronous library (like `asyncio` in Python 3) to send and receive without being blocked.
 
+以这种方式连接，我们在收到之前无法发送，并且无法同时响应多个消息。 更健壮的实现将使用异步库（如Python 3中的asyncio）来发送和接收，而不会阻塞。
+
 We also need a verack message class, which we'll create here:
+
+我们也需要一个verack消息类，我们在这里创建：
 
 [source,python]
 ----
@@ -147,20 +193,26 @@ include::code-ch10/network.py[tag=source3]
 
 A `VerAckMessage` is a minimal network message.
 
+`VerAckMessage` 是一个最小的网络消息。
+
 Let's now automate this by creating a class that will handle the communication for us:
+
+现在让我们通过创建一个将处理我们通信的类来自动化这个过程：
 
 [source,python]
 ----
 include::code-ch10/network.py[tag=source4]
 ----
 <1> The `send` method sends a message over the socket.
-The `command` property and `serialize` methods are expected to exist in the `message` object.
-<2> The `read` method reads a new message from the socket.
+The `command` property and `serialize` methods are expected to exist in the `message` object. send方法通过套接字发送消息。 command属性和serialize方法预计将存在于message对象中。
+<2> The `read` method reads a new message from the socket. read方法从套接字中读取一个新消息。 
 <3> The `wait_for` method lets us wait for any one of several commands (specifically, message classes).
 Along with the synchronous nature of this class, a method like this makes for easier programming.
-A commercial-strength node would definitely not use something like this.
+A commercial-strength node would definitely not use something like this. wait_for方法让我们等待多个命令（具体来说，消息类）中的任何一个。 与这个类的同步特性相结合，这样的方法使得编程更加容易。 商业强度的节点肯定不会使用类似的东西。
 
 Now that we have a node, we can handshake with another node: 
+
+现在我们有一个节点，我们可以与其他节点握手：
 
 [source,python]
 ----
@@ -179,15 +231,15 @@ Now that we have a node, we can handshake with another node:
 ...         node.send(VerAckMessage())
 ----
 <1> Most nodes don't care about the fields in `version` like IP address.
-We can connect with the defaults and everything will be just fine.
-<2> We start the handshake by sending the version message.
-<3> We only finish when we've received both verack and version.
+We can connect with the defaults and everything will be just fine. 大多数节点不在乎version中的IP地址等字段。 我们可以使用默认值进行连接，一切都会很好。 
+<2> We start the handshake by sending the version message. 我们通过发送版本消息来开始握手。
+<3> We only finish when we've received both verack and version. 我们只有在收到verack和版本消息后才能完成握手。 
 <4> We expect to receive a verack for our version and the other node's version.
-We don't know in which order they will arrive, though.
+We don't know in which order they will arrive, though. 我们期望收到对我们版本和另一个节点版本的verack。 但我们不知道它们将以什么顺序到达。
 
 include::code-ch10/answers.py[tag=exercise5,indent=0]
 
-=== Getting Block Headers
+=== Getting Block Headers 获取区块头
 
 Now((("networking", "getting block headers")))((("blocks", "getting block headers"))) that we have code to connect to a node, what can we do?
 When any node first connects to the network, the data that's most crucial to get and verify is the block headers.
@@ -195,8 +247,17 @@ For full nodes, downloading the block headers allows them to asynchronously ask 
 For light clients, downloading headers allows them to verify the proof-of-work in each block.
 As we'll see in <<chapter_spv>>, light clients will be able to get proofs of inclusion through the network, but that requires the light clients to have the block headers.
 
+现在我们有了连接到节点的代码，我们能做什么呢？ 
+当一个节点第一次连接到网络时，最重要获取和验证的数据是区块头。 
+对于全节点，下载区块头允许它们异步地从多个节点请求完整区块，并行下载数块。 
+对于轻客户端，下载头允许它们验证每个区块中的工作量证明。
+正如我们在<<SPV章节>>中所看到的，轻客户端将能够通过网络获取包含证明，但那需要轻客户端有区块头。
+
 Nodes((("getheaders command"))) can give us the block headers without taking up much bandwidth.
 The command to get the block headers is called `getheaders`, and it looks like <<parsed_getheaders>>.
+
+节点可以给我们区块头，而不会占用太多带宽。 
+获取区块头的命令称为getheaders，它看起来像<<解析getheaders>>。
 
 [[parsed_getheaders]]
 .Parsed getheaders
@@ -206,22 +267,30 @@ As with version, we start with the protocol version, then the number of block he
 If we specify the ending block to be `000...000`, we're indicating that we want as many as the other node will give us.
 The maximum number of headers that we can get back is 2,000, or almost a single difficulty adjustment period (2,016 blocks).
 
+与版本一样，我们从协议版本开始，然后是此列表中区块头组的数量（如果链分裂，这个数字可以大于1），然后是起始区块头，最后是结束区块头。 
+如果我们指定结束区块为000...000，表示我们希望得到尽可能多的其他节点提供的数据。 
+我们可以获取的最大头数是2,000，几乎是一个难度调整周期（2,016个区块）。
+
 Here's what the class looks like:
+
+这个类的样子如下：
 
 [source,python]
 ----
 include::code-ch10/network.py[tag=source5]
 ----
 <1> For the purposes of this chapter, we're going to assume that the number of block header groups is 1.
-A more robust implementation would handle more than a single block group, but we can download the block headers using a single group.
-<2> A starting block is needed, otherwise we can't create a proper message.
-<3> The ending block we assume to be null, or as many as the server will send to us if not defined.
+A more robust implementation would handle more than a single block group, but we can download the block headers using a single group. 为了本章的目的，我们将假设区块头组的数量为1。 更健壮的实现将处理不止一个区块组，但我们可以使用单个组下载区块头。 
+<2> A starting block is needed, otherwise we can't create a proper message. 需要一个起始区块，否则我们无法创建一个适当的消息。 
+<3> The ending block we assume to be null, or as many as the server will send to us if not defined. 我们假设结束区块为null，或者如果未定义，则为服务器发送给我们的数量。
 
 include::code-ch10/answers.py[tag=exercise6,indent=0]
 
-=== Headers Response
+=== Headers Response 头部响应
 
 We((("networking", "headers response messages", id="NWheader10"))) can now create a node, handshake, and then ask for some headers:
+
+我们现在可以创建一个节点，握手，然后请求一些头部：
 
 [source,python]
 ----
@@ -240,6 +309,8 @@ The((("headers command"))) other node will send back the `headers` command.
 This is a list of block headers (<<parsed_headers_chap_ten>>), which we already learned how to parse in <<chapter_blocks>>.
 The `HeadersMessage` class can take advantage of this when parsing.
 
+现在我们需要一种从另一个节点接收头部的方式。 另一个节点将回送headers命令。 这是一列表块头（<<解析头部>>），我们已经在<<块章节>>中学过如何解析。 HeadersMessage类在解析时可以充分利用这一点。
+
 [[parsed_headers_chap_ten]]
 .Parsed headers
 image::images/prbc_1004.png[headers payload]
@@ -252,32 +323,40 @@ This may be a bit confusing at first, since we only asked for the headers and no
 The reason nodes bother sending the number of transactions at all is because the headers message is meant to be compatible with the format for the block message, which is the block header, the number of transactions, and then the transactions themselves.
 By specifying that the number of transactions is 0, we can use the same parsing engine as when parsing a full block:
 
+头部消息以一个varint类型的头部数量开始，这是一个从1到2,000（包含）的数字。 我们知道，每个块头是80字节。 然后是交易的数量。 头部消息中的交易数量总是0。 这可能会让人有些困惑，因为我们只请求了头部，而没有请求交易。 节点之所以会发送交易数量，是因为头部消息的格式应该与块消息的格式兼容，即块头，交易数量，然后是交易本身。 通过指定交易数量为0，我们可以使用与解析完整块时相同的解析引擎：
+
 [source,python]
 ----
 include::code-ch10/network.py[tag=source6]
 ----
-<1> Each block gets parsed with the `Block` class's `parse` method, using the same stream that we have.
-<2> The number of transactions is always 0 and is a remnant of block parsing.
-<3> If we didn't get 0, something is wrong.
+<1> Each block gets parsed with the `Block` class's `parse` method, using the same stream that we have. 每个块都使用Block类的parse方法进行解析，使用与我们相同的流。
+<2> The number of transactions is always 0 and is a remnant of block parsing. 交易数量总是0，是块解析的遗留物。
+<3> If we didn't get 0, something is wrong. 如果我们得到的不是0，那么一定有问题。
 
 Given the network connection that we've set up, we can download the headers, check their proof-of-work, and validate the block header difficulty adjustments as follows:
+
+根据我们建立的联网连接，我们可以下载头部，检查它们的工作量证明，并按照以下方式验证块头难度调整：
 
 [source,pycon]
 ----
 include::code-ch10/examples.py[tag=example1]
 ----
-<1> Check that the proof-of-work is valid.
-<2> Check that the current block is after the previous one.
-<3> Check that the bits/target/difficulty is what we expect based on the previous epoch calculation.
-<4> At the end of the epoch, calculate the next bits/target/difficulty.
-<5> Store the first block of the epoch to calculate bits at the end of the epoch.
+<1> Check that the proof-of-work is valid. 检查工作量证明是否有效。
+<2> Check that the current block is after the previous one. 检查当前块是否在之前的块之后。
+<3> Check that the bits/target/difficulty is what we expect based on the previous epoch calculation. 检查基于之前的epoch计算的位/目标/难度是否符合我们的预期。
+<4> At the end of the epoch, calculate the next bits/target/difficulty. 在epoch结束时，计算下一个位/目标/难度。
+<5> Store the first block of the epoch to calculate bits at the end of the epoch. 存储每个epoch的第一个块，以在epoch结束时计算位。
 
 Note that this won't work on testnet as the difficulty adjustment algorithm is different.
 To make sure blocks can be found consistently for testing, if a block hasn't been found on testnet in 20 minutes, the difficulty drops to 1, making it very easy to find a block.
 This is set up this way to allow testers to be able to keep building blocks on the network without expensive mining equipment.
 A $30 USB ASIC can typically find a few blocks per minute at the minimum difficulty.((("", startref="NWheader10")))
 
-=== Conclusion
+请注意，这在测试网上是无法工作的，因为难度调整算法是不同的。 为了确保测试中可以一致地找到块，如果在测试网上在20分钟内找不到块，难度将降至1，这使得找到块变得非常容易。 这种方式是为了让测试人员能够在没有昂贵挖矿设备的情况下继续在网络上构建块。 一个价值30美元的USB ASIC通常可以在最低难度下每分钟找到几个块。((("", startref="NWheader10")))
+
+=== Conclusion 结论
 
 We've managed to connect to a node on the network, handshake, download the block headers, and verify that they meet the consensus rules.
 In the next chapter, we focus on getting information about transactions that we're interested in from another node in a private yet provable way.
+
+我们已经成功地连接到网络上的一个节点，握手，下载块头，并验证它们是否符合共识规则。 在下一章中，我们将重点介绍如何以私密且可证明的方式从另一个节点获取我们感兴趣的交易的详细信息。
