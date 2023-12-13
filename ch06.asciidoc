@@ -105,7 +105,7 @@ A((("OP_DUP operation"))) typical operation is `OP_DUP` (<<op_dup_duplicates_the
 一个典型的操作是OP_DUP（<<op_dup_duplicates_the_top_element>>），它将复制栈顶元素（消耗0）并将新元素推送到栈中（推送1）。
 
 [[op_dup_duplicates_the_top_element]]
-.OP_DUP duplicates the top element .OP_DUP 复制栈顶元素
+.OP_DUP duplicates the top element OP_DUP 复制栈顶元素
 image::images/prbc_0603.png[OP_DUP]
 
 After all the commands are evaluated, the top element of the stack must be nonzero for the script to resolve as valid.
@@ -123,8 +123,8 @@ Note in the diagram that `y = hash160(x)`.
 除了OP_DUP，还有许多其他操作。 OP_HASH160（<<op_hash160_does_a_sha256_followed_by_ripemd160_to_the_top_element>>) 对栈顶元素执行sha256，然后执行ripemd160（也称为hash160）（消耗1），并将新元素推送到栈中（推送1）。 请注意，在图中 `y = hash160(x)`。
 
 [[op_hash160_does_a_sha256_followed_by_ripemd160_to_the_top_element]]
-.OP_HASH160 does a sha256 followed by ripemd160 to the top element 
-image::images/prbc_0604.png[OP_HASH160] OP_HASH160 对栈顶元素执行sha256，然后执行ripemd160
+.OP_HASH160 does a sha256 followed by ripemd160 to the top element OP_HASH160 对栈顶元素执行sha256，然后执行 ripemd160
+image::images/prbc_0604.png[OP_HASH160]
 
 Another((("OP_CHECKSIG operation"))) very important operation is `OP_CHECKSIG` (<<op_checksig_checks_if_the_signature_for_the_pubkey_is_valid_or_not>>).
 `OP_CHECKSIG` consumes two elements from the stack, the first being the pubkey and the second being a signature, and examines whether the signature is good for the given pubkey.
@@ -133,8 +133,8 @@ If so, `OP_CHECKSIG` pushes a 1 to the stack; otherwise, it pushes a 0 to the st
 另一个非常重要的操作是OP_CHECKSIG（<<op_checksig_checks_if_the_signature_for_the_pubkey_is_valid_or_not>>）。 OP_CHECKSIG 从栈中消耗两个元素，第一个是公钥，第二个是签名，并检查签名是否适用于给定的公钥。 如果是，OP_CHECKSIG 将1推送到栈中；否则，它将0推送到栈中。
 
 [[op_checksig_checks_if_the_signature_for_the_pubkey_is_valid_or_not]]
-.OP_CHECKSIG checks if the signature for the pubkey is valid or not
-image::images/prbc_0605.png[OP_CHECKSIG] 检查公钥的签名是否有效
+.OP_CHECKSIG checks if the signature for the pubkey is valid or not 检查公钥的签名是否有效
+image::images/prbc_0605.png[OP_CHECKSIG]
 
 ==== Coding Opcodes 编码操作码
 
@@ -320,21 +320,27 @@ We will use this ability to combine scripts for evaluation later in this chapter
 
 我们将在本章后面使用这个组合脚本的能力进行评估。
 
-=== Standard Scripts
+=== Standard Scripts 标准脚本
 
 There((("Script", "standard scripts"))) are many types of standard scripts in Bitcoin, including the following:
 
-p2pk:: Pay-to-pubkey
-p2pkh:: Pay-to-pubkey-hash
-p2sh:: Pay-to-script-hash
-p2wpkh:: Pay-to-witness-pubkey-hash
-p2wsh:: Pay-to-witness-script-hash
+比特币中有很多类型的标准脚本，包括以下几种：
+
+p2pk:: Pay-to-pubkey 支付到公钥
+p2pkh:: Pay-to-pubkey-hash 支付到公钥哈希
+p2sh:: Pay-to-script-hash 支付到脚本哈希
+p2wpkh:: Pay-to-witness-pubkey-hash 支付到见证公钥哈希
+p2wsh:: Pay-to-witness-script-hash 支付到见证脚本哈希
 
 Addresses are known script templates like these.
 Wallets know how to interpret various address types (p2pkh, p2sh, p2wpkh) and create the appropriate ScriptPubKeys.
 All of the examples here have a particular type of address format (Base58, Bech32) so wallets can pay to them.
 
+地址是像这些脚本模板一样的已知模板。钱包知道如何解释各种地址类型（p2pkh、p2sh、p2wpkh）并创建相应的ScriptPubKeys。这里所有的示例都具有特定类型的地址格式（Base58、Bech32），因此钱包可以向它们支付。
+
 To show exactly how all this works, we'll start with one of the original scripts, pay-to-pubkey.
+
+为了准确地说明这一切是如何工作的，我们将从原始脚本之一，支付到公钥（pay-to-pubkey）开始。
 
 === p2pk
 
@@ -342,29 +348,41 @@ Pay-to-pubkey (p2pk) ((("ScriptPubKeys", "p2pk (pay-to-pubkey)", id="Sp2pk06")))
 Most coins thought to belong to Satoshi are in p2pk UTXOs—that is, transaction outputs whose ScriptPubKeys have the p2pk form.
 There are some limitations that we'll discuss in <<problemsp2pk>>, but first, let's look at how p2pk works.
 
+支付到公钥（p2pk）在比特币的早期阶段被广泛使用。大多数被认为属于中本聪的硬币都在p2pk UTXOs中——也就是说，交易输出的ScriptPubKeys具有p2pk形式。我们在<>中讨论一些限制，但首先，让我们看看p2pk是如何工作的。
+
 Back in <<chapter_elliptic_curve_cryptography>>, we learned about both ECDSA signing and verification.
 To verify an ECDSA signature, we need the message, _z_, the public key, _P_, and the signature, _r_ and _s_.
 In p2pk, bitcoins are sent to a public key, and the owner of the private key can unlock or spend the bitcoins by creating a signature.
 The ScriptPubKey of a transaction puts the assigned bitcoins under the control of the private key owner.
 
+在<<chapter_elliptic_curve_cryptography>>中，我们了解了ECDSA签名和验证。要验证ECDSA签名，我们需要消息 _z_、公钥 _P_ 以及签名 _r_ 和 _s_。在p2pk中，比特币发送到一个公钥，私钥所有者可以通过创建签名来解锁或花费比特币。交易中的ScriptPubKey将分配的比特币置于私钥所有者的控制之下。
+
 Specifying where the bitcoins go is the job of the ScriptPubKey—this is the lockbox that receives the bitcoins.
 The p2pk ScriptPubKey looks like <<pay_to_pubkey_p2pk_scriptpubkey>>.
 
+指定比特币的去向是ScriptPubKey的工作——这是接收比特币的锁箱。p2pk ScriptPubKey 看起来像<<pay_to_pubkey_p2pk_scriptpubkey>>。
+
 [[pay_to_pubkey_p2pk_scriptpubkey]]
-.Pay-to-pubkey (p2pk) ScriptPubKey
+.Pay-to-pubkey (p2pk) ScriptPubKey 支付到公钥（p2pk）ScriptPubKey
 image::images/prbc_0607.png[P2PK ScriptPubKey]
 
 Note((("OP_CHECKSIG operation"))) the `OP_CHECKSIG`, as that will be very important.
 The ScriptSig is the part that unlocks the received bitcoins.
 The pubkey can be compressed or uncompressed, though early on in Bitcoin's history when p2pk was more prominent, the uncompressed format was the only one being used (see <<chapter_serialization>>).
 
+请注意OP_CHECKSIG操作，因为这非常重要。ScriptSig是解锁接收比特币的部分。公钥可以是压缩的或未压缩的，尽管在比特币历史的早期阶段，当p2pk更为突出时，唯一使用的是未压缩格式（请参见<<chapter_serialization>>）。
+
 For p2pk, the ScriptSig required to unlock the corresponding ScriptPubKey is the signature followed by a single sighash byte, as shown in <<pay_to_pubkey_p2pk_scriptsig>>.
+
+对于p2pk，解锁相应 ScriptPubKey 所需的 ScriptSig 是签名后跟一个单独的 sighash 字节，如下所示<<pay_to_pubkey_p2pk_scriptsig>>。
 
 [[pay_to_pubkey_p2pk_scriptsig]]
 .Pay-to-pubkey (p2pk) ScriptSig
 image::images/prbc_0608.png[P2PK ScriptSig]
 
 The ScriptPubKey and ScriptSig combine to make a command set that looks like <<p2pk_combined>>.
+
+脚本公钥（ScriptPubKey）和脚本签名（ScriptSig）组合成一个命令集，看起来像<<p2pk_combined>>。
 
 [[p2pk_combined]]
 .p2pk combined
@@ -375,6 +393,8 @@ At the end of the processing, the top element of the stack must be nonzero to be
 The Script commands are processed one at a time.
 In <<p2pk_start>>, we start with the commands as combined in <<p2pk_combined>>.
 
+<<p2pk_start>>中的两列是脚本命令和元素堆栈。 在处理结束时，堆栈顶部的元素必须非零才能被视为有效的ScriptSig。 脚本命令一次处理一个。 在<<p2pk_start>>中，我们以<<p2pk_combined>>中组合的命令开始。
+
 [[p2pk_start]]
 .p2pk start
 image::images/prbc_0610.png[P2PK Start]
@@ -382,12 +402,16 @@ image::images/prbc_0610.png[P2PK Start]
 The first command is the signature, which is an element.
 This is data that is pushed to the stack (<<pspk_step_1>>).
 
+第一个命令是签名，它是一个元素。 这是推送到堆栈的数据（<<pspk_step_1>>）。
+
 [[pspk_step_1]]
 .p2pk step 1
 image::images/prbc_0611.png[P2PK Step 1]
 
 The second command is the pubkey, which is also an element.
 Again, this is data that is pushed to the stack (<<pspk_step_2>>).
+
+第二个命令是公钥，它也是一个元素。 同样，这是推送到堆栈的数据（<<pspk_step_2>>）。
 
 [[pspk_step_2]]
 .p2pk step 2
@@ -397,6 +421,8 @@ image::images/prbc_0612.png[P2PK Step 2]
 `OP_CHECKSIG` will push a 1 to the stack if the signature is valid, and a 0 if not.
 Assuming that the signature is valid for this public key, we have the situation shown in <<pspk_step_3>>.
 
+OP_CHECKSIG 消耗两个堆栈命令（公钥和签名）并确定它们是否有效。 如果签名有效，OP_CHECKSIG 会将1推送到堆栈；如果无效，则推送到0。 假设该签名对此公钥有效，则我们得到<<pspk_step_3>>所示的情况。
+
 [[pspk_step_3]]
 .p2pk step 3
 image::images/prbc_0613.png[P2PK End 1]
@@ -404,7 +430,11 @@ image::images/prbc_0613.png[P2PK End 1]
 We're finished processing all the Script commands, and we've ended up with a single element on the stack.
 Since the top element is nonzero (1 is definitely not 0), this script is valid.
 
+我们已经处理完所有脚本命令，堆栈上剩下一个元素。 由于顶部元素非零（1绝对不是0），因此这个脚本有效。
+
 If this transaction instead had an invalid signature, the result from `OP_CHECKSIG` would be 0, ending our script processing (as shown in <<p2pk_end>>).
+
+如果此交易具有无效签名，OP_CHECKSIG 的结果将是0，结束我们的脚本处理（如<<p2pk_end>>所示）。
 
 [[p2pk_end]]
 .p2pk end
@@ -412,29 +442,39 @@ image::images/prbc_0614.png[P2PK End 2]
 
 If the top element is 0, the combined script is invalid and a transaction with this ScriptSig in the input is invalid.
 
+如果顶部元素为0，则组合脚本无效，具有此 ScriptSig 的输入的交易无效。
+
 The combined script will validate if the signature is valid, but fail if the signature is invalid.
 The ScriptSig will only unlock the ScriptPubKey if the signature is valid for that public key.
 In other words, only someone with knowledge of the private key can produce a valid ScriptSig.
+
+组合脚本将在签名有效时进行验证，在签名无效时失败。 只有当签名对该公钥有效时，ScriptSig 才能解锁 ScriptPubKey。 换句话说，只有拥有私钥知识的人才能生成有效的 ScriptSig。
 
 Incidentally, we can see where ScriptPubKey got its name.
 The public key in uncompressed SEC format is the main command in the ScriptPubKey for p2pk (the other command being `OP_CHECKSIG`).
 Similarly, ScriptSig is named as such because the ScriptSig for p2pk has the DER signature.((("", startref="P2oper06")))
 
-==== Coding Script Evaluation
+顺便说一句，我们可以看到脚本公钥（ScriptPubKey）是如何得名的。 未压缩的SEC格式的公钥是 p2pk ScriptPubKey 中的主要命令（另一个命令是 OP_CHECKSIG）。 同样，ScriptSig 之所以如此命名，是因为 p2pk 的 ScriptSig 具有DER签名。
+
+==== Coding Script Evaluation 编码脚本评估
 
 We'll((("p2pk (pay-to-pubkey)", "coding script evaluation"))) now code a way to evaluate scripts.
 This requires us to go through each command and evaluate whether the script is valid.
 What we want to be able to do is this:
 
+我们将要为 p2pk（支付到公钥）编写一种评估脚本的方法。这需要我们遍历每个命令，评估脚本是否有效。我们想要能够做到这一点：
+
 [source,python]
 ----
 include::code-ch06/examples.py[tag=example1]
 ----
-<1> The p2pk ScriptPubkey is the SEC format pubkey followed by `OP_CHECKSIG`, which is `0xac` or 172.
-<2> We can do this because of the `__add__` method we just created.
-<3> We want to evaluate the commands and see if the script validates.
+<1> The p2pk ScriptPubkey is the SEC format pubkey followed by `OP_CHECKSIG`, which is `0xac` or 172. p2pk ScriptPubkey 是 SEC 格式公钥后跟 OP_CHECKSIG，它是 0xac 或 172。
+<2> We can do this because of the `__add__` method we just created. 我们可以这样做，因为我们刚刚创建的 __add__ 方法。 
+<3> We want to evaluate the commands and see if the script validates. 我们想要评估命令，看看脚本是否验证。
 
 Here is the method that we'll use for the _combined_ command set (combination of the ScriptPubKey of the previous transaction and the ScriptSig of the current pass:[<span class="keep-together">transaction</span>]):
+
+这是我们将用于组合命令集（前一个交易的 ScriptPubKey 和当前传递的 ScriptSig 的组合）的方法：
 
 [source,python]
 ----
@@ -444,31 +484,35 @@ class Script:
 ...
 include::code-ch06/script.py[tag=source5]
 ----
-<1> As the commands list will change, we make a copy.
-<2> We execute until the commands list is empty.
+<1> As the commands list will change, we make a copy. 由于命令列表将更改，我们制作一个副本。
+<2> We execute until the commands list is empty. 我们执行直到命令列表为空。 
 <3> The function that executes the opcode is in the `OP_CODE_FUNCTIONS` array (e.g.,
-`OP_DUP`, `OP_CHECKSIG`, etc.).
+`OP_DUP`, `OP_CHECKSIG`, etc.). 执行操作码的函数在 OP_CODE_FUNCTIONS 数组中（例如，OP_DUP，OP_CHECKSIG 等）。 
 <4> 99 and 100 are `OP_IF` and `OP_NOTIF`, respectively.
-They require manipulation of the `cmds` array based on the top element of the stack.
+They require manipulation of the `cmds` array based on the top element of the stack. 99 和 100 分别是 OP_IF 和 OP_NOTIF。它们需要根据堆栈的顶部元素对 cmds 数组进行操作。 
 <5> 107 and 108 are `OP_TOALTSTACK` and `OP_FROMALTSTACK`, respectively.
-They move stack elements to/from an "alternate" stack, which we call `altstack`.
-<6> 172, 173, 174, and 175 are `OP_CHECKSIG`, `OP_CHECKSIGVERIFY`, `OP_CHECKMULTISIG`, and `OP_CHECKMULTISIGVERIFY`, which all require the signature hash, `z`, from <<chapter_elliptic_curve_cryptography>> for signature validation.
-<7> If the command is not an opcode, it's an element, so we push that element to the stack.
-<8> If the stack is empty at the end of processing all the commands, we fail the script by returning `False`.
-<9> If the stack's top element is an empty byte string (which is how the stack stores a 0), then we also fail the script by returning `False`.
-<10> Any other result means that the script has validated.
+They move stack elements to/from an "alternate" stack, which we call `altstack`. 107 和 108 分别是 OP_TOALTSTACK 和 OP_FROMALTSTACK。它们将堆栈元素移动到 / 从“备用”堆栈，我们称之为 altstack。
+<6> 172, 173, 174, and 175 are `OP_CHECKSIG`, `OP_CHECKSIGVERIFY`, `OP_CHECKMULTISIG`, and `OP_CHECKMULTISIGVERIFY`, which all require the signature hash, `z`, from <<chapter_elliptic_curve_cryptography>> for signature validation. 172、173、174 和 175 分别是 OP_CHECKSIG、OP_CHECKSIGVERIFY、OP_CHECKMULTISIG 和 OP_CHECKMULTISIGVERIFY，它们都需要 <<椭圆曲线密码学章节>> 中的签名哈希 z 进行签名验证。 
+<7> If the command is not an opcode, it's an element, so we push that element to the stack. 如果命令不是操作码，它是元素，所以我们将该元素推送到堆栈。 
+<8> If the stack is empty at the end of processing all the commands, we fail the script by returning `False`. 如果在处理所有命令后堆栈为空，我们通过返回 False 来失败脚本。
+<9> If the stack's top element is an empty byte string (which is how the stack stores a 0), then we also fail the script by returning `False`. 如果堆栈的顶部元素是空字节字符串（这是堆栈存储 0 的方式），那么我们也通过返回 False 来失败脚本。 
+<10> Any other result means that the script has validated.  任何其他结果都意味着脚本已验证。
 
 [WARNING]
-.Making Script Evaluation Safe
+.Making Script Evaluation Safe 使脚本评估安全
 ====
 The code shown here is a little bit of a cheat, as the combined script is not exactly executed this way.
 The ScriptSig is evaluated separately from the ScriptPubKey so as to not allow operations from the ScriptSig to affect the ScriptPubKey commands.
 
+这里展示的代码有些作弊，因为组合脚本并不是这样执行的。 ScriptSig 与 ScriptPubKey 分开评估，以防止 ScriptSig 中的操作影响 ScriptPubKey 命令。
+
 Specifically, the stack after all the ScriptSig commands are evaluated is stored, and then the ScriptPubkey commands are evaluated on their own with the stack from the first execution.
+
+具体来说，在所有 ScriptSig 命令评估后，堆栈的存储，然后 ScriptPubkey 命令与第一次执行中的堆栈一起评估。
 ====
 
 
-==== Stack Elements Under the Hood
+==== Stack Elements Under the Hood 堆栈元素内部
 
 It((("p2pk (pay-to-pubkey)", "stack elements under the hood"))) may be confusing that the stack elements are sometimes numbers like 0 or 1 and other times byte strings like a DER signature or SEC pubkey.
 Under the hood, they're all bytes, but some are interpreted as numbers for certain opcodes.
@@ -476,7 +520,11 @@ For example, 1 is stored on the stack as the `01` byte, 2 is stored as the `02` 
 Any byte string is interpreted as a little-endian number for arithmetic opcodes.
 The integer 0 is _not_ stored as the `00` byte, but as the empty byte string.
 
+堆栈元素有时是像 0 或 1 这样的数字，有时是像 DER 签名或 SEC 公钥这样的字节字符串，这可能会让人感到困惑。在内部，它们都是字节，但某些操作码将某些字节解释为数字。例如，1 在堆栈中存储为 01 字节，2 存储为 02 字节，999 存储为 e703 字节等。任何字节字符串都被解释为小端数字以进行算术操作码。整数 0 不是 存储为 00 字节，而是存储为空字节字符串。
+
 The code in _op.py_ can clarify what's going on:
+
+_op.py_ 中的代码可以解释发生了什么：
 
 [source,python]
 ----
@@ -485,13 +533,17 @@ include::code-ch06/op.py[tag=source3]
 
 Numbers being pushed to the stack are encoded into bytes and decoded from bytes when the numerical value is needed.
 
+将数字推送到堆栈时，将数字编码成字节，需要数值时再从字节解码。
+
 include::code-ch06/answers.py[tag=exercise2,indent=0]
 
 [[problemsp2pk]]
-=== Problems with p2pk
+=== Problems with p2pk p2pk 的问题
 
 Pay-to-pubkey((("p2pk (pay-to-pubkey)", "problems with"))) is intuitive in the sense that there is a public key that anyone can send bitcoins to and a signature that can only be produced by the owner of the private key.
 This works well, but there are some problems.
+
+支付到公钥（p2pk）在某种程度上是直观的，因为有一个任何人都可以发送比特币的公钥和一个只能由私钥所有者生成的签名。 这很好，但有一些问题。
 
 First, the public keys are long.
 We know from <<chapter_serialization>> that secp256k1 public points are 33 bytes in compressed SEC and 65 bytes in uncompressed SEC format.
@@ -502,38 +554,57 @@ This makes the compressed and uncompressed SEC formats 66 and 130 characters, re
 To compound this, early Bitcoin transactions didn't use the compressed versions, so the hexadecimal addresses were 130 characters each!
 This is not fun or easy for people to transcribe, much less communicate by voice.
 
+首先，公钥很长。 我们从<<序列化章节>>中了解到，secp256k1公钥点在压缩的SEC格式下是33个字节，在未压缩的SEC格式下是65个字节。 不幸的是，人类无法轻松解释33或65个原始字节。 大多数字符编码无法渲染某些字节范围，因为它们是控制字符、换行符或类似的内容。 SEC格式通常以十六进制编码，长度加倍（十六进制编码每字符4位，而不是8位）。 这使得压缩和未压缩的SEC格式分别为66和130个字符，这比大多数标识符（例如，网站上的用户名通常少于20个字符）要长。 更糟糕的是，早期的比特币交易没有使用压缩版本，所以十六进制地址每个都有130个字符！ 这对于人们转录来说并不有趣或容易，更不用说通过语音进行沟通了。
+
 That((("IP-to-IP payments"))) said, the original use cases for p2pk were for IP-to-IP payments and mining outputs.
 For IP-to-IP payments, IP addresses were queried for their public keys; communicating the public keys was done machine-to-machine, which meant that human communication wasn't necessarily a problem.
 Use for mining outputs also doesn't require human communication.
 Incidentally, this IP-to-IP payment system was phased out because it's not secure and prone to man-in-the-middle attacks.
 
-.Why Did Satoshi Use the Uncompressed SEC Format?
+IP到IP付款，p2pk的原始用例是IP到IP付款和挖矿输出。 对于IP到IP付款，查询IP地址的公钥；机器间通信，这意味着人类沟通并不是问题。 挖矿输出也不需要人类沟通。 顺便说一句，这个IP到IP支付系统已经被淘汰，因为它不安全且容易受到中间人攻击。
+
+.Why Did Satoshi Use the Uncompressed SEC Format? 为什么中本聪使用未压缩的SEC格式呢？
 ****
 It((("SEC serialization format", "uncompressed format")))((("serialization", "uncompressed SEC format"))) seems the uncompressed SEC format doesn't make sense for Bitcoin given that block space is at a premium. So why did Satoshi use it?
 Satoshi((("OpenSSL library"))) was using the OpenSSL library to do the SEC format conversions, and the OpenSSL library at the time Satoshi wrote Bitcoin (circa 2008) did not document the compressed format very well.
 It's speculated this is why Satoshi used the uncompressed SEC format.
 
+似乎未压缩的SEC格式对于比特币来说并不合适，因为区块空间是宝贵的。那么为什么中本聪要使用它呢？ 中本聪在使用OpenSSL库进行SEC格式转换，而在中本聪编写比特币（大约2008年）时，OpenSSL库并未很好地记录压缩格式。 人们推测这就是为什么中本聪使用未压缩的SEC格式。
+
 When Pieter Wuille discovered that the compressed SEC format existed in OpenSSL, more people started using the compressed SEC format in Bitcoin.
+
+当Pieter Wuille发现OpenSSL中存在压缩的SEC格式时，更多的人开始使用比特币中的压缩SEC格式。
 ****
 
 Second, the length of the public keys causes a subtler problem: because they have to be kept around and indexed to see if the outputs are spendable, the UTXO set becomes bigger.
 This requires more resources on the part of full nodes.
 
+其次，公钥的长度导致了更微妙的问题：因为它们必须保留并进行索引以查看输出是否可消费，所以UTXO集变得越来越大。 这要求完整节点提供更多资源。
+
 Third, because we're storing the public keys in the ScriptPubKey field, they're known to everyone.
 That means should ECDSA someday be broken, these outputs could be stolen. For example, quantum computing has the potential to reduce the calculation times significantly for RSA and ECDSA, so having something else in addition to protect these outputs would be more secure. However, this is not a very big threat since ECDSA is used in a lot of applications besides Bitcoin and breaking it would affect all of those things, too.
 
-=== Solving the Problems with p2pkh
+第三，因为我们将公钥存储在 ScriptPubKey 字段中，所以每个人都知道它们。 这意味着如果有一天 ECDSA 被破解，这些输出可能会被盗。例如，量子计算有望大大缩短 RSA 和 ECDSA 的计算时间，所以除了保护这些输出之外，还要有其他措施才能更安全。然而，这个威胁并不是很大，因为除了比特币之外，ECDSA 还在许多其他应用程序中使用，破解它也会影响所有这些内容。
+
+=== Solving the Problems with p2pkh 解决p2pkh问题
 
 Pay-to-pubkey-hash (p2pkh) is((("p2pkh (pay-to-pubkey-hash)", id="p2pkh06")))((("p2pk (pay-to-pubkey)", "solving problems with p2pkh"))) an alternative script format that has two key advantages over p2pk:
 
-1. The addresses are shorter.
-2. It's additionally protected by sha256 and ripemd160.
+Pay-to-pubkey-hash（p2pkh）是一种替代脚本格式，相较于p2pk具有两个关键优势：
+
+1. The addresses are shorter. 地址更短。
+2. It's additionally protected by sha256 and ripemd160. 此外，它还受到 sha256 和 ripemd160 的保护。
 
 The addresses are shorter because it uses the sha256 and ripemd160 hashing algorithms.
 We do both in succession and call that hash160.
 The result of hash160 is 160 bits or 20 bytes, which are encoded into an address.
 
+地址更短是因为它使用了 sha256 和 ripemd160 哈希算法。我们连续执行这两个算法，并将结果称为 hash160。hash160 的结果是160位或20字节，这些字节被编码成一个地址。
+
+
 The result is what you may have seen on the Bitcoin network and coded in <<chapter_serialization>>:
+
+结果就是你在比特币网络上可能见过并在<<序列化章节>>中编码的：
 
 ----
 1PMycacnJaSqwwJqjawXBErnLsZ7RkXUAs
@@ -541,11 +612,15 @@ The result is what you may have seen on the Bitcoin network and coded in <<chapt
 
 This address encodes within 20 bytes that look like this in hexadecimal:
 
+这个地址在20个字节中以十六进制形式编码如下：
+
 ----
 f54a5851e9372b87810a8e60cdd2e7cfd80b6e31
 ----
 
 These 20 bytes are the result of doing a hash160 operation on this (compressed) SEC public key:
+
+这20个字节是对此（压缩）SEC公钥执行hash160操作的结果：
 
 ----
 0250863ad64a87ae8a2fe83c1af1a8403cb53f53e486d8511dad8a04887e5b2352
@@ -553,31 +628,45 @@ These 20 bytes are the result of doing a hash160 operation on this (compressed) 
 
 Given that p2pkh is shorter and more secure, p2pk use declined significantly after 2010, though it's still fully supported today.((("", startref="Sp2pk06")))
 
+鉴于p2pkh更短且更安全，2010年后，p2pk的使用量大幅下降，尽管如今它仍得到全面支持。
+
 ==== p2pkh
 
 Pay-to-pubkey-hash((("ScriptPubKeys", "p2pkh (pay-to-pubkey-hash)", id="Sp2pkh06"))) was used during the early days of Bitcoin, though not as much as p2pk.
 
+Pay-to-pubkey-hash (p2pkh)是在比特币早期被使用的一种ScriptPubKeys，尽管它没有p2pk那么常用。
+
 The p2pkh ScriptPubKey, or locking script, looks like <<pay_to_pubkey_hash_p2pkh_scriptpubkey>>.
 
+p2pkh ScriptPubKey，或锁定脚本，看起来像这样<<支付给公钥哈希的p2pkh脚本>>。
+
 [[pay_to_pubkey_hash_p2pkh_scriptpubkey]]
-.Pay-to-pubkey-hash (p2pkh) ScriptPubKey
+.Pay-to-pubkey-hash (p2pkh) ScriptPubKey 支付给公钥哈希 (p2pkh) ScriptPubKey
 image::images/prbc_0615.png[P2PKH ScriptPubKey]
 
 Like p2pk, `OP_CHECKSIG` is here and `OP_HASH160` makes an appearance.
 Unlike p2pk, the SEC pubkey is not here, but a 20-byte hash is.
 There((("OP_EQUALVERIFY operation"))) is also a new opcode here: `OP_EQUALVERIFY`.
 
+与p2pk一样，OP_CHECKSIG在这里，OP_HASH160也出现了。 与p2pk不同的是，SEC公钥不在这里，但有一个20字节的哈希。 在这里(OP_EQUALVERIFY操作)还有一个新的操作码：OP_EQUALVERIFY。
+
 The p2pkh ScriptSig, or unlocking script, looks like <<pay_to_pubkey_hash_p2pkh_scriptsig>>.
 
+p2pkh ScriptSig，或解锁脚本，看起来像这样<<支付给公钥哈希的p2pkh脚本签名>>。
+
 [[pay_to_pubkey_hash_p2pkh_scriptsig]]
-.Pay-to-pubkey-hash (p2pkh) ScriptSig
+.Pay-to-pubkey-hash (p2pkh) ScriptSig 支付给公钥哈希 (p2pkh) ScriptSig
 image::images/prbc_0616.png[P2PKH ScriptSig]
 
 Like p2pk, the ScriptSig has the DER signature.
 Unlike p2pk, the ScriptSig also has the SEC pubkey.
 The main difference between p2pk and p2pkh ScriptSigs is that the SEC pubkey has moved from the ScriptPubKey to the ScriptSig.
 
+与p2pk一样，ScriptSig有DER签名。 与p2pk不同的是，ScriptSig还有SEC公钥。 p2pk和p2pkh ScriptSigs之间的主要区别在于，SEC公钥从ScriptPubKey移动到了ScriptSig。
+
 The ScriptPubKey and ScriptSig combine to form a list of commands that looks like <<p2pkh_combined>>.
+
+ScriptPubKey 和 ScriptSig 组合成一个命令列表，看起来像这样<<p2pkh组合>>。
 
 [[p2pkh_combined]]
 .p2pkh combined
@@ -586,11 +675,15 @@ image::images/prbc_0617.png[P2PKH Combination]
 At this point, the script is processed one command at a time.
 We start with the commands as combined in <<p2pkh_start>>.
 
+在此阶段，脚本逐个处理命令。 我们从<<p2pkh开始>>中组合的命令开始。
+
 [[p2pkh_start]]
 .p2pkh start
 image::images/prbc_0618.png[P2PKH Start]
 
 The first two commands are elements, so they are pushed to the stack (<<p2pkh_step_1>>).
+
+前两个命令是元素，所以它们被推送到栈(<<p2pkh步骤1>>)。
 
 [[p2pkh_step_1]]
 .p2pkh step 1
@@ -598,17 +691,23 @@ image::images/prbc_0619.png[P2PKH Step 1]
 
 `OP_DUP` duplicates the top element, so the pubkey gets duplicated (<<p2pkh_step_2>>).
 
+OP_DUP复制顶部元素，所以公钥被复制(<<p2pkh步骤2>>)。
+
 [[p2pkh_step_2]]
 .p2pkh step 2
 image::images/prbc_0620.png[P2PKH Step 2]
 
 `OP_HASH160` takes the top element and performs the hash160 operation on it (sha256 followed by ripemd160), creating a 20-byte hash (<<p2pkh_step_3>>).
 
+OP_HASH160取顶部元素，对其执行hash160操作(sha256后跟ripemd160)，创建一个20字节的哈希(<<p2pkh步骤3>>)。
+
 [[p2pkh_step_3]]
 .p2pkh step 3
 image::images/prbc_0621.png[P2PKH Step 3]
 
 The 20-byte hash is an element and is pushed to the stack (<<p2pkh_step_4>>).
+
+20字节的哈希是一个元素，被推送到栈(<<p2pkh步骤4>>)。
 
 [[p2pkh_step_4]]
 .p2pkh step 4
@@ -620,12 +719,16 @@ If they are equal, the script continues execution.
 If they are not equal, the script stops immediately and fails.
 We assume here that they're equal, leading to <<p2pkh_step_5>>.
 
+现在我们到了OP_EQUALVERIFY。 这个操作码消耗顶部两个元素并检查它们是否相等。 如果它们相等，脚本继续执行。 如果它们不相等，脚本立即停止并失败。 我们假设它们是相等的，导致<<p2pkh步骤5>>。
+
 [[p2pkh_step_5]]
 .p2pkh step 5
 image::images/prbc_0623.png[P2PKH Step 5]
 
 We are now exactly where we were during the `OP_CHECKSIG` part of processing p2pk.
 Once again, we assume that the signature is valid (<<p2pkh_end>>).
+
+我们现在正好处于处理p2pk的OP_CHECKSIG部分的位置。 再次，我们假设签名是有效的(<<p2pkh结束>>)。
 
 [[p2pkh_end]]
 .p2pkh end
@@ -636,17 +739,25 @@ If the ScriptSig provides a public key that does not hash160 to the 20-byte hash
 The other failure condition is if the ScriptSig has a public key that hash160s to the 20-byte hash in the ScriptPubKey, but has an invalid signature.
 That would end the combined script evaluation with a 0, ending in failure.
 
+这个脚本有两种失败的方式。 如果ScriptSig提供了一个在ScriptPubKey中不哈希160为20字节哈希的公钥，脚本将在OP_EQUALVERIFY处失败(<<p2pkh步骤4>>)。 另一种失败情况是，如果ScriptSig有一个在ScriptPubKey中哈希160为20字节哈希的公钥，但签名无效。 那将导致组合脚本评估以0结束，最终失败。
+
 This is why we call this type of script pay-to-pubkey-_hash_.
 The ScriptPubKey has the 20-byte _hash160_ of the public key and not the public key itself.
 We are locking bitcoins to a _hash_ of the public key, and the spender is responsible for revealing the public key as part of constructing the ScriptSig.
 
+这就是为什么我们称这种类型的脚本为支付给公钥 _哈希_。 ScriptPubKey有公钥的20字节 _哈希160_，而不是公钥本身。 我们将比特币锁定到一个公钥的 _哈希_ 上，而支出方有责任在构建ScriptSig时揭示公钥。
+
 The major advantages are that the ScriptPubKey is shorter (just 25 bytes) and a thief would not only have to solve the discrete log problem in ECDSA, but also figure out a way to find preimages of both ripemd160 and sha256.((("", startref="p2pkh06")))((("", startref="Sp2pkh06")))
 
-=== Scripts Can Be Arbitrarily Constructed
+主要优点在于，ScriptPubKey更短(仅25字节)，窃贼不仅需要解决ECDSA中的离散对数问题，还需要找到ripemd160和sha256的前映像。
+
+=== Scripts Can Be Arbitrarily Constructed 脚本可以任意构建
 
 Note((("Script", "construction of scripts", id="Sconst06"))) that a script can be any arbitrary program.
 Script is a smart contract language and can lock bitcoins in many different ways.
 <<example_scriptpubkey>> is an example ScriptPubKey.
+
+注意(((“脚本”, “脚本构建”, id=“Sconst06”)))，脚本可以是任何任意程序。 脚本是一种智能合约语言，可以用许多不同的方式锁定比特币。 <<示例_scriptpubkey>>是一个示例ScriptPubKey。
 
 [[example_scriptpubkey]]
 .Example ScriptPubKey
@@ -654,11 +765,15 @@ image::images/prbc_0625.png[Example 1 ScriptPubKey]
 
 <<example_scriptsig>> is a ScriptSig that will unlock the the ScriptPubKey from <<example_scriptpubkey>>.
 
+<<示例_scriptsig>>是一个ScriptSig，用于解锁<<示例_scriptpubkey>>中的ScriptPubKey。
+
 [[example_scriptsig]]
 .Example ScriptSig
 image::images/prbc_0626.png[Example 1 ScriptSig]
 
 The combined script is shown in <<example_combined>>.
+
+组合脚本显示在<<示例组合>>中。
 
 [[example_combined]]
 .Example combined
@@ -666,11 +781,15 @@ image::images/prbc_0627.png[Example 1 Combination]
 
 Script evaluation will start as shown in <<example_start>>.
 
+脚本评估将按照<<示例开始>>所示开始。
+
 [[example_start]]
 .Example start
 image::images/prbc_0628.png[Example 1 Start]
 
 `OP_4` will push a 4 to the stack (<<example_step_1>>).
+
+OP_4将4推送到栈(<<示例步骤1>>)。
 
 [[example_step_1]]
 .Example step 1
@@ -678,11 +797,15 @@ image::images/prbc_0629.png[Example 1 Step 1]
 
 `OP_5` will likewise push a 5 to the stack (<<example_step_2>>).
 
+OP_5也将5推送到栈(<<示例步骤2>>)。
+
 [[example_step_2]]
 .Example step 2
 image::images/prbc_0630.png[Example 1 Step 2]
 
 `OP_ADD` will(((" OP_ADD operation"))) consume the top two elements of the stack, add them together, and push the sum to the stack (<<example_step_3>>).
+
+OP_ADD将(((" OP_ADD操作")))消耗栈顶两个元素，将它们相加，并将和推送到栈(<<示例步骤3>>)。
 
 [[example_step_3]]
 .Example step 3
@@ -690,11 +813,15 @@ image::images/prbc_0631.png[Example 1 Step 3]
 
 `OP_9` will((("OP_9 operation"))) push a 9 to the stack (<<example_step_4>>).
 
+OP_9将(((“OP_9操作”)))将9推送到栈(<<示例步骤4>>)。
+
 [[example_step_4]]
 .Example step 4
 image::images/prbc_0632.png[Example 1 Step 4]
 
 `OP_EQUAL` will((("OP_EQUAL operation"))) consume two elements and push a 1 if they're equal and a 0 if not (<<example_end>>).
+
+OP_EQUAL将(((“OP_EQUAL操作”)))消耗两个元素，如果它们相等则推送到1，否则推送到0(<<示例结束>>)。
 
 [[example_end]]
 .Example end
@@ -705,33 +832,49 @@ As a result, the ScriptPubKey is vulnerable to being taken by anyone who can sol
 Think of this ScriptPubKey as a lockbox with a very flimsy lock that anyone can break into.
 It is for this reason that most transactions have a signature requirement in the ScriptSig.
 
+请注意，这里的ScriptSig并不难猜出，并且不包含任何签名。 因此，任何能解决这个ScriptPubKey的人都可以拿走它。 把这个ScriptPubKey想象成一个带有一个非常脆弱的锁的锁箱，任何人都可以闯入。 这就是大多数交易在ScriptSig中要求签名的原因。
+
 Once a UTXO has been spent, included in a block, and secured by proof-of-work, the coins are locked to a different ScriptPubKey and no longer as easily spendable.
 Someone attempting to spend already spent coins would have to provide proof-of-work, which is expensive (see <<chapter_blocks>>).((("", startref="Sconst06")))
 
+一旦UTXO被花费，包含在一个区块中，并通过工作量证明得到保护，这些硬币就被锁定到一个不同的ScriptPubKey，不再容易被花费。 试图花费已经被花费的硬币的人必须提供工作量证明，这是昂贵的(参见<<章节块>>)。(((“”, startref=“Sconst06”)))
+
 include::code-ch06/answers.py[tag=exercise3,indent=0]
 
-==== Utility of Scripts
+==== Utility of Scripts 脚本的作用
 
 The((("Script", "utility of")))((("OP_MUL operation"))) previous exercise was a bit of a cheat, as `OP_MUL` is no longer allowed on the Bitcoin network.
 Version 0.3.5 of Bitcoin disabled a lot of different opcodes (anything that had even a little bit of potential to create vulnerabilities on the network).
+
+上一个练习中的(((“脚本”, “OP_MUL操作”)))((“OP_MUL操作”))有些作弊，因为OP_MUL在比特币网络上不再被允许。 比特币的0.3.5版本禁用了很多不同的操作码（任何可能在网络中造成漏洞的操作码）。
 
 This is just as well, since most of the functionality in Script is actually not used much.
 From a software maintenance standpoint, this is not a great situation as the code has to be maintained despite its lack of usage.
 Simplifying and getting rid of certain capabilities can be seen as a way to make Bitcoin more secure.
 
+这并没有什么不好，因为脚本中的大多数功能实际上并没有被经常使用。 从软件维护的角度来看，这并不是一个很好的情况，因为即使没有使用，代码也必须维护。 简化并消除某些功能可能被视为使比特币更安全的一种方式。
+
 This is in stark contrast to other projects, which try to expand their smart contract languages, often increasing the attack surface along with new features.
+
+这与其他项目形成鲜明对比，其他项目试图扩展其智能合约语言，通常随着新功能的出现，攻击面也会增加。
 
 include::code-ch06/answers.py[tag=exercise4,indent=0]
 
-==== SHA-1 Piñata
+==== SHA-1 Piñata SHA-1彩罐
 
 In((("SHA-1 piñata")))((("Script", "SHA-1 piñata")))((("hash collisions"))) 2013, Peter Todd created a script very similar to the one in Exercise 4 and put some bitcoins into it to create an economic incentive for people to find hash collisions.
 The donations reached 2.49153717 BTC, and when Google actually found a https://security.googleblog.com/2017/02/announcing-first-sha1-collision.html[hash collision for SHA-1 in February 2017], this script was promptly redeemed.
 The transaction output was 2.48 BTC, which was 2,848.88 USD at the time.
 
+在(((“SHA-1彩罐”)))((“脚本”, “SHA-1彩罐”)))((“哈希碰撞”))2013年，Peter Todd创建了一个与练习4中非常相似的脚本，并将一些比特币放入其中，为人们找到哈希碰撞创造经济激励。 捐款达到了2.49153717 BTC，当谷歌在2017年2月实际找到一个 https://security.googleblog.com/2017/02/announcing-first-sha1-collision.html[SHA-1的哈希碰撞时]，这个脚本立即被兑换。 当时，交易输出是2.48 BTC，相当于2,848.88美元。
+
 Peter created more piñatas for sha256, hash256, and hash160, which add economic incentives to find collisions for these hashing functions.
 
-=== Conclusion
+Peter为sha256，hash256和hash160创建了更多的彩罐，为找到这些哈希函数的碰撞提供了经济激励。
+
+=== Conclusion 结论
 
 We've covered Script and how it works.
 We can now proceed to the creation and validation of transactions.
+
+我们已经介绍了脚本以及它的运作方式。 现在我们可以继续进行交易创建和验证。
