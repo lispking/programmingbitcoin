@@ -1,24 +1,39 @@
 [[chapter_bloom_filters]]
 
-== Bloom Filters
+== Bloom Filters 布隆过滤器
 
 [.lead]
 In <<chapter_spv>> we learned how to validate a Merkle block.
 A full node can provide a proof of inclusion for transactions of interest through the `merkleblock` command.
 But how does the full node know which transactions are of interest?
 
+在<<SPV章节>>中，我们学习了如何验证Merkle块。 
+通过merkleblock命令，全节点可以为感兴趣的交易提供包含证明。 
+但是全节点如何知道哪些交易是感兴趣的呢？
+
 A light client could tell the full node its addresses (or ScriptPubKeys).
 The full node can check for transactions that are relevant to these addresses, but that would be compromising the light client's privacy.
 A light client wouldn't want to reveal, for example, that it has 1,000 BTC to a full node.
 Privacy leaks are security leaks, and in Bitcoin, it's generally a good idea to not leak any privacy whenever possible.
 
+轻客户端可以向全节点告知其地址（或ScriptPubKeys）。 
+全节点可以检查与这些地址相关的交易，但这将侵犯轻客户端的隐私。 
+轻客户端不想向全节点透露，例如，它有1,000个BTC。 
+隐私泄露就是安全泄露，在比特币中，尽可能地不泄露任何隐私是一个好主意。
+
 One((("Bloom filters", "purpose of", id="BFpurpose12"))) solution is for the light client to tell the full node enough information to create a _superset_ of all transactions of interest.
 To create this superset, we use what's called a _Bloom filter_.
 
-=== What Is a Bloom Filter?
+一种解决方案是轻客户端告诉全节点足够的信息，以创建所有感兴趣交易的超集。
+为了创建这个超集，我们使用一种称为 布隆过滤器 的东西。
+
+=== What Is a Bloom Filter? 什么是布隆过滤器？
 
 A Bloom filter is a filter for all possible transactions.
 Full nodes run transactions through a Bloom filter and send `merkleblock` commands for transactions that make it through.
+
+布隆过滤器是所有可能交易的过滤器。 
+全节点将交易通过布隆过滤器，并发送通过过滤器的交易的merkleblock命令。
 
 Suppose there are 50 total transactions.
 There is one transaction a light client is interested in.
@@ -27,103 +42,155 @@ This requires a function that groups the 50 transactions into 10 different bucke
 This grouping would have to be _deterministic_—that is, be the same each time.
 How can this be accomplished?
 
+假设总共有50笔交易。 
+有一笔交易是轻客户端感兴趣的。 
+轻客户端希望将交易“隐藏”在五笔交易中的一组。 
+这需要一个将50笔交易分成10个不同桶的函数，全节点可以从中发送一个交易桶，以这种方式。 
+这种分组必须是 确定性的 —— 也就是说，每次都要相同。 如何实现这一点呢？
+
 The solution is to use a hash function to get a deterministic number and modulo to organize transactions into buckets.
+
+解决方案是使用哈希函数获得确定性数值，然后使用模运算将交易组织到桶中。
 
 A Bloom filter is a computer science structure that can be used on any data in a set, so suppose that we have one item, "hello world", that we want to create a Bloom filter for.
 We need a hash function, so we'll use one we already have: hash256.
 The process of figuring out what bucket our item goes into looks like this:
 
+布隆过滤器是一种计算机科学结构，可用于集合中的任何数据，所以假设我们有一个项目“hello world”，我们想要为它创建一个布隆过滤器。 
+我们需要一个哈希函数，所以我们使用我们已经拥有的一个：hash256。 确定我们的项目放入哪个桶的过程如下：
+
 [source,python]
 ----
 include::code-ch12/examples.py[tag=example1]
 ----
-<1> Our `bit_field` is the list of "buckets," and we want there to be 10.
-<2> We hash the item with hash256.
-<3> We interpret this as a big-endian integer and modulo by 10 to determine the bucket this item belongs to.
-<4> We indicate the bucket we want in the Bloom filter.
+<1> Our `bit_field` is the list of "buckets," and we want there to be 10. 我们的bit_field是“桶”的列表，我们希望有10个。
+<2> We hash the item with hash256. 我们使用hash256对项目进行哈希。
+<3> We interpret this as a big-endian integer and modulo by 10 to determine the bucket this item belongs to. 我们将其解释为一个大端整数，然后模10以确定此项目属于哪个桶。
+<4> We indicate the bucket we want in the Bloom filter. 我们在布隆过滤器中指示我们想要的桶。
 
 Conceptually, what we just did looks like <<ten_bit_bloom_filter_with_1_element>>.
 
+从概念上讲，我们刚刚完成的是<<ten_bit_bloom_filter_with_1_element>>。
+
 [[ten_bit_bloom_filter_with_1_element]]
-.10-bit Bloom filter with one element
+.10-bit Bloom filter with one element 10位布隆过滤器有一个元素
 image::images/prbc_1201.png[Simple Bloom filter]
 
 Our Bloom filter consists of:
 
-1. The size of the bit field
-2. The hash function used (and how we converted that to a number)
-3. The bit field, which indicates the bucket we're interested in
+我们的布隆过滤器包括：
+
+1. The size of the bit field 位字段的大小
+2. The hash function used (and how we converted that to a number) 使用的哈希函数（以及如何将其转换为数字）
+3. The bit field, which indicates the bucket we're interested in 位字段，表示我们感兴趣的桶
 
 This works great for a single item, so it would work for a single address/ScriptPubKey/transaction ID of interest.
 What do we do when we're interested in more than one item?
 
+这对于单一项目来说非常有效，因此对于单个地址/ScriptPubKey/交易ID来说也非常有效。
+当我们对多个项目感兴趣时该怎么办？
+
 We can run a second item through the same filter and set that bit to 1 as well.
 The full node can then send multiple buckets of transactions instead of a single bucket.
 Let's create a Bloom filter with two items, "hello world" and "goodbye", using the following code:
+
+我们可以将第二个项目通过相同的过滤器，并将该位设置为1。 
+全节点可以发送多个交易桶，而不是单个桶。
+让我们使用以下代码创建一个包含两个项目“hello world”和“goodbye”的布隆过滤器：
 
 [source,python]
 ----
 include::code-ch12/examples.py[tag=example2]
 ----
 
-<1> We are creating a filter for two items here, but this can be extended to many more.
+<1> We are creating a filter for two items here, but this can be extended to many more. 我们在这里创建一个过滤器，用于两个项目，但这可以扩展到更多的项目。
 
 <<ten_bit_bloom_filter_with_two_elements>> shows what this looks like conceptually.
 
+<<ten_bit_bloom_filter_with_two_elements>>展示了从概念上讲这看起来是什么样子。
+
+
 [[ten_bit_bloom_filter_with_two_elements]]
-.10-bit Bloom filter with two elements
+.10-bit Bloom filter with two elements 10位布隆过滤器有两个元素
 image::images/prbc_1202.png[Two Item Bloom filter]
 
 If the space of all possible items is 50, 10 items on average will make it through this filter instead of the 5 when we only had 1 item of interest, because 2 buckets are returned, not 1.((("", startref="BFpurpose12")))
 
+如果所有可能项目的空间是50，那么平均而言，此过滤器将会有10个项目通过，而不是我们只有1个感兴趣项目时的5个，因为返回的是2个桶，而不是1个桶。
+
 include::code-ch12/answers.py[tag=exercise1,indent=0]
 
-==== Going a Step Further
+==== Going a Step Further 更进一步
 
 Suppose((("Bloom filters", "using multiple hash functions"))) that the space of all items is 1 million and we want bucket sizes to still be 5. We would need a Bloom filter that's 1,000,000 / 5 = 200,000 bits long.
 Each bucket would have on average 5 items and we would get 5 times the number of items we're interested in, 20% of which would be items of interest.
 200,000 bits is 25,000 bytes and is a lot to transmit.
 Can we do better?
 
+假设((("Bloom filters", "using multiple hash functions")))所有项目的空间是100万，我们希望桶的大小仍然是5。那么我们需要一个长度为1,000,000 / 5 = 200,000位的布隆过滤器。 
+每个桶平均会有5个项目，我们会得到5倍于我们感兴趣的项目数量，其中20%是我们感兴趣的项目。 
+200,000位是25,000字节，传输起来相当耗时。我们能否做得更好？
+
 A Bloom filter using multiple hash functions can shorten the bit field considerably.
 If we use 5 hash functions over a bit field of 32, we have 32!/(27!5!) ~ 200,000 possible 5-bit combinations in that 32-bit field.
 Of 1 million possible items, 5 items on average should have that 5-bit combination.
 Instead of transmitting 25K bytes, we can transmit just 32 bits, or 4 bytes!
 
+使用多个哈希函数的布隆过滤器可以显著缩短位字段。 
+如果在32位的字段中使用5个哈希函数，我们可以在该32位字段中拥有约200,000个可能的5位组合。 
+在100万个可能的项目中，平均每个项目应该有那个5位组合。 
+我们可以传输32位，即4个字节，而不是传输25K字节！
+
 Here's what that would look like.
 For simplicity, we stick to the same 10-bit field but still have two items of interest:
+
+下面是这个样子。为了简单起见，我们仍然使用10位字段，但仍然有两个感兴趣的项目：
 
 [source,python]
 ----
 include::code-ch12/examples.py[tag=example3]
 ----
-<1> We iterate over two different hash functions (hash256 and hash160), but we could just as easily have more.
+<1> We iterate over two different hash functions (hash256 and hash160), but we could just as easily have more. 我们遍历两个不同的哈希函数（hash256和hash160），但我们同样可以容易地拥有更多。
 
 Conceptually, <<ten_bit_bloom_filter_with_two_elements_and_two_hash_functions>> shows what the preceding code does.
 
+从概念上讲，<<ten_bit_bloom_filter_with_two_elements_and_two_hash_functions>>展示了前述代码的作用。
+
 [[ten_bit_bloom_filter_with_two_elements_and_two_hash_functions]]
-.10-bit Bloom filter with two elements and two hash functions
+.10-bit Bloom filter with two elements and two hash functions 10位布隆过滤器有两个元素和两个哈希函数
 image::images/prbc_1203.png[Multiple Hash Functions]
 
 A Bloom filter can be optimized by changing the number of hash functions and bit field size to get a desirable false-positive rate.
 
-=== BIP0037 Bloom Filters
+通过改变哈希函数的数量和位字段大小，可以优化布隆过滤器以获得可接受的误报率。
+
+=== BIP0037 Bloom Filters BIP0037布隆过滤器
 
 BIP0037((("Bloom filters", "BIP0037 Bloom filters")))((("BIP (Bitcoin Improvement Proposals)", "BIP0037"))) specifies Bloom filters in network communication. The information contained in a Bloom filter is:
 
+BIP0037((("Bloom filters", "BIP0037 Bloom filters")))((("BIP (Bitcoin Improvement Proposals)", "BIP0037")))规定了网络通信中的布隆过滤器。布隆过滤器中包含的信息如下：
+
 1. The size of the bit field, or how many buckets there are.
-The size is specified in bytes (8 bits per byte) and rounded up if necessary.
-2. The number of hash functions.
-3. A "tweak" to be able to change the Bloom filter slightly if it hits too many items.
-4. The bit field that results from running the Bloom filter over the items of interest.
+The size is specified in bytes (8 bits per byte) and rounded up if necessary. 位字段的大小，或者有多少个桶。 大小以字节为单位指定（每个字节8位），如果需要，将向上舍入。
+2. The number of hash functions. 哈希函数的数量。
+3. A "tweak" to be able to change the Bloom filter slightly if it hits too many items. 一个“调整”以能够在命中太多项目时稍微改变布隆过滤器。
+4. The bit field that results from running the Bloom filter over the items of interest. 通过对感兴趣的项目运行布隆过滤器得到的位字段。
 
 While we could define lots of hash functions (sha512, keccak384, ripemd160, blake256, etc.), in practice, we use a single hash function with a different seed.
 This allows the implementation to be simpler.
+
+尽管我们可以定义许多哈希函数（sha512、keccak384、ripemd160、blake256等），但在实际应用中，我们使用带有不同种子的单一哈希函数。这使得实现更简单。
 
 The((("hashes", "murmur3 hash function")))((("murmur3 hash function"))) hash function we use is called _murmur3_.
 Unlike sha256, murmur3 is not cryptographically secure, but it is much faster.
 The task of filtering and getting a deterministic, evenly distributed modulo does not require cryptographic security but benefits from speed, so murmur3 is the appropriate tool for the job.
 The seed formula is defined this way:
+
+我们使用的((("hashes", "murmur3 hash function")))((("murmur3 hash function")))哈希函数叫做 `murmur3`。 
+与 `sha256` 不同，`murmur3` 不具备加密安全性，但它要快得多。
+过滤和得到确定性、均匀分布的模运算的任务不需要加密安全性，但受益于速度，所以 `murmur3` 是这项工作的适当工具。
+种子公式定义如下： 
+
 [source,python]
 ----
 i*0xfba4c795 + tweak
@@ -133,21 +200,31 @@ i*0xfba4c795 + tweak
 The `tweak` is a bit of entropy that can be added if the results of of one tweak are not satisfactory.
 The hash functions and the size of the bit field are used to calculate the bit field, which then gets transmitted:
 
+`fba4c795` 是比特币布隆过滤器的常数。
+`i` 是第一个哈希函数的0，第二个的1，第三个的2，以此类推。
+`调整` 是可以在一个调整结果不满意时添加的熵。
+哈希函数和位字段的大小用于计算位字段，然后进行传输：
+
 [source,python]
 ----
 include::code-ch12/examples.py[tag=example4]
 ----
-<1> `murmur3` is implemented in pure Python in _helper.py_.
-<2> `BIP37_CONSTANT` is the `fba4c795` number specified in BIP0037.
-<3> We iterate over some items of interest.
-<4> We use two hash functions.
-<5> This is the seed formula.
-<6> murmur3 returns a number, so we don't have to do a conversion to an integer.
+<1> `murmur3` is implemented in pure Python in _helper.py_. murmur3 在 _helper.py_ 中用纯Python实现。
+<2> `BIP37_CONSTANT` is the `fba4c795` number specified in BIP0037. BIP37_CONSTANT 是BIP0037中指定的 fba4c795 数字。
+<3> We iterate over some items of interest. 我们遍历一些感兴趣的项目。
+<4> We use two hash functions. 我们使用两个哈希函数。
+<5> This is the seed formula. 这是种子公式。
+<6> murmur3 returns a number, so we don't have to do a conversion to an integer. murmur3 返回一个数字，所以我们不需要将其转换为整数。
 
 This 2-byte Bloom filter has 4 bits set to 1 out of 16, so the probability of any random item passing through this filter is 1/4 &#215; 1/4 = 1/16.
 If the space of all items numbers 160, a client will receive 10 items on average, 2 of which will be interesting.
 
+这个2字节的布隆过滤器有16位中的4位设置为1，所以任何随机项目通过这个过滤器的概率是1/4 × 1/4 = 1/16。 
+如果所有项目的空间为160，客户端平均会收到10个项目，其中2个是有趣的。
+
 We can start coding a `BloomFilter` class now:
+
+现在我们可以开始编写一个 `BloomFilter` 类的代码：
 
 [source,python]
 ----
@@ -158,7 +235,7 @@ include::code-ch12/answers.py[tag=exercise2,indent=0]
 
 include::code-ch12/answers.py[tag=exercise3,indent=0]
 
-=== Loading a Bloom Filter
+=== Loading a Bloom Filter 加载布隆过滤器
 
 Once((("Bloom filters", "loading"))) a light client has created a Bloom filter, it needs to let the full node know the details of the filter so the full node can send proofs of inclusion.
 The first thing a light client must do is set the optional relay flag in the version message (see <<chapter_networking>>) to 0.
@@ -167,6 +244,14 @@ After the relay flag, a light client then communicates to the full node the Bloo
 The command to set the Bloom filter is called `filterload`.
 The payload looks like <<parsed_filterload>>.
 
+一旦((("Bloom filters", "loading")))轻客户端创建了布隆过滤器，它需要告诉全节点过滤器的详细信息，以便全节点可以发送包含证明。 
+轻客户端首先要做的是在版本消息中设置可选的中继标志（参见<<网络通信章节>>）为0。 
+这告诉全节点除非它们与布隆过滤器匹配或被特别请求，否则不要发送交易消息。 
+在中继标志之后，轻客户端然后将布隆过滤器本身传达给全节点。
+设置布隆过滤器的命令称为 `filterload`。 
+负载看起来像<<parsed_filterload>>。
+
+
 [[parsed_filterload]]
 .Parsed filterload
 image::images/prbc_1204.png[filterload Command]
@@ -174,9 +259,12 @@ image::images/prbc_1204.png[filterload Command]
 The elements of a Bloom filter are encoded into bytes. The bit field, hash function count, and tweak are encoded in this message.
 The last field, matched item flag, is a way of asking the full node to add any matched transactions to the Bloom filter.
 
+布隆过滤器的元素被编码成字节。位字段、哈希函数数量和调整都在这个消息中编码。
+最后一个字段，匹配项标志，是一种询问全节点是否将任何匹配的交易添加到布隆过滤器的方法。
+
 include::code-ch12/answers.py[tag=exercise4,indent=0]
 
-=== Getting Merkle Blocks
+=== Getting Merkle Blocks 获取梅克尔区块
 
 There((("Bloom filters", "getting Merkle blocks")))((("Merkle blocks", "filtered")))((("filtered blocks"))) is one more command that a light client needs: Merkle block information about transactions of interest from the full node.
 The `getdata` command is what communicates blocks and transactions.
@@ -184,7 +272,15 @@ The specific type of data that a light client will want from a full node is some
 A filtered block is asking for transactions that pass through the Bloom filter in the form of Merkle blocks.
 In other words, the light client can ask for Merkle blocks whose transactions of interest match the Bloom filter.
 
+轻客户端需要了解梅克尔区块的命令：((("Bloom filters", "getting Merkle blocks")))((("Merkle blocks", "filtered")))((("filtered blocks")))。 
+`getdata` 命令用于通信区块和交易。 
+轻客户端从全节点想要的数据类型是称为 过滤区块 的东西。 
+过滤区块是请求通过布隆过滤器的交易，以梅克尔区块的形式。 
+换句话说，轻客户端可以请求交易与其感兴趣的项目匹配布隆过滤器的梅克尔区块。
+
 <<parsed_getdata>> depicts the payload for `getdata`.
+
+<<parsed_getdata>> 描绘了 getdata 的有效载荷。
 
 [[parsed_getdata]]
 .Parsed getdata
@@ -194,45 +290,59 @@ The number of items as a varint specifies how many items we want.
 Each item has a type.
 A type value of 1 is a transaction (<<chapter_tx_parsing>>), 2 is a normal block (<<chapter_blocks>>), 3 is a Merkle block (<<chapter_spv>>), and 4 is a compact block (not covered in this book).
 
+作为可变整数的项目数量指定了我们想要多少个项目。 
+每个项目都有一个类型。 
+类型值为1的是交易（<<交易解析章节>>），2是普通区块（<<区块章节>>），3是梅克尔区块（<<SPV章节>>），4是紧凑区块（本书未涉及）。
+
 We can create this message in _network.py_:
+
+我们可以在 _network.py_ 中创建此消息：
 
 [source,python]
 ----
 include::code-ch12/network.py[tag=source1]
 ----
-<1> We store the items we want.
-<2> We add items to the message using the `add_data` method.
+<1> We store the items we want. 我们存储想要的项目。
+<2> We add items to the message using the `add_data` method. 我们使用 `add_data` 方法将项目添加到消息中。
 
 include::code-ch12/answers.py[tag=exercise5,indent=0]
 
-=== Getting Transactions of Interest
+=== Getting Transactions of Interest 获取感兴趣的交易
 
 A((("Bloom filters", "getting transactions of interest")))((("transactions of interest, collecting"))) light client that loads a Bloom filter with a full node will get all the information needed to prove that transactions of interest are included in particular blocks:
+
+加载了布隆过滤器的轻客户端将获得证明感兴趣的交易包含在特定区块中的所有所需信息：
 
 [source,python]
 ----
 include::code-ch12/examples.py[tag=example5]
 ----
-<1> We are creating a Bloom filter that's 30 bytes and uses 5 hash functions and a particularly popular '90s tweak.
-<2> We filter for the address above.
-<3> We send the `filterload` command from the Bloom filter we made.
-<4> We get the block headers after `last_block_hex`.
-<5> We create a getdata message for Merkle blocks that may have transactions of interest.
+<1> We are creating a Bloom filter that's 30 bytes and uses 5 hash functions and a particularly popular '90s tweak. 我们创建了一个30字节的布隆过滤器，使用5个哈希函数和一个特别受欢迎的90年代的调整。 
+<2> We filter for the address above. 我们过滤上述地址。
+<3> We send the `filterload` command from the Bloom filter we made. 我们发送我们制作的布隆过滤器的 `filterload` 命令。
+<4> We get the block headers after `last_block_hex`. 我们获取 `last_block_hex` 之后的区块头。
+<5> We create a getdata message for Merkle blocks that may have transactions of interest. 我们创建一个用于可能包含感兴趣交易的梅克尔区块的 getdata 消息。
 <6> We request a Merkle block proving transactions of interest to us are included.
-Most blocks will probably be complete misses.
-<7> The getdata message asks for 2,000 Merkle blocks after the block defined by `last_block_hex`.
-<8> We wait for the `merkleblock` command, which proves inclusion, and the `tx` command, which gives us the transaction of interest.
-<9> We check that the Merkle block proves transaction inclusion.
-<10> We're looking for UTXOs for `address`, and we print to screen if we find one.
+Most blocks will probably be complete misses. 我们请求证明感兴趣的交易包含在我们这里的梅克尔区块。 大多数区块可能完全是错过的。 
+<7> The getdata message asks for 2,000 Merkle blocks after the block defined by `last_block_hex`. getdata 消息请求 last_block_hex 定义后的2,000个梅克尔区块。
+<8> We wait for the `merkleblock` command, which proves inclusion, and the `tx` command, which gives us the transaction of interest. 我们等待 `merkleblock` 命令，证明包含，以及 `tx` 命令，给我们感兴趣的交易。
+<9> We check that the Merkle block proves transaction inclusion. 我们检查梅克尔区块是否证明交易包含。 
+<10> We're looking for UTXOs for `address`, and we print to screen if we find one.  我们寻找 address 的 UTXO，如果找到，我们将其打印到屏幕上。
 
 What we've done is look at 2,000 blocks after a particular block for UTXOs corresponding to a particular address.
 This is without the use of any block explorer, which preserves, to some degree, our privacy.
 
+我们所做的是在特定区块后查看2,000个区块，寻找与特定地址对应的 UTXO。 
+这是在不使用任何区块浏览器的情况下，在一定程度上保护我们的隐私。
+
 include::code-ch12/answers.py[tag=exercise6,indent=0]
 
-=== Conclusion
+=== Conclusion 结论
 
 In this chapter, we created everything necessary to connect peer to peer as a light client and ask for and receive the UTXOs necessary to construct a transaction, all while preserving some privacy by using a Bloom filter.
 
+在本章中，我们作为轻客户端创建了一切必要的东西，以便进行点对点连接，请求和接收构造交易所需的 UTXO，同时使用布隆过滤器保留一定程度的隐私。
+
 We now turn to Segwit, which is a new type of transaction that was activated in 2017.
 
+现在我们转向 Segwit，这是2017年激活的一种新型交易。
