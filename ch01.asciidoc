@@ -216,7 +216,7 @@ include::code-ch01/answers.py[tag=exercise1,indent=0]
 
 One((("finite fields", "modulo arithmetic", id="FFmodulo01")))((("modulo arithmetic", id="modulo01"))) of the tools we can use to make a finite field closed under addition, subtraction, multiplication, and division is something called _modulo arithmetic_.
 
-有限域((“finite fields”，“modulo arithmetic”，id=“FFmodulo01”))中，我们可以使用模运算((“modulo arithmetic”，id=“modulo01”))这一工具，使得有限域在加法、减法、乘法和除法下封闭。
+有限域((("finite fields", "modulo arithmetic", id="FFmodulo01")))((("modulo arithmetic", id="modulo01")))中，我们可以使用模运算这一工具，使得有限域在加法、减法、乘法和除法下封闭。
 
 We can define addition on the finite set using modulo arithmetic, which is something you probably learned when you first learned division.
 Remember problems like the one in <<long_division_example_one>>?
