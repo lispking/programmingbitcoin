@@ -1,19 +1,27 @@
 [[chapter_advanced]]
-== Advanced Topics and Next Steps
+== Advanced Topics and Next Steps 高级主题和下一步
 
 If you've made it this far, congratulations!
 You've learned a lot about Bitcoin's inner workings, and hopefully you are inspired to learn a lot more.
 This book has only scratched the surface.
 In this chapter, we'll go through some other topics you might want to explore, how to bootstrap your career as a Bitcoin developer, and ways to contribute to the community.
 
-=== Suggested Topics to Study Next
+如果你已经读到这里，恭喜你！ 
+你已经了解了比特币的许多内部工作原理，希望你能学到更多。 
+这本书只是触及了表面。 
+在本章中，我们将介绍一些你可能想要探索的其他主题，如何作为比特币开发者启动你的职业生涯，以及如何为社区做出贡献。
 
-==== Wallets
+=== Suggested Topics to Study Next 建议下一步研究主题
+
+==== Wallets 钱包
 
 Creating((("Bitcoin wallets")))((("wallets"))) a wallet is a challenging task because securing private keys is very difficult.
 That said, there are a bunch of standards for creating wallets that can help.
 
-===== Hierarchical Deterministic Wallets
+创建钱包是一项具有挑战性的任务，因为确保私钥安全非常困难。 
+话虽如此，但还是有一些创建钱包的标准可以提供帮助。
+
+===== Hierarchical Deterministic Wallets 层次确定性钱包
 
 For((("deterministic wallets")))((("hierarchical deterministic (HD) wallets")))((("addresses, reusing")))((("privacy issues, reusing addresses"))) privacy purposes, reusing addresses is very bad (see <<chapter_tx>>).
 That means we need to create lots of addresses.
@@ -24,17 +32,36 @@ What if you run out of secrets?
 How do you back them up again?
 What system can you use to ensure that the backups are current?
 
+为了隐私，重复使用地址是非常不好的（参见<<chapter_tx>>）。 
+这意味着我们需要创建很多地址。 
+不幸的是，为每个生成的地址存储不同的秘密可能会导致安全和备份问题。 
+您如何以安全的方式备份它们？ 
+您是否生成大量秘密然后再备份？
+如果您用完了秘密怎么办？ 
+您如何再次备份？ 
+您可以使用什么系统来确保备份是最新的？
+
 To((("Armory"))) combat this problem, Armory, an early Bitcoin wallet, first implemented _deterministic_ wallets.
 The idea of a deterministic wallet is that you can generate one seed and create lots and lots of different addresses with that one seed.
 The((("BIP (Bitcoin Improvement Proposals)", "BIP0032"))) Armory-style deterministic wallets were great, except people wanted some grouping of addresses—so, the _hierarchical deterministic_ (HD) wallet standard, BIP0032, was born.
 BIP0032 wallets have multiple layers and keys, each with a unique derivation path.
 The specifications and test vectors are defined in the BIP0032 standard, so implementing your own HD wallet on testnet is a great way to learn.
 
+为了解决这个问题，早期的比特币钱包Armory首次实现了确定性钱包。 
+确定性钱包的理念是，你可以生成一个种子，然后使用这个种子创建许多不同的地址。 
+BIP0032标准的Armory式确定性钱包非常好，但是人们希望有一些地址分组 - 因此，分层确定性（HD）钱包标准BIP0032应运而生。 
+BIP0032钱包具有多个层次和密钥，每个密钥都具有唯一的推导路径。 
+规范和测试向量在BIP0032标准中定义，因此在测试网上实现你自己的HD钱包是学习的好方法。
+
 Additionally, BIP0044((("BIP (Bitcoin Improvement Proposals)", "BIP0044"))) defines what each layer of the BIP0032 hierarchy can mean and the best practices for using a single HD seed to store coins from a lot of different cryptocurrencies.
 Implementing BIP0044 can also be a way to understand the HD wallet infrastructure a lot better.
 While((("Trezor")))((("Coinomi")))((("Electrum")))((("Edge"))) many wallets (Trezor, Coinomi, etc.) implement both BIP0032 and BIP0044, some wallets ignore BIP0044 altogether and use their own BIP0032 hierarchy (Electrum and Edge being two examples).
 
-===== Mnemonic Seeds
+此外，BIP0044定义了BIP0032层次结构中每个层次的意义，以及使用单个HD种子存储许多不同加密货币的最佳实践。 
+实现BIP0044也可以更好地了解HD钱包基础设施。 
+虽然许多钱包（如Trezor，Coinomi等）实现了BIP0032和BIP0044，但有些钱包完全忽略了BIP0044，使用自己的BIP0032层次结构（Electrum和Edge是两个例子）。
+
+===== Mnemonic Seeds 词汇种子
 
 Writing((("mnemonic seeds")))((("backup and restoration"))) down and transcribing a 256-bit seed is a pain, and fraught with errors.
 To combat this, BIP0039((("BIP (Bitcoin Improvement Proposals)", "BIP0039"))) describes a way to encode the seed into a bunch of English words.
@@ -43,17 +70,31 @@ The standard defines exactly how the mnemonic backup gets translated to a BIP003
 BIP0039 along with BIP0032 and BIP0044 is how most wallets implement backup and restoration.
 Writing a testnet wallet that implements BIP0039 is another good way to get a taste for Bitcoin development.
 
-==== Payment Channels and Lightning Network
+写下并转录256位种子是痛苦的，而且容易出错。 
+为了解决这个问题，BIP0039描述了一种将种子编码成一系列英文单词的方法。 
+有2,048个可能的单词，或者2^11^，这意味着每个单词编码11位种子。 
+标准定义了如何将词汇备份转换为BIP0032种子。 
+BIP0039与BIP0032和BIP0044一起，是大多数钱包实现备份和恢复的方式。 
+在测试网上实现BIP0039是了解比特币开发的另一个好方法。
+
+==== Payment Channels and Lightning Network 支付通道和闪电网络
 
 Payment channels((("payment channels")))((("Lightning Network")))((("BOLT standard"))) are the atomic unit of the Lightning Network, and learning how they work is a good next step.
 There are many ways to implement payment channels, but the BOLT standard is the specification that lightning nodes use.
 The specifications are in progress as of this writing and are available at https://github.com/lightningnetwork/lightning-rfc/.
 
-=== Contributing
+支付通道是闪电网络的基本单位，了解它们的工作原理是一个好的下一步。 
+实现支付通道的方法有很多，但是BOLT标准是闪电节点使用的规范。 
+本写作时，规范正在制定中，可在 https://github.com/lightningnetwork/lightning-rfc/上找到。
+
+=== Contributing 贡献
 
 A((("Bitcoin", "open source projects")))((("open source projects"))) large part of the Bitcoin ethic is contributing back to the community.
 The main way you can do that is through open source projects.
 There are almost too many to list, but here's a sample:
+
+比特币的开源项目很大一部分是回馈社区。 
+你可以通过开源项目来实现这一目标。 这里有太多的项目，但以下是一些示例：
 
 https://github.com/bitcoin/bitcoin[Bitcoin Core]:: The reference client
 https://github.com/libbitcoin/libbitcoin[Libbitcoin]:: An alternate implementation of Bitcoin in C++
@@ -66,53 +107,92 @@ https://github.com/btcpayserver/btcpayserver[BTCPay]:: A Bitcoin payment process
 
 Contributing can be very beneficial for a lot of reasons, including future employment opportunities, learning, getting good business ideas, and so on.
 
-=== Suggested Next Projects
+贡献有很多好处，包括未来的就业机会、学习、获得好的商业想法等。
+
+=== Suggested Next Projects 建议的下一个项目
 
 If((("Bitcoin", "suggested next projects"))) at this point you're still wondering what projects would be beneficial for you, what follows are some suggestions.
 
-==== Testnet Wallet
+如果你还在想哪些项目对你有好处，以下是一些建议。
+
+==== Testnet Wallet 测试网钱包
 
 It's hard((("testnet")))((("Bitcoin wallets")))((("wallets"))) to understate the importance of security in Bitcoin.
 Writing a wallet even on testnet will help you understand the various considerations that go into creating a wallet.
 UI, backups, address books, and transaction histories are just some of the things that you have to deal with when creating a wallet.
 As this is the most popular application of Bitcoin, creating a wallet will give you a lot of insight into users' needs.
 
-==== Block Explorer
+在比特币中，安全性很难被高估。 
+即使在测试网上编写一个钱包，也会帮助你了解创建钱包时需要考虑的各种因素。 
+UI、备份、地址簿和交易历史只是你在创建钱包时需要处理的一些事情。 
+由于这是比特币最流行的应用程序，创建一个钱包将为您提供很多关于用户需求的洞察。
+
+==== Block Explorer 区块浏览器
 
 A((("block explorers"))) more ambitious project would be to write your own block explorer.
 The key to making your own block explorer is to store the blockchain data in an easy-to-access fashion.
 Using a traditional database like Postgres or MySQL may be useful here.
 As Bitcoin Core does not have address indexes, adding one will make it possible for you to allow lookups of UTXOs and past transactions by address, which is what most users desire.
 
-==== Web Shop
+一个更雄心勃勃的项目是编写你自己的区块浏览器。 
+制作你自己的区块浏览器的关键是将以易于访问的方式存储区块链数据。 
+在这里，使用像Postgres或MySQL这样的传统数据库可能是有用的。 
+由于比特币核心没有地址索引，添加一个将使您能够通过地址查找UTXO和过去的事务，这正是大多数用户所需要的。
+
+==== Web Shop 网站商店
 
 A Bitcoin-based shop((("Bitcoin-based shops"))) is another project that helps you learn.
 This is particularly appropriate for web developers as they typically know how to create a web application.
 A web application with a Bitcoin backend can be a powerful way to avoid third-party dependencies for payment.
 Once again, it's advised that you start on testnet and use the cryptographically secure libraries that are available to hook up the plumbing for payments.
 
-==== Utility Library
+一个基于比特币的商店是另一个可以帮助你学习的项目。 
+这对于网页开发者尤其合适，因为他们通常知道如何创建一个网络应用程序。 
+具有比特币后端网络应用程序可以是一种强大的避免第三方依赖支付的方式。 
+再次建议您从测试网开始，并使用可用的加密安全库来连接支付的水管。
+
+==== Utility Library 实用库
 
 A utility library((("utility libraries"))) like the one built in this book is another great way to learn more about Bitcoin.
 Writing((("BIP (Bitcoin Improvement Proposals)", "BIP0143"))) the BIP0143 serialization for the signature hash of Segwit, for example, can be instructive in getting used to protocol programming.
 Porting the code from this book to another language would also be a great learning tool.
 
-==== Finding a Job
+像本书中构建的实用库是另一种了解比特币的好方法。 
+例如，编写BIP0143序列化以对Segwit签名哈希进行编码，有助于习惯于协议编程。 
+将本书的代码移植到另一种语言也将是一个很好的学习工具。
+
+==== Finding a Job 寻找工作
 
 If((("Bitcoin", "opportunities for developers")))((("developers, opportunities for"))) you are interested in getting into this industry in more depth, there are lots of great opportunities for developers.
 The key to proving that you know something is to have a portfolio of projects that you've done on your own.
 Contributing to an existing open source project or making your own project will help you get noticed by companies.
 In addition, programming against the API of any particular company is a great way to get an interview!
 
+如果你对更深入地进入这个行业感兴趣，那么有很多对开发者很好的机会。 
+证明你了解一些东西的关键是拥有一系列你独立完成的项目。 
+为现有开源项目做贡献或创建自己的项目将帮助你被公司注意到。 
+此外，针对任何特定公司的API进行编程是获得面试的绝佳途径！
+
 Generally, local work is going to be a lot easier to get as companies don't like the risk profile of remote workers.
 Go to local meetups and network with people that you meet there, and the local Bitcoin jobs will be a lot easier to come by.
+
+通常，本地工作要容易得多，因为公司不喜欢远程工作者的风险概况。 
+参加当地的聚会并与那里的人建立联系，当地的比特币工作要容易得多。
 
 Similarly, remote work requires that you put yourself out there to be noticed.
 Besides open source contributions, go to conferences, network, and create technical content (YouTube videos, blog posts, etc.).
 These will help quite a bit in getting noticed and getting a remote job.
 
-=== Conclusion
+同样，远程工作需要你把自己展现出来以便被注意到。 
+除了开源贡献，参加会议，建立人脉并创建技术内容（YouTube视频，博客文章等）。 
+这些将大大帮助你被人注意并找到远程工作。
+
+=== Conclusion 结论
 
 I'm excited that you've made it to the end.
 If you are so inclined, please send me notes about your progress, as I would love to hear from you!
 I can be reached at jimmy@programmingblockchain.com.
+
+我很高兴你能坚持到最后。
+如果你愿意，请将你的进度告知我，因为我非常愿意听取你的意见！ 
+你可以通过 jimmy@programmingblockchain.com 联系我。
