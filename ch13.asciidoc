@@ -7,16 +7,25 @@ _Segwit_ stands for "segregated witness" and is a backward-compatible upgrade or
 While the activation was controversial, the features of this technology require some explanation.
 In this chapter, we'll explore how Segwit works, why it's backward compatible, and what Segwit enables.
 
+_Segwit_ 代表“隔离见证” ，是一个向后兼容的升级或“软分叉”，于2017年8月激活在比特币网络上。 
+尽管激活存在争议，但这项技术的特性需要一些解释。 
+在本章中，我们将探讨Segwit如何工作，为什么它是向后兼容的，以及Segwit启用了什么。
+
 As a brief overview, Segwit incorporated a multitude of changes:
 
-* Block size increase
-* Transaction malleability fix
-* Segwit versioning for clear upgrade paths
-* Quadratic hashing fix
-* Offline wallet fee calculation security
+简要概述，Segwit纳入了众多更改：
+
+* Block size increase 块大小增加
+* Transaction malleability fix 交易可塑性修复
+* Segwit versioning for clear upgrade paths Segwit版本化，为明确的升级路径
+* Quadratic hashing fix 二次哈希修复
+* Offline wallet fee calculation security 离线钱包费用计算安全性
 
 It's not entirely obvious what Segwit is without looking at how it's implemented.
 We'll start by examining the most basic type of Segwit transaction, pay-to-witness-pubkey-hash.
+
+如果不了解其实现方式，就不容易理解Segwit是什么。 
+我们将从研究最基本的Segwit交易类型开始，即支付给见证公钥哈希。
 
 === Pay-to-Witness-Pubkey-Hash (p2wpkh)
 
@@ -25,31 +34,58 @@ This is a smart contract that acts a lot like pay-to-pubkey-hash and is named si
 The main change from p2pkh is that the data for the ScriptSig is now in the witness field.
 The rearrangement is to fix transaction malleability.
 
-==== Transaction Malleability
+支付给见证公钥哈希（p2wpkh）是四种脚本类型之一，由Segwit在BIP0141和BIP0143中定义。 
+这是一个智能合约，行为与支付给公钥哈希非常相似，因此得名相似。 
+从p2pkh的主要变化是，ScriptSig的数据现在在见证字段中。 
+这种重新排列是为了修复交易可塑性。
+
+==== Transaction Malleability 交易可塑性
 
 _Transaction malleability_ is the((("transaction malleability")))((("malleability")))((("Segwit (segregated witness)", "transaction malleability")))((("p2wpkh (pay-to-witness-pubkey-hash)", "transaction malleability and"))) ability to change the transaction's ID without altering the transaction's meaning.
 Mt. Gox CEO Mark Karpeles cited transaction malleability as the reason why his exchange was not allowing withdrawals back in 2013.
 
+交易可塑性是指在不改变交易含义的情况下改变交易ID的能力。
+Mt. Gox首席执行官Mark Karpeles将交易可塑性作为他交易所不允许提现的原因，追溯到2013年。
+
 Malleability((("payment channels"))) of the ID is an important consideration when creating payment channels, which are the atomic unit of the Lightning Network.
 A malleable transaction ID makes the safe creation of payment channel transactions much more difficult.
+
+在创建支付通道时，ID的可塑性是一个重要的考虑因素，支付通道是闪电网络的基本单位。 
+可塑的交易ID使得安全创建支付通道交易变得更加困难。
 
 The reason why transaction malleability is a problem at all is because the transaction ID is calculated from the entire transaction.
 The ID of the transaction is the hash256 of the transaction.
 Most of the fields in a transaction cannot be changed without invalidating the transaction's signature (and thus the transaction itself), so from a malleability standpoint, these fields are not a problem.
+
+交易可塑性之所以成为一个问题，是因为交易ID是从整个交易中计算出来的。 
+交易的ID是交易的hash256。 
+交易中的大多数字段在不变签名（从而不变交易本身）的情况下无法更改，因此从可塑性的角度来看，这些字段不是问题。
 
 The((("ScriptSig field (inputs)"))) one field that does allow for some manipulation without invalidating the signature is the ScriptSig field on each input.
 The ScriptSig is emptied before creating the signature hash (see <<chapter_tx>>), so it's possible to change the ScriptSig without invalidating the signature.
 Also, as we learned in <<chapter_elliptic_curve_cryptography>>, signatures contain a random component.
 This means that two different ScriptSigs can essentially mean the same thing but be different byte-wise.
 
+ScriptSig字段（输入）是唯一一个在不无效签名的情况下允许一些操纵的字段。 
+在创建签名哈希之前（见<<chapter_tx>>），ScriptSig被清空，因此可以更改ScriptSig而不使签名无效。 
+此外，我们在<<chapter_elliptic_curve_cryptography>>中学到，签名包含一个随机组件。 
+这意味着两个不同的ScriptSigs本质上可以意味着相同的事情，但在字节数上有所不同。
+
 This makes the ScriptSig field _malleable_—that is, able to be changed without changing the meaning—and means that the entire transaction, and the transaction ID, are malleable.
 A malleable transaction ID means that any _dependent_ transactions (that is, any transaction spending one of the malleable transaction's outputs) cannot be constructed in such a way as to guarantee validity.
 The previous transaction hash is uncertain, so the dependent transaction's transaction input field cannot be guaranteed to be valid.
 
+这使得ScriptSig字段具有可塑性，也就是说，可以更改而不改变含义，意味着整个交易和交易ID都具有可塑性。 
+可塑的交易ID意味着任何依赖的交易（即花费可塑交易输出的任何交易）都不能以保证有效的方式构建。 
+前一个交易哈希是不确定的，因此依赖交易的交易输入字段不能保证有效。
+
 This is not usually a problem as once a transaction enters the blockchain, the transaction ID is fixed and no longer malleable (at least without finding a proof-of-work!).
 However, with payment channels, there are dependent transactions created _before_ the funding transaction is added to the blockchain.
 
-==== Fixing Malleability
+通常这并不是问题，因为一旦交易进入区块链，交易ID就被固定，不再具有可塑性（至少在找到工作量证明之前！）。 
+然而，在支付通道中，有在资金交易加入区块链之前创建的依赖交易。
+
+==== Fixing Malleability 修复可塑性
 
 Transaction malleability is fixed by emptying the ScriptSig field and putting the data in another field that's not used for ID calculation.
 For p2wpkh, the signature and pubkey are the items from ScriptSig, so those get moved to the witness field, which is not used for ID calculation.
@@ -57,12 +93,23 @@ This way, the transaction ID stays stable as the malleability vector disappears.
 The witness field, and the whole Segwit serialization of a transaction, is only sent to nodes that ask for it.
 In other words, old nodes that haven't upgraded to Segwit don't receive the witness field and don't verify the pubkey and signature.
 
+通过清空ScriptSig字段并将数据放入另一个不用于ID计算的字段来修复交易可塑性。 
+对于p2wpkh，签名和公钥是ScriptSig中的项目，因此这些项目被移动到见证字段，见证字段不用于ID计算。 
+这样，随着可塑性向量的消失，交易ID保持稳定。 
+见证字段和交易的整个隔离见证序列化只发送给请求它的节点。 
+换句话说，未升级到隔离见证的老节点不接收见证字段，也不验证公钥和签名。
+
 If this sounds familiar, it should.
 This is similar to how p2sh works (<<chapter_p2sh>>) in that newer nodes do additional validation that older nodes do not, and is the basis for why Segwit is a soft fork (backward-compatible upgrade) and not a hard fork (backward-incompatible upgrade).
 
-=== p2wpkh Transactions
+如果这听起来很熟悉，那应该如此。 
+这与p2sh的工作方式（<<p2sh章节>>）类似，即新节点进行老节点不进行的额外验证，这是隔离见证为什么是软分叉（向后兼容升级）而不是硬分叉（向后不兼容升级）的基础。
+
+=== p2wpkh Transactions p2wpkh 交易
 
 To((("Segwit (segregated witness)", "p2wpkh (pay-to-witness-pubkey-hash)", id="Sp2wpkh13")))((("p2wpkh (pay-to-witness-pubkey-hash)", "transactions using", id="p2wpkh13"))) understand Segwit, it helps to look at what a transaction looks like when sent to an old node (<<pay_to_witness_pubkey_hash_as_seen_by_pre_bip0141_software>>) versus a new node (<<pay_to_witness_pubkey_hash_as_seen_by_post_bip0141_software>>).
+
+为了((("Segwit (segregated witness)", "p2wpkh (pay-to-witness-pubkey-hash)", id="Sp2wpkh13")))((("p2wpkh (pay-to-witness-pubkey-hash)", "transactions using", id="p2wpkh13")))理解隔离见证，我们可以查看当交易发送给老节点（<<pay_to_witness_pubkey_hash_as_seen_by_pre_bip0141_software>>）和新节点（<<pay_to_witness_pubkey_hash_as_seen_by_post_bip0141_software>>）时的样子。
 
 [[pay_to_witness_pubkey_hash_as_seen_by_pre_bip0141_software]]
 .Pay-to-witness-pubkey-hash (p2wpkh) as seen by pre-BIP0141 software
@@ -76,12 +123,23 @@ The difference between these two serializations is that the latter transaction (
 Otherwise, the two transactions look similar.
 The reason the transaction ID is not malleable is because the first serialization is used for calculating the transaction ID.
 
+这两个序列化之间的区别在于后一个交易（隔离见证序列化）具有标记、标志和见证字段。 
+否则，这两个交易看起来很相似。 
+交易ID不可塑的原因是第一个序列化用于计算交易ID。
+
 The witness field in p2wpkh has the signature and pubkey as its two elements.
 These will be used for validation for upgraded nodes only.
+
+p2wpkh的见证字段包括签名和公钥这两个元素。 
+这些元素仅用于升级后的节点的验证。
 
 The ScriptPubKey for p2wpkh is `OP_0` _<20-byte hash>_.
 The ScriptSig, as seen in both serializations, is empty.
 The combined script is shown in <<pay_to_witness_pubkey_hash_p2wpkh_scriptpubkey>>.
+
+p2wpkh的ScriptPubKey是OP_0 <20-byte hash>。 
+如两个序列化所示，ScriptSig为空。
+组合脚本如下所示<<pay_to_witness_pubkey_hash_p2wpkh_scriptpubkey>>。
 
 [[pay_to_witness_pubkey_hash_p2wpkh_scriptpubkey]]
 .Pay-to-witness-pubkey-hash (p2wpkh) ScriptPubKey
@@ -89,17 +147,23 @@ image::images/prbc_1303.png[p2wpkh ScriptPubKey]
 
 The processing of the combined script starts like <<p2wpkh_start>>.
 
+组合脚本的处理开始于<<p2wpkh_start>>。
+
 [[p2wpkh_start]]
 .p2wpkh start
 image::images/prbc_1304.png[p2wpkh start]
 
 `OP_0` pushes a 0 to the stack (<<p2wpkh_step_1>>).
 
+OP_0将0压入栈中（<<p2wpkh_step_1>>）。
+
 [[p2wpkh_step_1]]
 .p2wpkh step 1
 image::images/prbc_1305.png[p2wpkh step 1]
 
 The 20-byte hash is an element, so it's pushed to the stack (<<p2wpkh_step_2>>).
+
+20字节的哈希是一个元素，所以它被推送到栈中（<<p2wpkh_step_2>>）。
 
 [[p2wpkh_step_2]]
 .p2wpkh step 2
@@ -111,9 +175,20 @@ This is very similar to p2sh (<<chapter_p2sh>>) in that older nodes cannot valid
 Newer nodes, however, have a special Segwit rule much like the special rule for p2sh (see <<chapter_p2sh>>).
 Recall that with p2sh, the exact script sequence of _<RedeemScript>_ `OP_HASH160` _<hash>_ `OP_EQUAL` triggers a special rule.
 
+在这个阶段，旧的节点将停止工作，因为没有更多的脚本命令需要处理。 
+由于顶层元素非零，这将被视为一个有效的脚本。 
+这与p2sh（<<章节_p2sh>>）非常相似，因为旧的节点无法进行进一步验证。 
+然而，新节点有一个类似于p2sh的特殊规则（参见<<章节_p2sh>>）的Segwit规则。 
+回想一下，在p2sh中，准确的脚本序列“RedeemScript `OP_HASH160` hash `OP_EQUAL`”触发了一个特殊规则。
+
 In the case of p2wpkh, the script sequence is `OP_0` _<20-byte hash>_.
 When that script sequence is encountered, the pubkey and signature from the witness field and the 20-byte hash are added to the command set in exactly the same sequence as with p2pkh, namely _<signature>_ _<pubkey>_ `OP_DUP OP_HASH160` _<20-byte hash>_ `OP_EQUALVERIFY OP_CHECKSIG`.
 <<p2wpkh_step_3>> shows the state that is encountered next.
+
+在p2wpkh的情况下，脚本序列是 `OP_0` _<20-byte hash>_。
+当遇到这个脚本序列时，来自见证字段中的公钥和签名以及20字节哈希将按照与p2pkh完全相同的顺序添加到命令集中，即 _<signature>_ _<pubkey>_ `OP_DUP OP_HASH160` _<20-byte hash>_ `OP_EQUALVERIFY OP_CHECKSIG`。
+<<p2wpkh_step_3>> 显示了下一个遇到的状态。
+
 
 [[p2wpkh_step_3]]
 .p2wpkh step 3
@@ -121,6 +196,9 @@ image::images/prbc_1307.png[p2wpkh step 3]
 
 The rest of the processing of p2wpkh is the same as the processing of p2pkh, as seen in <<chapter_script>>.
 The end state is a single 1 on the stack if and only if the 20-byte hash is the hash160 of the pubkey and the signature is valid (<<p2wpkh_step_4>>).
+
+p2wpkh的其余处理过程与p2pkh的处理过程相同，如<<chapter_script>>所示。
+最终状态是栈上的单个1，当且仅当20字节哈希是公钥的hash160且签名有效（<<p2wpkh_step_4>>）。
 
 [[p2wpkh_step_4]]
 .p2wpkh step 4
@@ -139,16 +217,36 @@ Upgrades((("Schnorr signatures")))((("Graftroot")))((("Simplicity"))) of Segwit 
 Segwit gives us a clear upgrade path.
 Software that understands how to validate Segwit version X will validate such transactions, but software that isn't aware of Segwit version X simply processes only up to the point of the special rule.((("", startref="Sp2wpkh13")))
 
+对于较旧的节点，处理在 _<20-byte hash>_ 0处停止，因为较旧的节点不知道特殊的Segwit规则。
+只有升级后的节点才会进行剩余的验证，这与p2sh非常相似。
+请注意，较旧的节点接收到的数据较少。
+此外，如果节点不想下载（因此不验证）_x_个区块旧的交易，节点可以有这样的选择。
+在某种程度上，签名已经被一群人见证，如果一个节点选择信任这是有效的，而不是直接验证，那么它可以选择这样做。
+还要注意的是，((("Segwit (segregated witness)", "Segwit version 0")))这是Segwit版本0的特殊规则。
+Segwit版本1可能有完全不同的处理路径。
+_<20-byte hash>_ `1` 可能是触发不同规则的特定脚本序列。
+Segwit的升级((("Schnorr signatures")))((("Graftroot")))((("Simplicity")))可以引入Schnorr签名，Graftroot，或者完全不同的脚本系统，如Simplicity。
+Segwit为我们提供了清晰的升级路径。
+理解如何验证Segwit版本X的软件会验证此类交易，但不知道Segwit版本X的软件只会处理到特殊规则之前的部分。((("", startref="Sp2wpkh13")))
+
 === p2sh-p2wpkh
 
 p2wpkh((("Segwit (segregated witness)", "p2sh-p2wpkh nested transactions", id="Sp2sh13")))((("p2sh (pay-to-script-hash)", "backward compatibility", id="p2shback13")))((("ScriptPubKeys", "p2sh-p2wpkh nested transactions", id="Hnest13")))((("p2sh-p2wpkh nested transactions", id="P2sh-p2wpkhnest13"))) is great, but unfortunately, this is a new type of script and older wallets cannot send bitcoins to p2wpkh ScriptPubKeys.
 p2wpkh uses a new address format called Bech32, defined((("BIP (Bitcoin Improvement Proposals)", "BIP0173"))) in BIP0173, whose ScriptPubKeys older wallets don't know how to create.
 
+p2wpkh(((“Segwit (segregated witness)”, “p2sh-p2wpkh nested transactions”, id=“Sp2sh13”)))(((“p2sh (pay-to-script-hash)”, “backward compatibility”, id=“p2shback13”)))(((“ScriptPubKeys”, “p2sh-p2wpkh nested transactions”, id=“Hnest13”)))(((“p2sh-p2wpkh nested transactions”, id=“P2sh-p2wpkhnest13”)))是非常好的，但不幸的是，这是一种新型的脚本，旧的的钱包无法将比特币发送到p2wpkh ScriptPubKeys。 p2wpkh使用了一种名为Bech32的新地址格式，定义在BIP0173中，旧的钱包不知道如何创建这种地址格式的ScriptPubKeys。
+
 The Segwit authors found an ingenious way to make Segwit backward compatible by "wrapping" p2wpkh inside p2sh.
 This is called "nested" Segwit as the Segwit script is nested in a p2sh RedeemScript.
 
+Segwit的作者们找到了一种巧妙的方法，通过将p2wpkh包裹在p2sh中来实现Segwit的后向兼容性。 
+这被称为“嵌套”的Segwit，因为Segwit脚本嵌套在p2sh RedeemScript中。
+
 A p2sh-p2wpkh address is a normal p2sh address, but the RedeemScript is `OP_0` _<20-byte hash>_, or the ScriptPubKey of p2wpkh.
 As with p2wpkh, different transactions are sent to older nodes (<<p2sh_p2wpkh_to_pre_bip0141_software>>) versus newer nodes (<<p2sh_p2wpkh_to_post_bip0141_software>>).
+
+p2sh-p2wpkh地址是一个普通的p2sh地址，但RedeemScript是OP_0 <20-byte hash>, 或者是p2wpkh的ScriptPubKey。 
+与p2wpkh一样，不同的交易会被发送到旧节点（<<p2sh_p2wpkh_to_pre_bip0141_software>>) 和新节点（<<p2sh_p2wpkh_to_post_bip0141_software>>）。
 
 [[p2sh_p2wpkh_to_pre_bip0141_software]]
 .Pay-to-script-hash-pay-to-witness-pubkey-hash (p2sh-p2wpkh) to pre-BIP0141 software
@@ -163,11 +261,17 @@ The ScriptSig has a RedeemScript, which is equal to the ScriptPubkey in p2wpkh.
 As this is a p2sh script, the ScriptPubKey is the same as in any other p2sh script.
 The combined script looks like <<p2sh_p2wpkh_scriptpubkey_is_the_same_as_a_normal_p2sh_scriptpubkey>>.
 
+与p2wpkh的区别在于，ScriptSig不再为空。 ScriptSig有一个RedeemScript，它等于p2wpkh中的ScriptPubkey。 
+由于这是一个p2sh脚本，ScriptPubKey与任何其他p2sh脚本的ScriptPubKey相同。 
+组合脚本看起来像<<p2sh_p2wpkh_scriptpubkey_is_the_same_as_a_normal_p2sh_scriptpubkey>>。
+
 [[p2sh_p2wpkh_scriptpubkey_is_the_same_as_a_normal_p2sh_scriptpubkey]]
 .p2sh-p2wpkh ScriptPubKey is the same as a normal p2sh ScriptPubKey
 image::images/prbc_1311.png[p2sh-p2wpkh ScriptPubKey]
 
 We start the script evaluation like in <<p2sh_p2wpkh_start>>.
+
+我们像<<p2sh_p2wpkh_start>>一样开始脚本评估。
 
 [[p2sh_p2wpkh_start]]
 .p2sh-p2wpkh start
@@ -176,17 +280,24 @@ image::images/prbc_1312.png[p2sh-p2wpkh start]
 Notice that the commands to be processed are exactly what triggers the p2sh special rule.
 The RedeemScript goes on the stack (<<p2sh_p2wpkh_step_1>>).
 
+请注意，要处理的命令正是触发p2sh特殊规则的内容。 
+RedeemScript压入栈（<<p2sh_p2wpkh_step_1>>）。
+
 [[p2sh_p2wpkh_step_1]]
 .p2sh-p2wpkh step 1
 image::images/prbc_1313.png[p2sh-p2wpkh step 1]
 
 The `OP_HASH160` will return the RedeemScript's hash (<<p2sh_p2wpkh_step_2>>).
 
+`OP_HASH160` 将返回RedeemScript的哈希（<<p2sh_p2wpkh_step_2>>）。
+
 [[p2sh_p2wpkh_step_2]]
 .p2sh-p2wpkh step 2
 image::images/prbc_1314.png[p2sh-p2wpkh step 2]
 
 The hash will go on the stack, and we then get to `OP_EQUAL` (<<p2sh_p2wpkh_step_3>>).
+
+哈希将被压入栈，然后我们来到 `OP_EQUAL`（<<p2sh_p2wpkh_step_3>>）。
 
 [[p2sh_p2wpkh_step_3]]
 .p2sh-p2wpkh step 3
@@ -197,12 +308,18 @@ However, post-BIP0016 nodes recognize the special script sequence for p2sh, so t
 The RedeemScript is `OP_0` _<20-byte hash>_, which is the same as the ScriptPubKey for p2wpkh.
 This makes the script state look like <<p2sh_p2wpkh_step_4>>.
 
+在(((“BIP (Bitcoin Improvement Proposals)”, “BIP0016”)))这个点上，如果哈希相等，那么在BIP0016之前的节点将简单地将输入标记为有效，因为它们不知道p2sh验证规则。 
+然而，BIP0016之后的节点会识别p2sh的特殊脚本序列，所以RedeemScript将被评估为脚本命令。 RedeemScript是OP_0 <20-byte hash>, 这与p2wpkh的ScriptPubKey相同。 
+这使得脚本状态看起来像<<p2sh_p2wpkh_step_4>>。
+
 [[p2sh_p2wpkh_step_4]]
 .p2sh-p2wpkh step 4
 image::images/prbc_1316.png[p2sh-p2wpkh step 4]
 
 This should look familiar, as this is the state that p2wpkh starts with.
 After `OP_0` and the 20-byte hash we are left with <<p2sh_p2wpkh_step_5>>.
+
+这看起来应该很熟悉，因为这是p2wpkh开始的状态。 在OP_0和20字节哈希之后，我们得到<<p2sh_p2wpkh_step_5>>。
 
 [[p2sh_p2wpkh_step_5]]
 .p2sh-p2wpkh step 5
@@ -212,12 +329,19 @@ At this point, pre-Segwit nodes will mark this input as valid as they are unawar
 However, post-Segwit nodes will recognize the special script sequence for p2wpkh.
 The signature and pubkey from the witness field along with the 20-byte hash will add the p2pkh commands (<<p2sh_p2wpkh_step_6>>).
 
+在这个点上，pre-Segwit节点将此输入标记为有效，因为它们不知道Segwit验证规则。 
+然而，post-Segwit节点将识别p2wpkh的特殊脚本序列。 
+见证字段中的签名和公钥以及20字节哈希将添加p2pkh命令（<<p2sh_p2wpkh_step_6>>）。
+
 [[p2sh_p2wpkh_step_6]]
 .p2sh-p2wpkh step 6
 image::images/prbc_1318.png[p2sh-p2wpkh step 6]
 
 The rest of the processing is the same as p2pkh (<<chapter_script>>).
 Assuming the signature and pubkey are valid, we are left with <<p2sh_p2wpkh_end>>.
+
+其余的处理与p2pkh相同（<<chapter_script>>）。 
+假设签名和公钥有效，我们得到<<p2sh_p2wpkh_end>>。
 
 [[p2sh_p2wpkh_end]]
 .p2sh-p2wpkh end
@@ -228,19 +352,32 @@ A pre-BIP0016 node would consider the script valid once the RedeemScripts were e
 Both would not do the full validation and would accept the transaction.
 A post-Segwit node would do the complete validation, including checking the signature and pubkey.
 
+如你所见，p2sh-p2wpkh交易在后向兼容性方面一直追溯到BIP0016之前。 
+一个pre-BIP0016节点会在RedeemScripts相等后认为脚本有效，一个post-BIP0016，pre-Segwit节点会在20字节哈希处认为脚本有效。 
+两者都不会进行完整的验证，而是接受交易。 
+一个post-Segwit节点会进行完整的验证，包括检查签名和公钥。
+
 [NOTE]
-.Can Anyone Spend Segwit Outputs?
+.Can Anyone Spend Segwit Outputs? 谁可以花费Segwit输出？
 ====
 Detractors of Segwit have referred to Segwit outputs as "anyone-can-spend."
 This would have been true if the Bitcoin community had rejected Segwit.
 In other words, if an economically significant part of the Bitcoin community had refused to do the Segwit validation and actively split from the network by accepting transactions that were not Segwit-valid, the outputs would have been anyone-can-spend.
 However, due to a variety of economic incentives, Segwit was activated on the network, there was no network split, a lot of bitcoins are now locked in Segwit outputs, and Segwit transactions are validated per the soft-fork rules by the vast economic majority of nodes.
 We can now say confidently that the detractors were wrong.((("", startref="p2shback13")))
+
+Segwit的反对者将Segwit输出称为“任何人都可以花费”。 
+如果比特币社区拒绝了Segwit，那么这将是真的。 
+换句话说，如果比特币社区的一个重要部分拒绝进行Segwit验证，并积极通过与接受非Segwit有效的交易来与网络分裂，那么输出将是任何人都可以花费的。 
+然而，由于各种经济激励，Segwit在网络上被激活，没有发生网络分裂，很多比特币现在被锁定在Segwit输出中，绝大多数节点根据软分叉规则验证Segwit交易。 
+现在我们可以有信心地说，反对者是错误的。(((“”, startref=“p2shback13”)))
 ====
 
 === Coding p2wpkh and p2sh-p2wpkh
 
 The((("ScriptPubKeys", "p2wpkh (pay-to-witness-pubkey-hash)")))((("p2wpkh (pay-to-witness-pubkey-hash)", "coding", id="paytowitcod13")))((("p2sh (pay-to-script-hash)", "coding", id="PTScode13"))) first change we're going to make is to the `Tx` class, where we need to mark whether the transaction is Segwit or not:
+
+我们要做的第一个更改是针对 `Tx` 类，我们需要标记此交易是否为Segwit交易：
 
 [source,python]
 ----
@@ -249,6 +386,8 @@ include::code-ch13/tx.py[tag=source1]
 
 Next, we change the `parse` method depending on the serialization we receive:
 
+接下来，我们将根据收到的序列化内容更改 `parse` 方法：
+
 [source,python]
 ----
 class Tx:
@@ -256,13 +395,15 @@ class Tx:
 include::code-ch13/tx.py[tag=source2]
 ----
 <1> To determine whether we have a Segwit transaction or not, we look at the fifth byte.
-The first four are the version, the fifth is the Segwit marker.
+The first four are the version, the fifth is the Segwit marker. 要确定我们是否有一个Segwit交易，我们查看第五个字节。 前四个字节是版本，第五个是Segwit标记。 
 <2> The fifth byte being 0 is how we tell that this transaction is Segwit (this is not foolproof, but it's what we're going to use).
-We use different parsers depending on whether it's Segwit.
-<3> We put the stream back to the position before we examined the first 5 bytes.
-<4> We've moved the old `parse` method to `parse_legacy`.
+We use different parsers depending on whether it's Segwit. 第五个字节为0是我们判断此交易为Segwit的方式（这并不是万无一失的，但我们将使用这种方式）。 根据是否为Segwit，我们使用不同的解析器。
+<3> We put the stream back to the position before we examined the first 5 bytes. 我们将流恢复到检查前5个字节之前的位置。 
+<4> We've moved the old `parse` method to `parse_legacy`. 我们将旧的parse方法移动到parse_legacy。
 
 Here's a parser for the Segwit serialization: 
+
+这是一个用于Segwit序列化的解析器：
 
 [source,python]
 ----
@@ -270,10 +411,12 @@ class Tx:
 ...
 include::code-ch13/tx.py[tag=source3]
 ----
-<1> There are two new fields; one of them is the Segwit marker.
-<2> The second new field is witness, which contains items for each input.
+<1> There are two new fields; one of them is the Segwit marker. 有两个新字段；其中一个是Segwit标记。
+<2> The second new field is witness, which contains items for each input. 第二个新字段是见证人，其中包含每个输入的项目。
 
 We now code the corresponding changes to the serialization methods:
+
+现在我们编写相应的序列化方法更改：
 
 [source,python]
 ----
@@ -281,11 +424,13 @@ class Tx:
 ...
 include::code-ch13/tx.py[tag=source4]
 ----
-<1> What used to be called `serialize` is now `serialize_legacy`.
-<2> The Segwit serialization adds the markers.
-<3> The witness is serialized at the end.
+<1> What used to be called `serialize` is now `serialize_legacy`. 以前称为 serialize 的现在称为 serialize_legacy。
+<2> The Segwit serialization adds the markers. Segwit序列化添加了标记。
+<3> The witness is serialized at the end. 见证人在最后序列化。
 
 We also have to change the `hash` method to use the legacy serialization, even for Segwit transactions, as that will keep the transaction ID stable:
+
+我们还必须将 hash 方法更改为使用遗留序列化，即使对于Segwit交易也是如此，因为这将保持交易ID稳定：
 
 [source,python]
 ----
@@ -297,6 +442,10 @@ include::code-ch13/tx.py[tag=source5]
 The `verify_input` method requires a different `z` for Segwit transactions.
 The Segwit transaction signature hash calculation is specified in((("BIP (Bitcoin Improvement Proposals)", "BIP0143"))) BIP0143.
 In addition, the witness field is passed through to the script evaluation engine:
+
+`verify_input` 方法需要为Segwit交易提供不同的 `z`。
+Segwit交易签名哈希计算在 BIP0143 中指定。
+此外，见证字段将传递给脚本评估引擎：
 
 [source,python]
 ----
@@ -325,12 +474,14 @@ class Tx:
         combined_script = tx_in.script_sig + tx_in.script_pubkey(self.testnet)
         return combined_script.evaluate(z, witness)  # <4>
 ----
-<1> This handles the p2sh-p2wpkh case.
-<2> The BIP0143 signature hash generation code is in _tx.py_ of this chapter's code.
-<3> This handles the p2wpkh case.
-<4> The witness passes through to the evaluation engine so that p2wpkh can construct the right commands.
+<1> This handles the p2sh-p2wpkh case. 这处理了p2sh-p2wpkh的情况。
+<2> The BIP0143 signature hash generation code is in _tx.py_ of this chapter's code. BIP0143签名哈希生成代码在本章代码的_tx.py_中。
+<3> This handles the p2wpkh case. 这处理了p2wpkh的情况。
+<4> The witness passes through to the evaluation engine so that p2wpkh can construct the right commands. 见证人传递给评估引擎，以便p2wpkh可以构建正确的命令。
 
 We also define what a p2wpkh script looks like in _script.py_:
+
+在 _script.py_ 中，我们还定义了p2wpkh脚本的外观：
 
 [source,python]
 ----
@@ -338,10 +489,12 @@ include::code-ch13/script.py[tag=source1]
 ...
 include::code-ch13/script.py[tag=source2]
 ----
-<1> This is OP_0 _<20-byte-hash>_.
-<2> This checks if the current script is a p2wpkh ScriptPubKey.
+<1> This is OP_0 _<20-byte-hash>_. 这是OP_0 <20-byte-hash>。 
+<2> This checks if the current script is a p2wpkh ScriptPubKey. 这检查当前脚本是否为p2wpkh ScriptPubKey。
 
 Last, we need to implement the special rule in the `evaluate` method.
+
+最后，我们需要在evaluate方法中实现特殊规则。
 
 [source,python]
 ----
@@ -359,12 +512,20 @@ include::code-ch13/script.py[tag=source3]
 <1> This is where we execute witness program version 0 for p2wpkh.
 We make a p2pkh combined script from the 20-byte hash, signature, and pubkey and evaluate.((("", startref="p2wpkh13")))((("", startref="Sp2sh13")))((("", startref="PTScode13")))((("", startref="paytowitcod13")))((("", startref="Hnest13")))((("", startref="P2sh-p2wpkhnest13")))
 
+这是我们为p2wpkh执行见证程序版本0的地方。 我们用20字节的哈希、签名和公钥创建一个p2pkh组合脚本并评估。((("", startref="p2wpkh13")))((("", startref="Sp2sh13")))((("", startref="PTScode13")))((("", startref="paytowitcod13")))((("", startref="Hnest13")))((("", startref="P2sh-p2wpkhnest13")))
+
 === Pay-to-Witness-Script-Hash (p2wsh)
 
 While((("ScriptPubKeys", "p2wsh (pay-to witness-script-hash)", id="Hp2wsh13")))((("p2wsh (pay-to witness-script-hash)", id="p2witscripthash13")))((("Segwit (segregated witness)", "p2wsh (pay-to witness-script-hash)", id="Spaywithash13"))) p2wpkh takes care of a major use case, we need something more flexible if we want more complicated (e.g., multisig) scripts.
 This is where pay-to-witness-script-hash (p2wsh) comes in. p2wsh is like p2sh, but with all the ScriptSig data in the witness field instead.
 
+虽然p2wpkh处理了一个主要用例，但如果我们想要更复杂的（例如，多签名）脚本，我们需要更灵活的东西。
+这就是支付给见证脚本哈希（p2wsh）出现的地方。
+p2wsh类似于p2sh，但所有的ScriptSig数据都在见证字段中。
+
 As((("BIP (Bitcoin Improvement Proposals)", "BIP0141"))) with p2wpkh, we send different data to pre-BIP0141 software (<<p2wsh_as_seen_by_pre_bip0141_software>>) versus post-BIP0141 software (<<p2wsh_as_seen_by_post_bip0141_software>>).
+
+与p2wpkh一样，我们向pre-BIP0141软件（<<p2wsh_as_seen_by_pre_bip0141_software>>）发送不同于post-BIP0141软件（<<p2wsh_as_seen_by_post_bip0141_software>>）的数据。
 
 [[p2wsh_as_seen_by_pre_bip0141_software]]
 .Pay-to-witness-script-hash as seen by pre-BIP0141 software
@@ -378,6 +539,11 @@ The ScriptPubKey for p2wsh script is `OP_0` _<32-byte hash>_.
 This sequence triggers another special rule.
 The ScriptSig, as with p2wpkh, is empty.
 When p2wsh outputs are being spent, the combined script looks like <<p2wsh_scriptpubkey>>.
+
+p2wsh脚本的ScriptPubKey是OP_0 <32-byte hash>。 
+这个序列触发了另一个特殊规则。 
+与p2wpkh一样，ScriptSig是空的。
+当p2wsh输出被花费时，组合脚本看起来像<<p2wsh_scriptpubkey>>。
 
 [[p2wsh_scriptpubkey]]
 .Pay-to-witness-script-hash (p2wsh) ScriptPubKey
@@ -395,6 +561,8 @@ image::images/prbc_1324.png[p2wsh step 1]
 
 The 32-byte hash is an element, so it is pushed to the stack (<<p2wsh_step_2>>).
 
+32字节的哈希是一个元素，所以它被推送到栈上（<<p2wsh_step_2>>）。
+
 [[p2wsh_step_2]]
 .p2wsh step 2
 image::images/prbc_1325.png[p2wsh step 2]
@@ -402,7 +570,12 @@ image::images/prbc_1325.png[p2wsh step 2]
 As with p2wpkh, older nodes will stop here because there are no more Script commands to be processed.
 Newer nodes will recognize the special sequence and do additional validation by looking at the witness field.
 
+与p2wpkh一样，旧节点将在这里停止，因为没有更多的脚本命令需要处理。 
+新节点会识别这个特殊序列，并通过查看见证字段进行额外的验证。
+
 The witness field for p2wsh in our case is a 2-of-3 multisig (<<p2wsh_witness>>).
+
+在我们的案例中，p2wsh的见证字段是一个2-of-3多签名（<<p2wsh_witness>>）。
 
 [[p2wsh_witness]]
 .p2wsh witness
@@ -413,11 +586,18 @@ Note this is sha256, not hash256.
 Once the WitnessScript is validated by having the same hash value, it is interpreted as script commands and put into the command set.
 The WitnessScript looks like <<p2wsh_witness_script>>.
 
+见证的最后一个项目被称为 _WitnessScript_，其sha256必须与ScriptPubKey中的32字节哈希相匹配。 
+请注意，这是sha256，而不是hash256。 
+一旦WitnessScript通过具有相同的哈希值进行验证，它就被解释为脚本命令并放入命令集。 
+WitnessScript看起来像<<p2wsh_witness_script>>。
+
 [[p2wsh_witness_script]]
 .p2wsh WitnessScript
 image::images/prbc_1327.png[p2wsh WitnessScript]
 
 The rest of the witness field is put on top to produce the command set in <<p2wsh_step_3>>.
+
+见证字段的其余部分被放在顶部，以产生<<p2wsh_step_3>>中的命令集。
 
 [[p2wsh_step_3]]
 .p2wsh step 3
@@ -425,11 +605,15 @@ image::images/prbc_1328.png[p2wsh step 3]
 
 As you can see, this is a 2-of-3 multisig much like what was explored in <<chapter_p2sh>> (<<p2wsh_step_4>>).
 
+如你所见，这是一个类似于在<<chapter_p2sh>>中探讨的2-of-3多签名（<<p2wsh_step_4>>）。
+
 [[p2wsh_step_4]]
 .p2wsh step 4
 image::images/prbc_1329.png[p2wsh step 4]
 
 If the signatures are valid, we end like <<p2wsh_step_5>>.
+
+如果签名有效，我们最后会像<<p2wsh_step_5>>一样结束。
 
 [[p2wsh_step_5]]
 .p2wsh step 5
@@ -440,10 +624,16 @@ Once the sha256 of the WitnessScript is found to be the same as the 32-byte hash
 The rest of the witness field is then added to the command set as well, producing the final set of commands to be evaluated.
 p2wsh is particularly important, as unmalleable multisig transactions are required for creating bidirectional payment channels for the Lightning Network.((("", startref="Hp2wsh13")))
 
+WitnessScript与RedeemScript非常相似，因为脚本发布中的序列化sha256被揭示时，输出正在被花费。
+一旦找到WitnessScript的sha256与32字节哈希相同，WitnessScript就被解释为脚本命令并添加到命令集。 然后，将见证字段的其余部分也添加到命令集中，产生最终要评估的命令集。 
+p2wsh特别重要，因为不可篡改的多签名交易是创建Lightning Network中的双向支付通道所需的。((("", startref="Hp2wsh13")))
+
 === p2sh-p2wsh
 
 Like((("ScriptPubKeys", "p2sh-p2wsh nested transactions", id="Hp2wshnest13")))((("Segwit (segregated witness)", "p2sh-p2wsh nested transactions", id="Sp2wshnest13")))((("p2sh-p2wsh nested transactions", id="p2shnested13"))) p2sh-p2wpkh, p2sh-p2wsh is a way to make p2wsh backward compatible.
 Again, different transactions are sent to older nodes (<<p2sh_p2wsh_to_pre_bip0141_software>>) versus newer nodes (<<p2sh_p2wsh_to_post_bip0141_software>>).
+
+p2sh-p2wsh就像p2sh-p2wpkh一样，是一种使p2wsh向后兼容的方法。同样，不同的交易被发送到旧节点（<<p2sh_p2wsh_to_pre_bip0141_software>>)和新区节点（<<p2sh_p2wsh_to_post_bip0141_software>>）。
 
 [[p2sh_p2wsh_to_pre_bip0141_software]]
 .Pay-to-script-hash-pay-to-witness-script-hash (p2sh-p2wsh) to pre-BIP0141 software
@@ -456,11 +646,15 @@ image::images/prbc_1332.png[p2sh-p2wsh to New Nodes]
 [role="pagebreak-before"]
 As with p2sh-p2wpkh, the ScriptPubKey is indistinguishable from any other p2sh address and the ScriptSig is only the RedeemScript (<<p2sh_p2wsh_scriptpubkey>>).
 
+与p2sh-p2wpkh一样，ScriptPubKey与任何其他p2sh地址无法区分，而ScriptSig只是RedeemScript（<<p2sh_p2wsh_scriptpubkey>>）。
+
 [[p2sh_p2wsh_scriptpubkey]]
 .p2sh-p2wsh ScriptPubKey
 image::images/prbc_1311.png[p2sh-p2wsh ScriptPubKey]
 
 We start the p2sh-p2wsh script evaluation in exactly the same way that p2sh-p2wpkh script evaluation starts (<<p2sh_p2wsh_start>>).
+
+我们以与p2sh-p2wpkh脚本评估开始相同的方式开始p2sh-p2wsh脚本评估（<<p2sh_p2wsh_start>>）。
 
 [[p2sh_p2wsh_start]]
 .p2sh-p2wsh start
@@ -468,17 +662,23 @@ image::images/prbc_1312.png[p2sh-p2wsh start]
 
 The RedeemScript is pushed to the stack (<<p2sh_p2wsh_step_1>>).
 
+将RedeemScript推送到栈（<<p2sh_p2wsh_step_1>>）。
+
 [[p2sh_p2wsh_step_1]]
 .p2sh-p2wsh step 1
 image::images/prbc_1313.png[p2sh-p2wsh step 1]
 
 The `OP_HASH160` will return the RedeemScript's hash (<<p2sh_p2wsh_step_2>>).
 
+`OP_HASH160` 将返回RedeemScript的哈希（<<p2sh_p2wsh_step_2>>）。
+
 [[p2sh_p2wsh_step_2]]
 .p2sh-p2wsh step 2
 image::images/prbc_1314.png[p2sh-p2wsh step 2]
 
 The hash is pushed to the stack, and we then get to `OP_EQUAL` (<<p2sh_p2wsh_step_3>>).
+
+将哈希推送到栈，然后我们得到 `OP_EQUAL` （<<p2sh_p2wsh_step_3>>）。
 
 [[p2sh_p2wsh_step_3]]
 .p2sh-p2wsh step 3
@@ -488,11 +688,17 @@ As((("BIP (Bitcoin Improvement Proposals)", "BIP0016"))) with p2sh-p2wpkh, if th
 However, post-BIP0016 nodes will recognize the special script sequence for p2sh, so the RedeemScript will be interpreted as new script commands.
 The RedeemScript is `OP_0` _32-byte hash_, which is the same as the ScriptPubKey for p2wsh (<<p2sh_p2wsh_redeemscript>>).
 
+与p2sh-p2wpkh一样，如果哈希相等，那么pre-BIP0016节点将标记输入为有效，因为它们不知道p2sh验证规则。 
+然而，post-BIP0016节点将识别p2sh的特殊脚本序列，因此RedeemScript将被解释为新脚本命令。 RedeemScript是OP_0 32-byte hash，这与p2wsh的ScriptPubKey相同（<<p2sh_p2wsh_redeemscript>>）。
+
+
 [[p2sh_p2wsh_redeemscript]]
 .p2sh-p2wsh RedeemScript
 image::images/prbc_1338.png[p2sh-p2wsh RedeemScript]
 
 This makes the script state look like <<p2sh_p2wsh_step_4>>.
+
+这使得脚本状态看起来像<<p2sh_p2wsh_step_4>>。
 
 [[p2sh_p2wsh_step_4]]
 .p2sh-p2wsh step 4
@@ -500,11 +706,15 @@ image::images/prbc_1323.png[p2sh-p2wsh step 4]
 
 Of course, this is the exact same starting state as for p2wsh (<<p2sh_p2wsh_step_5>>).
 
+当然，这正好是p2wsh的起始状态（<<p2sh_p2wsh_step_5>>）。
+
 [[p2sh_p2wsh_step_5]]
 .p2sh-p2wsh step 5
 image::images/prbc_1324.png[p2sh-p2wsh step 5]
 
 The 32-byte hash is an element, so it is pushed to the stack (<<p2sh_p2wsh_step_6>>).
+
+32字节哈希是一个元素，所以它被推送到栈上（<<p2sh_p2wsh_step_6>>）。
 
 [[p2sh_p2wsh_step_6]]
 .p2sh-p2wsh step 6
@@ -513,6 +723,11 @@ image::images/prbc_1325.png[p2sh-p2wsh step 6]
 At this point, pre-Segwit nodes will mark this input as valid, as they are unaware of the Segwit validation rules.
 However, post-Segwit nodes will recognize the special script sequence for p2wsh.
 The witness field (<<p2sh_p2wsh_witness>>) contains the WitnessScript (<<p2sh_p2wsh_witness_script>>). The sha256 of the WitnessScript is checked against the 32-byte hash, and if they're equal the WitnessScript is interpreted as script commands and put into the command set (<<p2sh_p2wsh_step_7>>).
+
+在这个阶段，pre-Segwit节点将标记此输入为有效，因为它们不知道Segwit验证规则。 
+然而，post-Segwit节点将识别p2wsh的特殊脚本序列。 
+见证字段（<<p2sh_p2wsh_witness>>)包含WitnessScript（<<p2sh_p2wsh_witness_script>>）。
+检查WitnessScript的sha256与32字节哈希是否相等，如果相等，将WitnessScript解释为脚本命令并将其放入命令集（<<p2sh_p2wsh_step_7>>）。
 
 [[p2sh_p2wsh_witness]]
 .p2sh-p2wsh witness
@@ -529,16 +744,24 @@ image::images/prbc_1328.png[p2sh-p2wsh step 7]
 As you can see, this is a 2-of-3 multisig as in <<chapter_p2sh>>.
 If the signatures are valid, we end like <<p2sh_p2wsh_end>>.
 
+如你所见，这是一个在<<chapter_p2sh>>中的2-of-3多签名。 
+如果签名有效，我们将像<<p2sh_p2wsh_end>>一样结束。
+
 [[p2sh_p2wsh_end]]
 .p2sh-p2wsh end
 image::images/prbc_1330.png[p2sh-p2wsh end]
 
 This makes p2wsh backward compatible, allowing older wallets to send to p2sh ScriptPubKeys that they can handle.
 
+这使得p2wsh向后兼容，允许旧钱包向它们可以处理的p2sh ScriptPubKeys发送。
+
 === Coding p2wsh and p2sh-p2wsh
 
 The parsing and serialization are exactly the same as before.
 The main changes have to do with `verify_input` in _tx.py_ and `evaluate` in _script.py_:
+
+解析和序列化与之前完全相同。
+主要的更改与 `tx.py` 中的 `verify_input` 和 script.py 中的 `evaluate` 有关：
 
 [source,python]
 ----
@@ -581,10 +804,12 @@ class Tx:
         combined_script = tx_in.script_sig + tx_in.script_pubkey(self.testnet)
         return combined_script.evaluate(z, witness)
 ----
-<1> This takes care of p2sh-p2wsh.
-<2> This takes care of p2wsh.
+<1> This takes care of p2sh-p2wsh. 这处理了p2sh-p2wsh。
+<2> This takes care of p2wsh. 这处理了p2wsh。
 
 Next, we code a way to identify p2wsh in _script.py_:
+
+接下来，我们在 _script.py_ 中编写了一种识别p2wsh的方法：
 
 [source,python]
 ----
@@ -597,6 +822,8 @@ include::code-ch13/script.py[tag=source5]
 <1> `OP_0` _<32-byte script>_ is what we expect.
 
 Last, we handle the special rule for p2wsh:
+
+最后，我们处理p2wsh的特殊规则：
 
 [source,python]
 ----
@@ -611,22 +838,32 @@ class Script:
     	        ...
 include::code-ch13/script.py[tag=source6]
 ----
-<1> The top element is the sha256 hash of the WitnessScript.
-<2> The second element is the witness version, 0.
-<3> Everything but the WitnessScript is added to the command set.
-<4> The WitnessScript is the last item of the witness field.
-<5> The WitnessScript must hash to the sha256 that was in the stack.
-<6> We parse the WitnessScript and add it to the command set.((("", startref="p2witscripthash13")))((("", startref="Spaywithash13")))((("", startref="Sp2wshnest13")))((("", startref="p2shnested13")))((("", startref="Hp2wshnest13")))
+<1> The top element is the sha256 hash of the WitnessScript. 顶部元素是WitnessScript的sha256哈希。
+<2> The second element is the witness version, 0. 第二个元素是见证版本，为0。
+<3> Everything but the WitnessScript is added to the command set. 除了WitnessScript之外，所有内容都添加到命令集中。
+<4> The WitnessScript is the last item of the witness field. WitnessScript是见证字段的最后一个项目。
+<5> The WitnessScript must hash to the sha256 that was in the stack. WitnessScript必须哈希到在栈中的sha256。
+<6> We parse the WitnessScript and add it to the command set.((("", startref="p2witscripthash13")))((("", startref="Spaywithash13")))((("", startref="Sp2wshnest13")))((("", startref="p2shnested13")))((("", startref="Hp2wshnest13"))) 我们解析WitnessScript并将其添加到命令集中。
 
-=== Other Improvements
+
+=== Other Improvements 其他改进
 
 Segwit((("Segwit (segregated witness)", "other improvements"))) also fixes the quadratic hashing problem through a different calculation of the signature hash.
 A lot of the calculations for the signature hash, _z_, can be reused instead of requiring a new hash256 hash for each input.
 The((("BIP (Bitcoin Improvement Proposals)", "BIP0143"))) signature hash calculation is detailed in BIP0143 and can be seen in _code-ch13/tx.py_.
 
+Segwit((("Segwit (隔离见证)", "其他改进"))) 通过不同的签名哈希计算方法解决了二次哈希问题。
+对于签名哈希的大量计算，_z_，可以重用而不是要求每个输入都有一个新的hash256哈希。
+BIP0143中的签名哈希计算详细说明，可以在_code-ch13/tx.py_中查看。
+
 Another improvement is that by policy, uncompressed SEC pubkeys are now forbidden; only compressed SEC pubkeys are used for Segwit, saving space.
 
-=== Conclusion
+另一个改进是，根据政策，现在禁止使用未压缩的SEC公钥；只有压缩的SEC公钥用于Segwit，节省空间。
+
+=== Conclusion 结论
 
 The chapter covered the details of Segwit as a taste of what's now possible.
 <<chapter_advanced>> discusses the next steps that you can take on your Bitcoin developer journey.
+
+本章详细介绍了Segwit，以展示现在可以实现的功能。
+<<chapter_advanced>> 讨论了您在比特币开发人员旅程中可以采取的下一步。
