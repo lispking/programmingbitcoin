@@ -1,5 +1,5 @@
 [[chapter_spv]]
-== Simplified Payment Verification
+== Simplified Payment Verification 简化支付验证
 
 [.lead]
 The one block header field that we didn't investigate much in <<chapter_blocks>> was the Merkle root.
@@ -7,25 +7,42 @@ To understand what makes the Merkle root useful, we first have to learn about Me
 In this chapter, we're going to learn exactly what a Merkle root is.
 This will be motivated by something called a _proof of inclusion_.
 
-=== Motivation
+在<<块章节>>中，我们尚未深入研究的区块头字段是Merkle根。 要了解Merkle根的有用性，我们首先要了解Merkle树及其属性。 在本章中，我们将了解Merkle根究竟是什么。 这将从所谓的“包含证明”开始。
+
+=== Motivation 动机
 
 For a device that doesn't have much disk space, bandwidth, or computing power, it's expensive to store, receive, and validate the entire blockchain.
 As of this writing, the entire Bitcoin blockchain is around 200 GB, which is more than many phones can store; it can be very difficult to download efficiently and will certainly tax the CPU.
 If the entire blockchain cannot be put on the phone, what else can we do?
 Is it possible to create a((("wallets")))((("Bitcoin wallets")))((("SPV (Simplified Payment Verification)", "motivation for")))((("Simplified Payment Verification (SPV)", "motivation for"))) Bitcoin wallet on a phone without having all the data?
 
+对于磁盘空间、带宽或计算能力有限的设备来说，存储、接收和验证整个区块链是非常昂贵的。
+截至撰写本文时，整个比特币区块链大约有200GB，这比许多手机的存储空间都要大；下载效率可能非常低，而且肯定会占用CPU。
+如果整个区块链无法放在手机上，我们还能做什么呢？
+是否可以在没有所有数据的手机上创建一个比特币钱包？
+
 For any wallet, there are two scenarios that we're concerned with:
 
-1. Paying someone
-2. Getting paid by someone
+对于任何钱包，我们关心的有两个场景：
+
+1. Paying someone 给别人付款
+2. Getting paid by someone 接收别人的付款
 
 If you are paying someone with your Bitcoin wallet, it is up to the person receiving your bitcoins to verify that they've been paid.
 Once they've verified that the transaction has been included in a block sufficiently deep, the other side of the trade, or the good or service, will be given to you.
 Once you've sent the transaction to the other party, there really isn't anything for you to do other than wait until you receive whatever it is you're exchanging the bitcoins for.
 
+如果你正在用你的比特币钱包给某人付款，那么验证他们是否已经收到比特币是接收方的事情。
+一旦他们验证了交易已经被包含在一个足够深的区块中，交易双方就会给你货物或服务。
+一旦你将交易发送给对方，除了等待收到你用比特币换取的物品之外，你真的无事可做。
+
 When getting paid bitcoins, however, we have a dilemma.
 If we are connected and have the full blockchain, we can easily see when the transaction is in a sufficiently deep block, at which point we give the other party our goods or services.
 But if we don't have the full blockchain, as with a phone, what can we do?
+
+然而，在接收比特币付款时，我们面临一个困境。 
+如果我们连接并拥有完整的区块链，我们可以很容易地看到交易是否位于一个足够深的区块中，从而将货物或服务交给对方。 
+但是，如果我们没有完整的区块链，比如手机，我们能做什么呢？
 
 The answer lies in the Merkle root field from the block header that we saw in <<chapter_blocks>>.
 As we saw in the last chapter, we can download the block headers and verify that they meet the Bitcoin consensus rules.
@@ -34,37 +51,60 @@ Since the block header is secured by proof-of-work, a transaction with a proof o
 This means that the cost to deceive you would be at least the cost of the proof-of-work for the block.
 The rest of this chapter goes into what the proof of inclusion is and how to verify it.
 
-=== Merkle Tree
+答案在于我们在<<块章节>>中看到的区块头中的Merkle根字段。 
+正如我们在上一章中看到的，我们可以下载区块头并验证它们是否符合比特币共识规则。 
+在本章中，我们将努力证明一个特定交易位于我们所知道的区块中。 
+由于区块头由工作量证明保护，具有该区块包含证明的交易至少意味着在产生该区块时花费了大量的能量。 
+这意味着欺骗你的代价至少是区块的工作量证明成本。 
+本章的其余部分将介绍包含证明是什么以及如何验证它。
+
+=== Merkle Tree Merkle树
 
 A((("Merkle trees", "constructing"))) Merkle tree is a computer science structure designed for efficient proofs of inclusion.
 The prerequisites are an ordered list of items and a cryptographic hash function.
 In our case, the items in the ordered list are transactions in a block and the hash function is hash256.
 To construct the Merkle tree, we follow this algorithm:
 
-1. Hash all the items of the ordered list with the provided hash function.
-2. If there is exactly 1 hash, we are done.
-3. Otherwise, if there is an odd number of hashes, we duplicate the last hash in the list and add it to the end so that we have an even number of hashes.
-4. We pair the hashes in order and hash the concatenation to get the parent level, which should have half the number of hashes.
-5. Go to &#35;2.
+一个Merkle树是一个计算机科学结构，用于高效地证明包含关系。 
+先决条件是一个有序项目列表和一个加密哈希函数。 
+在我们的情况下，有序列表中的项目是区块中的交易，哈希函数是hash256。 
+要构建Merkle树，我们遵循以下算法：
+
+1. Hash all the items of the ordered list with the provided hash function. 使用提供的哈希函数对有序列表中的所有项目进行哈希。
+2. If there is exactly 1 hash, we are done. 如果恰好有1个哈希值，那么我们完成了。
+3. Otherwise, if there is an odd number of hashes, we duplicate the last hash in the list and add it to the end so that we have an even number of hashes. 否则，如果哈希值的数量是奇数，我们在列表末尾复制最后一个哈希值，使其数量为偶数。
+4. We pair the hashes in order and hash the concatenation to get the parent level, which should have half the number of hashes. 我们按顺序配对哈希值，并将连接后的字符串进行哈希以获取父级，父级的哈希值数量应为一半。
+5. Go to &#35;2. 重复第2步。
 
 The idea is to come to a single hash that "represents" the entire ordered list.
 Visually, a Merkle tree looks like <<merkle_tree_chap_eleven>>.
+
+这个算法的目的是得到一个单一的哈希值，这个哈希值"代表"整个有序列表。 
+从视觉上看，Merkle树看起来像<<merkle_tree_chap_eleven>>。
 
 The bottom row is what we call the _leaves_ of the tree.
 All((("internal nodes"))) other nodes besides the leaves are called _internal nodes_.
 The leaves get combined to produce a _parent level_ (H~AB~ and H~CD~), and when we calculate the parent level of that, we get the Merkle root.
 
+最底部的一行是我们称之为树的 叶子。 除了叶子之外，所有其他节点都被称为 内部节点。 
+叶子组合以产生一个 父级（H~AB~和H~CD~），当我们计算此父级的父级时，我们得到Merkle根。
+
 We'll go through each part of this process in the following sections.
+
+在以下部分中，我们将详细介绍此过程的每个部分。
 
 [[merkle_tree_chap_eleven]]
 .Merkle tree
 image::images/prbc_1101.png[Merkle tree]
 
 [WARNING]
-.Be Careful with Merkle Trees!
+.Be Careful with Merkle Trees! 小心使用Merkle树！
 ====
 There((("Denial of Service attack (DoS) attacks"))) was a vulnerability in Bitcoin 0.4&#8211;0.6 related to the Merkle root, which is detailed in CVE-2012-2459.
 There was a denial-of-service vector due to the duplication of the last item in Merkle trees, which caused some nodes to invalidate blocks even if they were valid.
+
+在比特币0.4-0.6版本中，与Merkle根相关的一个漏洞与CVE-2012-2459有关。 
+由于Merkle树中最后一个项目的复制，存在一个拒绝服务向量，导致一些节点即使块有效也使其无效。
 ====
 
 === Merkle Parent
@@ -74,10 +114,12 @@ As they are ordered, we will call the two hashes the _left_ hash and the _right_
 The hash of the left and right hashes is what we call the _parent_ hash.
 To clarify, here's the formula for the parent hash:
 
-* _H_ = Hashing function
-* _P_ = Parent hash
-* _L_ = Left hash
-* _R_ = Right hash
+给定两个散列值((("Merkle trees", "parent hashes")))((("hashes", "parent hashes")))，我们生成另一个散列值来表示这两个散列值。 由于它们是有序的，我们将这两个散列值称为 左 散列值和 右 散列值。 左散列值和右散列值的散列就是我们所称的 父 散列值。 为明确起见，下面是父散列值的公式：
+
+* _H_ = Hashing function 散列函数
+* _P_ = Parent hash 父散列值
+* _L_ = Left hash 左散列值
+* _R_ = Right hash 右散列值
 
 ++++
 <ul class="simplelist">
@@ -87,7 +129,11 @@ To clarify, here's the formula for the parent hash:
 
 Note that the || symbol denotes concatenation.
 
+注意，符号 “||” 表示连接。
+
 Here's how we can code this process in Python:
+
+下面是如何用 Python 编写这个过程：
 
 ----
 include::code-ch11/examples.py[tag=example1]
@@ -100,17 +146,28 @@ We can then combine _L_ and _R_ to produce _P_ and have proof that _L_ was used 
 If _L_ is not represented in _P_, being able to provide _R_ would be the equivalent to providing a hash pre-image, which we know is very difficult.
 This is what we mean by a proof of inclusion.
 
+我们将连接的结果哈希以获取父节点的原因是我们可以提供包含证明。
+具体来说，我们可以通过揭示 _R_ 来表明 _L_ 在父节点 _P_ 中有所表示。
+也就是说，如果我们想要证明 _L_ 在 _P_ 中有所表示，那么 _P_ 的生产者可以向我们展示 _R_ 并告诉我们 _L_ 是 _P_ 的左子节点。
+然后我们可以将 _L_ 和 _R_ 合并以生成 _P_ 并证明 _L_ 被用于生成 _P_。
+如果 _L_ 在 _P_ 中没有表示，那么能够提供 _R_ 就相当于提供了哈希的前图像，我们知道这是非常困难的。
+这就是我们所说的包含证明。
+
 include::code-ch11/answers.py[tag=exercise1,indent=0]
 
-=== Merkle Parent Level
+=== Merkle Parent Level Merkle 父节点层级
 
 Given((("Merkle parent level"))) an ordered list of more than two hashes, we can calculate the parents of each pair, or what we call the _Merkle parent level_.
 If we have an even number of hashes, this is straightforward, as we can simply pair them up in order.
 If we have an odd number of hashes, then we need to do something, as we have a lone hash at the end.
 We can solve this by duplicating the last item.
 
+给定一个包含超过两个哈希值的有序列表（“Merkle 父节点层级”），我们可以计算每对节点的父节点，或者我们称之为_Merkle 父节点层级_的内容。 如果我们有偶数个哈希值，这很简单，因为我们可以按顺序简单地配对它们。 如果我们有奇数个哈希值，那么我们需要做一些处理，因为最后会有一个单独的哈希值。 我们可以通过复制最后一个元素来解决这个问题。
+
 That is, for a list like [A, B, C] we can add C again to get [A, B, C, C].
 Now we can calculate the Merkle parent of A and B and calculate the Merkle parent of C and C to get:
+
+例如，对于像 [A, B, C] 这样的列表，我们可以再次添加 C 来得到 [A, B, C, C]。 现在我们可以计算 A 和 B 的 Merkle 父节点，并计算 C 和 C 的 Merkle 父节点，得到：
 
 ++++
 <ul class="simplelist">
@@ -121,22 +178,28 @@ Now we can calculate the Merkle parent of A and B and calculate the Merkle paren
 
 Since the Merkle parent always consists of two hashes, the Merkle parent level always has exactly half the number of hashes, rounded up. Here is how we calculate a Merkle parent level:
 
+由于 Merkle 父节点总是由两个哈希值组成，所以 Merkle 父节点层级总是具有恰好一半的哈希值数量，向上取整。这是我们如何计算 Merkle 父节点层级的：
+
 [source,pycon]
 ----
 include::code-ch11/examples.py[tag=example2]
 ----
-<1> We add the last hash on the list, `hashes[-1]`, to the end of `hashes` to make the length of `hashes` even.
+<1> We add the last hash on the list, `hashes[-1]`, to the end of `hashes` to make the length of `hashes` even. 我们将列表中的最后一个哈希值 hashes[-1] 添加到 hashes 的末尾，以使 hashes 的长度为偶数。
 <2> This is how we skip by two in Python.
-`i` will be 0 the first time through the loop, 2 the second, 4 the third, and so on.
+`i` will be 0 the first time through the loop, 2 the second, 4 the third, and so on. 这就是我们如何在 Python 中跳过两个的方法。 i 第一次循环时为 0，第二次为 2，第三次为 4，以此类推。
 
 This code results in a new list of hashes that correspond to the Merkle parent level.
 
+这段代码产生了一个与Merkle父级相匹配的新哈希列表。
+
 include::code-ch11/answers.py[tag=exercise2,indent=0]
 
-=== Merkle Root
+=== Merkle Root Merkle 根
 
 To get((("Merkle root", id="merroot11"))) the Merkle root we calculate successive Merkle parent levels until we get a single hash.
 If, for example, we have items A through G (7 items), we calculate the Merkle parent level first as follows:
+
+要获得Merkle根（标识为"merroot11"），我们需要计算一系列Merkle父级，直到得到一个单一的哈希值。例如，如果我们有A到G这7个项目，我们首先计算Merkle父级如下：
 
 ++++
 <ul class="simplelist">
@@ -146,6 +209,8 @@ If, for example, we have items A through G (7 items), we calculate the Merkle pa
 
 Then we calculate the Merkle parent level again:
 
+然后我们再次计算Merkle父级：
+
 ++++
 <ul class="simplelist">
 <li>[<em>H</em>(<em>H</em>(<em>A</em>||<em>B</em>)||<em>H</em>(<em>C</em>||<em>D</em>)), <em>H</em>(<em>H</em>(<em>E</em>||<em>F</em>)||<em>H</em>(<em>G</em>||<em>G</em>))]</li>
@@ -153,6 +218,8 @@ Then we calculate the Merkle parent level again:
 ++++
 
 We are left with just two items, so we calculate the Merkle parent level one more time:
+
+我们只剩下两个项目，所以我们再计算一次Merkle父级：
 
 ++++
 <ul class="simplelist">
@@ -163,51 +230,65 @@ We are left with just two items, so we calculate the Merkle parent level one mor
 Since we are left with exactly one hash, we are done.
 Each level will halve the number of hashes, so doing this process over and over will eventually result in a final single item called the Merkle root:
 
+因为我们最后只剩下一个哈希值，所以计算完成。每一级都会将哈希值数量减半，所以不断进行这个过程最终会得到一个最终的单一项目，称为Merkle根。
+
 [source,python]
 ----
 include::code-ch11/examples.py[tag=example3]
 ----
-<1> We loop until there's one hash left.
-<2> We've exited the loop so there should only be one item.
+<1> We loop until there's one hash left. 我们循环，直到只剩下一个哈希值。
+<2> We've exited the loop so there should only be one item. 我们已经退出了循环，所以应该只有一个项目。
 
 include::code-ch11/answers.py[tag=exercise3,indent=0]
 
-=== Merkle Root in Blocks
+=== Merkle Root in Blocks 区块中的Merkle根
 
 Calculating the Merkle root in blocks should be pretty straightforward, but due to endianness issues, it turns out to be tricky.
 Specifically, we use little-endian ordering for the leaves of the Merkle tree.
 After we calculate the Merkle root, we use little-endian ordering again.
 
+计算区块中的Merkle根应该是相当直接的，但是由于字节序问题，它实际上变得有些棘手。具体来说，我们在Merkle树的叶子上使用小端字节序。在计算出Merkle根后，我们再次使用小端字节序。
+
 In practice, this means reversing the leaves before we start and reversing the root at the end:
+
+在实践中，这意味着在开始之前反转叶子，并在最后反转根：
 
 [source,pycon]
 ----
 include::code-ch11/examples.py[tag=example4]
 ----
-<1> We reverse each hash before we begin using a Python list comprehension.
-<2> We reverse the root at the end.
+<1> We reverse each hash before we begin using a Python list comprehension. 我们使用Python列表推导式在开始前反转每个哈希。
+<2> We reverse the root at the end. 我们在最后反转根。
 
 We want to calculate Merkle roots for a `Block`, so we add a `tx_hashes` parameter:
+
+我们想要为Block计算Merkle根，所以我们添加了一个tx_hashes参数：
 
 [source,python]
 ----
 include::code-ch11/block.py[tag=source1]
 ----
 <1> We now allow the transaction hashes to be set as part of the initialization of the block.
-The transaction hashes have to be ordered.
+The transaction hashes have to be ordered. 现在我们允许交易哈希作为块初始化的一部分进行设置。 交易哈希必须是有序的。
 
 As a full node, if we are given all of the transactions, we can calculate the Merkle root and check that the Merkle root is what we expect.((("", startref="merroot11")))
 
+作为一个完整节点，如果我们得到了所有交易，我们可以计算Merkle根并检查Merkle根是否如我们所预期的那样。
+
 include::code-ch11/answers.py[tag=exercise4,indent=0]
 
-=== Using a Merkle Tree
+=== Using a Merkle Tree 使用Merkle树
 
 Now((("Merkle trees", "using"))) that we know how a Merkle tree is constructed, we can create and verify((("proofs of inclusion"))) proofs of inclusion.
 Light nodes can get proofs that transactions of interest were included in a block without having to know all the transactions of a block (<<merkle_proof>>).
 
+现在我们知道了Merkle树是如何构建的，我们可以创建和验证包含证明（Merkle证明）。 轻节点可以在不知道块中的所有交易的情况下获得证明，证明感兴趣的交易包含在块中（Merkle证明）。
+
 Say that a light client has two transactions that are of interest, which would be the hashes represented by the green boxes, H~K~ and H~N~ in <<merkle_proof>>.
 A full node can construct a proof of inclusion by sending us all of the hashes marked by blue boxes: H~ABCDEFGH~, H~IJ~, H~L~, H~M~, and H~OP~.
 The light client would then perform these calculations:
+
+假设轻客户端有两个感兴趣的交易，这些交易在Merkle证明中的绿色框表示的哈希，分别是H~K~和H~N~。 全节点可以通过发送所有蓝色框标记的哈希来构建包含证明：H~ABCDEFGH~，H~IJ~，H~L~，H~M~和H~OP~。 然后轻客户端执行以下计算：
 
 * H~KL~ = __merkle_parent__(H~K~, H~L~)
 * H~MN~ = __merkle_parent__(H~M~, H~N~)
@@ -217,38 +298,51 @@ The light client would then perform these calculations:
 * H~ABCDEFGHIJKLMNOP~ = __merkle_parent__(H~ABCDEFGH~, H~IJKLMNOP~)
 
 [[merkle_proof]]
-.Merkle proof
+.Merkle proof Merkle 证明
 image::images/prbc_1102.png[Merkle Proof]
 
 You can see that in <<merkle_proof>>, the dotted boxes correspond to the hashes that the light client calculates. In particular, the Merkle root is H~ABCDEFGHIJKLMNOP~, which can then be checked against the block header whose proof-of-work has been validated.
 
-.How Secure Is an SPV Proof?
+在Merkle证明中，你可以看到虚线框对应轻客户端计算的哈希。特别是，Merkle根是H~ABCDEFGHIJKLMNOP~，然后可以与已验证证明-of-work的块头进行比较。
+
+.How Secure Is an SPV Proof? SPV证明有多安全？
 ****
 The((("SPV (Simplified Payment Verification)", "security of")))((("Simplified Payment Verification (SPV)", "security of"))) full node can send a limited amount of information about the block and the light client can recalculate the Merkle root, which can then be verified against the Merkle root in the block header.
 This does not guarantee that the transaction is in the longest blockchain, but it does assure the light client that the full node would have had to spend a lot of hashing power or energy creating a valid proof-of-work.
 As long as the reward for creating such a proof-of-work is greater than the amounts in the transactions, the light client can at least know that the full node has no clear economic incentive to lie.
+
+全节点可以发送有关块和轻客户端可以重新计算Merkle根的有限信息，然后将其与块头中的Merkle根进行验证。 这不能保证交易在最长区块链中，但确实让轻客户端知道全节点必须花费大量哈希能力或能量创建有效的证明-of-work。 只要创建这种证明-of-work的奖励大于交易中的金额，轻客户端至少可以知道全节点没有明确的欺诈动机。
 
 Since block headers can be requested from multiple nodes, light clients have a way to verify if one node is trying to show them block headers that are not the longest.
 It only takes a single honest node to invalidate a hundred dishonest ones, since proof-of-work is objective.
 Therefore, isolation of a light client (that is, control of who the light client is connected to) is required to deceive in this way.
 The security of SPV requires that there be lots of honest nodes on the network.
 
+由于块头可以从多个节点请求，因此轻客户端有一种方法可以验证是否有一个节点试图显示不是最长的块头。 只需要一个诚实节点来使一百个不诚实的节点无效，因为证明-of-work是客观的。 因此，要欺骗轻客户端（即控制轻客户端连接的对象），需要将其隔离。 SPV的安全性要求网络中存在大量诚实节点。
+
 In((("light client security"))) other words, light client security is based on a robust network of nodes and the economic cost of producing proof-of-work.
 For small transactions relative to the block subsidy (currently 12.5 BTC), there's probably little to worry about.
 For large transactions (say, 100 BTC), the full nodes may have an economic incentive to deceive you.
 Transactions that large should generally be validated using a full node.
+
+换句话说，轻客户端的安全性基于一个强大的节点网络和产生证明-of-work的经济成本。 对于与块补贴（目前为12.5 BTC）相比较小的交易，可能无需担心。 对于大型交易（例如100 BTC），则全节点可能有欺诈您的经济动机。 这种规模的交易通常应使用全节点进行验证。
+
 ****
 
-=== Merkle Block
+=== Merkle Block Merkle区块
 
 When((("blocks", "Merkle blocks", id="Bmerkel11")))((("Merkle blocks", "role in proof of inclusion"))) a full node sends a proof of inclusion, there are two pieces of information that need to be included.
 First, the light client needs the Merkle tree structure, and second, the light client needs to know which hash is at which position in the Merkle tree.
 Once both pieces of information are given, the light client can reconstruct the partial Merkle tree to reconstruct the Merkle root and validate the proof of inclusion.
 A full node communicates these two pieces of information to a light client using a Merkle block.
 
+当一个全节点发送包含证明时((("blocks", "Merkle blocks", id="Bmerkel11")))((("Merkle blocks", "role in proof of inclusion")))，Merkle区块在证明中发挥着重要作用。轻客户端需要两方面的信息：首先，它需要Merkle树的结构；其次，它需要知道Merkle树中哪个哈希值位于哪个位置。一旦这两方面的信息都提供给了轻客户端，它就可以重建部分Merkle树，重构Merkle根，并验证包含证明。全节点使用Merkle区块将这两方面的信息传达给轻客户端。
+
 To((("Merkle blocks", "binary trees and")))((("binary trees"))) understand what's in a Merkle block, we need to understand a bit about how a Merkle tree, or more generally, binary trees, can be traversed.
 In((("Merkle trees", "breadth-first versus depth-first ordering"))) a binary tree, nodes can be traversed breadth-first or depth-first.
 Breadth-first traversal would go level by level like in <<bread_first_ordering>>.
+
+为了理解Merkle区块中的内容，我们需要了解一些关于Merkle树（或更一般的二叉树）如何遍历的知识。在二叉树中，节点可以采用广度优先或深度优先的方式进行遍历。广度优先遍历会逐层进行，就像在<<bread_first_ordering>>中所展示的那样。
 
 [[bread_first_ordering]]
 .Breadth-first ordering
@@ -256,7 +350,11 @@ image::images/prbc_1103.png[Breadth First]
 
 The((("breadth-first ordering"))) breadth-first ordering starts at the root and goes from root to leaves, level by level, left to right.
 
+广度优先排序从根节点开始，逐层逐级地从根节点到叶子节点，从左到右。
+
 Depth-first ordering is a bit different and looks like <<depth_first_ordering>>.
+
+深度优先排序略有不同，看起来像<<depth_first_ordering>>。
 
 [[depth_first_ordering]]
 .Depth-first ordering
@@ -264,20 +362,26 @@ image::images/prbc_1104.png[Depth First]
 
 The((("depth-first ordering"))) depth-first ordering starts at the root and traverses the left side at each node before the right side.
 
+深度优先排序从根节点开始，在每个节点遍历左侧后再遍历右侧。
+
 In a proof of inclusion (see <<merkle_proof_two>>), the full node sends the green boxes, H~K~ and H~N~, along with the blue boxes, H~ABCDEFGH~, H~IJ~, H~L~, H~M~ and H~OP~.
 The location of each hash is reconstructed using depth-first ordering from some flags.
 The process of reconstructing the tree, namely the dotted-edged boxes in <<merkle_proof_two>>, is described next.
+
+在一个包含证明中（见<<merkle_proof_two>>），全节点发送绿色方块H~K~和H~N~，以及蓝色方块H~ABCDEFGH~、H~IJ~、H~L~、H~M~和H~OP~。每个哈希值的位置都是通过深度优先排序从一些标志中重建的。接下来将描述重建树的过程，即在<<merkle_proof_two>>中的虚线边缘的方块。
 
 [[merkle_proof_two]]
 .Merkle proof
 image::images/prbc_1102.png[Merkle proof]
 
-==== Merkle Tree Structure
+==== Merkle Tree Structure Merkle树结构
 
 The((("Merkle blocks", "Merkle tree structure")))((("Merkle trees", "structure of"))) first thing a light client does is create the general structure of the Merkle tree.
 Because Merkle trees are built from the leaves upward, the only thing a light client needs is the number of leaves that exist to know the structure.
 The tree from <<merkle_proof_two>> has 16 leaves.
 A light client can create the empty Merkle tree like so:
+
+轻客户端首先要做的是创建 Merkle 树的一般结构。 由于Merkle树是从叶子向上构建的，所以轻客户端唯一需要知道的就是叶子的数量来了解结构。 <<merkle_proof_two>>中的树有16个叶子。 轻客户端可以像下面这样创建空的Merkle树：
 
 [source,python]
 ----
@@ -285,29 +389,34 @@ include::code-ch11/examples.py[tag=example5]
 ----
 <1> Since we halve at every level, log~2~ of the number of leaves is how many levels there are in the Merkle tree.
 Note we round up using `math.ceil` as we round up for halving at each level.
-We could also be clever and use `len(bin(total))-2`.
+We could also be clever and use `len(bin(total))-2`. 由于我们在每个层级都进行折半，所以叶子的数量对数以2为底就是Merkle树中的层级数量。 注意我们使用math.ceil进行向上舍入，因为我们在每个层级都进行向上舍入。 我们也可以变得聪明些，使用len(bin(total))-2。
 <2> The Merkle tree will hold the root level at index 0, the level below at index 1, and so on.
-In other words, the index is the "depth" from the top.
-<3> There are levels 0 to `max_depth` in this Merkle tree.
-<4> At any particular level, the number of nodes is the number of total leaves divided by 2 for every level above the leaf level.
-<5> We don't know yet what any of the hashes are, so we set them to `None`.
-<6> Note `merkle_tree` is a list of lists of hashes, or a two-dimensional array.
+In other words, the index is the "depth" from the top. Merkle树将根层级放在索引0，下一层级放在索引1，以此类推。 换句话说，索引是从顶部开始的“深度”。 
+<3> There are levels 0 to `max_depth` in this Merkle tree. 在这个Merkle树中，有从0到max_depth的层级。
+<4> At any particular level, the number of nodes is the number of total leaves divided by 2 for every level above the leaf level. 在任何特定的层级上，节点的数量是总叶子数量除以2，这是每个层级上的节点数量。
+<5> We don't know yet what any of the hashes are, so we set them to `None`. 我们还不知道任何散列值，所以我们将其设置为None。
+<6> Note `merkle_tree` is a list of lists of hashes, or a two-dimensional array. 注意merkle_tree是散列值列表的列表，或者说是一个二维数组。
 
 include::code-ch11/answers.py[tag=exercise5,indent=0]
 
-==== Coding a Merkle Tree
+==== Coding a Merkle Tree 编码Merkle树
 
 We((("Merkle blocks", "coding Merkle trees", id="MBcod11")))((("Merkle trees", "coding", id="MTcode11"))) can now create a `MerkleTree` class:
+
+我们现在可以创建一个MerkleTree类：
 
 [source,python]
 ----
 include::code-ch11/merkleblock.py[tag=source1]
 ----
-<1> We keep a pointer to a particular node in the tree, which will come in handy later.
-<2> We print a representation of the tree.
+<1> We keep a pointer to a particular node in the tree, which will come in handy later. 我们保留树中特定节点的指针，这在后面会很有用。
+<2> We print a representation of the tree. 我们打印出树的表示。
 
 Now that we have an empty tree, we can go about filling it to calculate the Merkle root.
 If we had every leaf hash, getting the Merkle root would look like this:
+
+现在我们有一个空树，我们可以填充它以计算Merkle根。 
+如果我们有每个叶子的散列，那么获取Merkle根将如下所示：
 
 [source,pycon]
 ----
@@ -319,13 +428,26 @@ However, the message from the network may not be giving us all of the leaves.
 The message might contain some internal nodes as well.
 We need a cleverer way to fill the tree.
 
+这填充了树并得到了我们的Merkle根。 
+然而，网络消息可能不会给我们所有的叶子。 
+消息中可能还包含一些内部节点。 
+我们需要一种更聪明的方法来填充树。
+
 _Tree traversal_ is going to be the way we do this.
 We can do a depth-first traversal and only fill in the nodes that we can calculate.
 To traverse, we need to keep track of where exactly in the tree we are.
 The properties `self.current_depth` and `self.current_index` do this.
 
+_Tre遍历_ 将是我们的实现方式。 
+我们可以进行深度优先遍历，只填充我们可以计算出来的节点。 
+为了遍历，我们需要跟踪我们在树中的确切位置。 
+self.current_depth和self.current_index属性实现了这一点。
+
 We need methods to traverse the Merkle tree.
 We'll also include other useful methods:
+
+我们需要在Merkle树中遍历的方法。 
+我们还会包括其他有用的方法：
 
 [source,python]
 ----
@@ -333,48 +455,59 @@ class MerkleTree:
 ...
 include::code-ch11/merkleblock.py[tag=source2]
 ----
-<1> We want the ability to set the current node in the tree to some value.
-<2> We want to know if we are a leaf node.
-<3> In certain situations, we won't have a right child because we may be at the furthest-right node of a level whose child level has an odd number of items.
+<1> We want the ability to set the current node in the tree to some value. 我们希望能够在树中的当前节点设置某个值。
+<2> We want to know if we are a leaf node. 我们需要知道我们是否是叶节点。
+<3> In certain situations, we won't have a right child because we may be at the furthest-right node of a level whose child level has an odd number of items. 在某些情况下，我们可能没有右子节点，因为我们可以是一层中位置最靠右的节点，而这个子层中的项目数量是奇数。
 
 We have Merkle tree traversal methods `left`, `right`, and `up`.
 Let's use these methods to populate the tree via depth-first traversal:
+
+我们有Merkle树的遍历方法left、right和up。 让我们通过深度优先遍历使用这些方法来填充树：
 
 [source,pycon]
 ----
 include::code-ch11/examples.py[tag=example7]
 ----
 <1> We traverse until we calculate the Merkle root.
-Each time through the loop, we are at a particular node.
-<2> If we are at a leaf node, we already have that hash, so we don't need to do anything but go back up.
-<3> If we don't have the left hash, then we calculate the value first before calculating the current node's hash.
+Each time through the loop, we are at a particular node. 我们遍历直到计算出Merkle根。 每次循环，我们都在特定的节点。 
+<2> If we are at a leaf node, we already have that hash, so we don't need to do anything but go back up. 如果我们在叶节点，我们已经有了这个散列，所以我们不需要做任何事情，只需要返回上一层。
+<3> If we don't have the left hash, then we calculate the value first before calculating the current node's hash. 如果我们没有左散列，那么我们在计算当前节点的散列之前先计算值。
 <4> If we don't have the right hash, we calculate the value before calculating the current node's hash.
-Note that we already have the left one due to the depth-first traversal.
+Note that we already have the left one due to the depth-first traversal. 如果我们没有右散列，我们在计算当前节点的散列之前先计算值。 请注意，由于深度优先遍历，我们已经有了左边的节点。
 <5> We have both the left and the right hash, so we calculate the Merkle parent value and set that to the current node.
-Once set, we can go back up.
+Once set, we can go back up. 我们既有左散列也有右散列，所以我们可以计算Merkle父值并将其设置为当前节点。 一旦设置，我们可以返回上一层。
 
 This code will only work when the number of leaves is a power of two, as edge cases where there are an odd number of nodes on a level are not handled.
 
+这段代码只有在叶子的数量是2的幂时才能工作，因为边缘情况（一层中节点数量为奇数）没有得到处理。
+
 We handle the case where the parent is the parent of the rightmost node on a level with an odd number of nodes:
+
+我们处理父节点是一层中位置最靠右的节点的父节点的情况：
 
 [source,pycon]
 ----
 include::code-ch11/examples.py[tag=example8]
 ----
-<1> If we don't have the left node's value, we traverse to the left node, since all internal nodes are guaranteed a left child.
+<1> If we don't have the left node's value, we traverse to the left node, since all internal nodes are guaranteed a left child. 如果我们没有左节点的值，我们遍历到左节点，因为所有内部节点都保证有一个左子节点。
 <2> We check first if this node has a right child.
-This is true unless this node happens to be the rightmost node and the child level has an odd number of nodes.
-<3> If we don't have the right node's value, we traverse to that node.
-<4> If we have both the left and the right node's values, we calculate the current node's value using `merkle_parent`.
+This is true unless this node happens to be the rightmost node and the child level has an odd number of nodes.  我们首先检查这个节点是否有右子节点。 除非这个节点碰巧是右边最后一个节点，而且子层中的节点数量为奇数，否则这是正确的。
+<3> If we don't have the right node's value, we traverse to that node. 如果我们没有右节点的值，我们遍历到那个节点。
+<4> If we have both the left and the right node's values, we calculate the current node's value using `merkle_parent`. 如果我们既有左节点的值也有右节点的值，我们使用merkle_parent计算当前节点的值。 
 <5> We have the left node's value, but the right child doesn't exist.
-This is the rightmost node of this level, so we combine the left value twice.
+This is the rightmost node of this level, so we combine the left value twice. 我们有左节点的值，但右子节点不存在。 这是这一层的最右节点，所以我们把左值合并两次。
 
 We can now traverse the tree for the number of leaves that aren't powers of two.((("", startref="MTcode11")))((("", startref="MBcod11")))
 
-==== The merkleblock Command
+现在我们可以遍历叶子数量不是2的幂的树。
+
+==== The merkleblock Command merkleblock 命令
 
 The((("Merkle blocks", "merkleblock command"))) full node communicating a Merkle block sends all the information needed to verify that the interesting transaction is in the Merkle tree.
 The `merkleblock` network command is what communicates this information; it looks like <<parsed_merkleblock>>.
+
+完全节点通过Merkle块发送所有需要验证有趣交易是否在Merkle树中的信息。 
+merkleblock网络命令就是用来传递这些信息的；它看起来像<<parsed_merkleblock>>。
 
 [[parsed_merkleblock]]
 .Parsed merkleblock
@@ -383,12 +516,22 @@ image::images/prbc_1106.png[merkleblock command]
 The first six fields are exactly the same as the block header from <<chapter_blocks>>.
 The last four fields are the proof of inclusion.
 
+前六个字段与<<块章节>>中的块头完全相同。 
+最后四个字段是包含证明。
+
 The number of transactions field indicates how many leaves this particular Merkle tree will have.
 This allows a light client to construct an empty Merkle tree.
 The hashes field holds the blue and green boxes from <<merkle_proof_two>>.
 Since the number of hashes in the hashes field is not fixed, it's prefixed with how many there are.
 Last, the flags field gives information about where the hashes go within the Merkle tree.
 The flags are parsed using `bytes_to_bits_field` to convert them to a list of bits (1's and 0's):
+
+交易数量字段表示这个特定的Merkle树将有多少个叶子。 
+这允许轻客户端构建一个空的Merkle树。 
+哈希字段保存了<<merkle_proof_two>>中的蓝色和绿色盒子。 
+由于哈希字段中的哈希数量不是固定的，所以它前面带有表示数量的前缀。 
+最后，标志字段给出了哈希在Merkle树中的位置信息。 
+使用bytes_to_bits_field解析标志字段，将它们转换为1和0的列表：
 
 [source,python]
 ----
@@ -397,18 +540,24 @@ include::code-ch11/helper.py[tag=source1]
 
 The ordering for the bytes is a bit strange, but it's meant to be easy to convert into the flag bits needed to reconstruct the Merkle root.
 
+字节的排序有点奇怪，但它的目的是为了容易转换为重构Merkle根所需的标志位。
+
 include::code-ch11/answers.py[tag=exercise6,indent=0]
 
-==== Using Flag Bits and Hashes
+==== Using Flag Bits and Hashes 使用标志位和哈希
 
 The((("Merkle blocks", "flag bits and hashes", id="MBflag11")))((("flag bits", id="flagbit11")))((("hashes", "using in Merkle blocks", id="Hblock11"))) flag bits inform where the hashes go using depth-first ordering.
 
+标志位使用深度优先顺序告知哈希值的位置。
+
 The rules for the flag bits are:
 
-1. If the node's value is given in the hashes field (blue box in <<processing_a_merkle_block>>), the flag bit is 0.
-2. If the node is an internal node and the value is to be calculated by the light client (dotted outline in <<processing_a_merkle_block>>), the flag bit is 1.
+标志位的规则如下：
+
+1. If the node's value is given in the hashes field (blue box in <<processing_a_merkle_block>>), the flag bit is 0. 如果节点的值在哈希字段中给出（<<处理Merkle块>>中的蓝色方框），则标志位为0。
+2. If the node is an internal node and the value is to be calculated by the light client (dotted outline in <<processing_a_merkle_block>>), the flag bit is 1. 如果节点是内部节点，并且值由轻客户端计算（<<处理Merkle块>>中的虚线轮廓），则标志位为1。
 3. If the node is a leaf node and is a transaction of interest (green box in <<processing_a_merkle_block>>), the flag is 1 and the node's value is also given in the hashes field.
-These are the items proven to be included in the Merkle tree.
+These are the items proven to be included in the Merkle tree. 如果节点是叶节点，并且是有趣的交易（<<处理Merkle块>>中的绿色方框），则标志为1，节点的值也包含在哈希字段中。 这些是在Merkle树中被证明包含的项。
 
 [[processing_a_merkle_block]]
 .Processing a Merkle block
@@ -416,38 +565,45 @@ image::images/prbc_1107.png[Merkle Blocks and Hashes]
 
 Given the tree from <<processing_a_merkle_block>>: 
 
-* The flag bit is 1 for the root node (1), since that hash is calculated by the light client.
-* The left child, H~ABCDEFGH~ (2), is included in the hashes field, so the flag is 0.
-* From here, we traverse to H~IJKLMNOP~ (3) instead of H~ABCD~ or H~EFGH~ since H~ABCDEFGH~ represents both those nodes and we don't need them.
-* The right child, H~IJKLMNOP~, is also calculated, so it has a flag bit of 1.
-* To calculate H~IJKLMNOP~, we need the values for H~IJKL~ and H~MNOP~ (9). The next node in depth-first order is the left child, H~IJKL~ (4), which is where we traverse to next.
-* H~IJKL~ is an internal node that's calculated, so the flag bit is 1.
+给定<<处理Merkle块>>中的树：
+
+* The flag bit is 1 for the root node (1), since that hash is calculated by the light client. 根节点的标志位为1（1），因为该哈希值由轻客户端计算。
+* The left child, H~ABCDEFGH~ (2), is included in the hashes field, so the flag is 0. 左子节点H~ABCDEFGH~（2）包含在哈希字段中，所以标志为0。
+* From here, we traverse to H~IJKLMNOP~ (3) instead of H~ABCD~ or H~EFGH~ since H~ABCDEFGH~ represents both those nodes and we don't need them. 从这里，我们遍历到H~IJKLMNOP~（3），而不是H~ABCD~或H~EFGH~，因为H~ABCDEFGH~代表这两个节点，我们不需要它们。
+* The right child, H~IJKLMNOP~, is also calculated, so it has a flag bit of 1. 右子节点H~IJKLMNOP~也需要计算，所以标志位为1。
+* To calculate H~IJKLMNOP~, we need the values for H~IJKL~ and H~MNOP~ (9). The next node in depth-first order is the left child, H~IJKL~ (4), which is where we traverse to next. 要计算H~IJKLMNOP~，我们需要H~IJKL~和H~MNOP~（9）的值。下一个节点按深度优先顺序是左子节点H~IJKL~（4），这是我们需要遍历的下一个节点。
+* H~IJKL~ is an internal node that's calculated, so the flag bit is 1. H~IJKL~是一个需要计算的内部节点，所以标志位为1。
 * From here, we traverse to its left child, H~IJ~ (5).
-We will be traversing to H~KL~ (6) when we come back to this node.
-* H~IJ~ is next in depth-first ordering; its hash is included in the hashes list and the flag is 0.
-* H~KL~ is an internal, calculated node, so the flag is 1.
-* H~K~ (7) is a leaf node whose presence in the block is being proved, so the flag is 1.
-* H~L~ (8) is a node whose value is included in the hashes field, so the flag is 0.
-* We traverse up to H~KL~, whose value can now be calculated since H~K~ and H~L~ are known.
-* We traverse up to H~IJKL~, whose value can now be calculated since H~IJ~ and H~KL~ are known.
-* We traverse up to H~IJKLMNOP~, whose value we can't calculate yet since we haven't been to H~MNOP~.
-* We traverse to H~MNOP~, which is another internal node, so the flag is 1.
-* H~MN~ (10) is another internal node that's calculated, so the flag is 1.
-* H~M~ (11) is a node whose value is included in the hashes field, so the flag is 0.
-* H~N~ (12) is of interest, so the flag is 1 and its value is in the hashes field.
-* We traverse up to H~MN~, whose value can now be calculated.
-* We traverse up again to H~MNOP~, whose value cannot be calculated because we haven't been to H~OP~ yet.
-* H~OP~ (13) is given, so the flag is 1 and its hash is the final hash in the hashes field.
-* We traverse to H~MNOP~, which can now be calculated.
-* We traverse to H~IJKLMNOP~, which can now be calculated.
-* Finally, we traverse to H~ABCDEFGHIJKLMNOP~, which is the Merkle root, and calculate it!
+We will be traversing to H~KL~ (6) when we come back to this node. 从这里，我们遍历到它的左子节点H~IJ~（5）。 当我们回到这个节点时，我们将遍历到H~KL~（6）。
+* H~IJ~ is next in depth-first ordering; its hash is included in the hashes list and the flag is 0. H~IJ~按深度优先顺序下一个；它的哈希包含在哈希列表中，标志为0。
+* H~KL~ is an internal, calculated node, so the flag is 1. H~KL~是一个内部节点，需要计算，所以标志为1。
+* H~K~ (7) is a leaf node whose presence in the block is being proved, so the flag is 1. H~K~（7）是一个叶节点，其存在于块中被证明，所以标志为1。
+* H~L~ (8) is a node whose value is included in the hashes field, so the flag is 0. H~L~（8）是一个节点的值包含在哈希字段中的节点，所以标志为0。
+* We traverse up to H~KL~, whose value can now be calculated since H~K~ and H~L~ are known. 我们遍历到H~KL~，由于已知H~K~和H~L~，它的值现在可以计算。
+* We traverse up to H~IJKL~, whose value can now be calculated since H~IJ~ and H~KL~ are known.  我们遍历到H~IJKL~，由于已知H~IJ~和H~KL~，它的值现在可以计算。
+* We traverse up to H~IJKLMNOP~, whose value we can't calculate yet since we haven't been to H~MNOP~. 我们遍历到H~IJKLMNOP~，由于我们还没有到达H~MNOP~，它的值我们暂时无法计算。
+* We traverse to H~MNOP~, which is another internal node, so the flag is 1. 我们遍历到H~MNOP~，这是另一个内部节点，所以标志为1。
+* H~MN~ (10) is another internal node that's calculated, so the flag is 1. H~MN~（10）是另一个需要计算的内部节点，所以标志为1。
+* H~M~ (11) is a node whose value is included in the hashes field, so the flag is 0. H~M~（11）是一个节点的值包含在哈希字段中的节点，所以标志为0。
+* H~N~ (12) is of interest, so the flag is 1 and its value is in the hashes field. H~N~（12）是有趣的节点，所以标志为1，它的值在哈希字段中。
+* We traverse up to H~MN~, whose value can now be calculated. 我们遍历到H~MN~，由于已知H~MN~和H~OP~，它的值现在可以计算。
+* We traverse up again to H~MNOP~, whose value cannot be calculated because we haven't been to H~OP~ yet. 我们再次遍历到H~MNOP~，由于我们还没有到达H~OP~，它的值暂时无法计算。
+* H~OP~ (13) is given, so the flag is 1 and its hash is the final hash in the hashes field. H~OP~（13）是已给出的，所以标志为1，它的哈希是哈希字段中的最后一个哈希。
+* We traverse to H~MNOP~, which can now be calculated. 我们遍历到H~MNOP~，它的值现在可以计算。
+* We traverse to H~IJKLMNOP~, which can now be calculated. 我们遍历到H~IJKLMNOP~，它的值现在可以计算。
+* Finally, we traverse to H~ABCDEFGHIJKLMNOP~, which is the Merkle root, and calculate it! 最后，我们遍历到H~ABCDEFGHIJKLMNOP~，这是Merkle树的根，然后计算它！
 
 The flag bits for nodes (1) through (13) are:
+
+节点（1）到（13）的标志位如下：
+
 [source,python]
 ----
 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0
 ----
 There should be seven hashes in the hashes field, in this order:
+
+哈希字段中应该有七个哈希，顺序如下：
 
 * H~ABCDEFGH~
 * H~IJ~
@@ -460,12 +616,18 @@ There should be seven hashes in the hashes field, in this order:
 Notice that every letter is represented in the hashes, A to P.
 This information is sufficient to prove that H~K~ and H~N~ (the green boxes in <<processing_a_merkle_block>>) are included in the block.
 
+请注意，每个字母都通过哈希表示，从A到P。这个信息足以证明H~K~和H~N~（<<处理Merkle块>>中的绿色方框）包含在块中。
+
 As you can see from <<processing_a_merkle_block>>, the flag bits are given in depth-first order.
 Anytime we're given a hash, as with H~ABCDEFGH~, we skip its children and continue.
 In the case of H~ABCDEFGH~, we traverse to H~IJKLMNOP~ instead of H~ABCD~.
 Flag bits are a clever mechanism to encode which nodes have which hash value.
 
+从<<处理Merkle块>>中可以看出，标志位是按深度优先顺序给出的。任何时候我们得到一个哈希，例如H~ABCDEFGH~，我们就跳过它的子节点并继续。在H~ABCDEFGH~的情况下，我们遍历到H~IJKLMNOP~而不是H~ABCD~。标志位是一种巧妙的机制，用于编码哪个节点具有哪个哈希值。
+
 We can now populate the Merkle tree and calculate the root, given the appropriate flag bits and hashes: 
+
+现在，我们可以根据给定的标志位和哈希填充Merkle树并计算根：
 
 [source,python]
 ----
@@ -474,30 +636,30 @@ class MerkleTree:
 include::code-ch11/merkleblock.py[tag=source3]
 ----
 <1> The point of populating this Merkle tree is to calculate the root.
-Each loop iteration processes one node until the root is calculated.
-<2> For leaf nodes, we are always given the hash.
+Each loop iteration processes one node until the root is calculated. 填充这个Merkle树的目的就是为了计算根。每个循环迭代处理一个节点，直到计算根。
+<2> For leaf nodes, we are always given the hash. 对于叶节点，我们总是给定哈希。
 <3> `flag_bits.pop(0)` is a way in Python to dequeue the next flag bit.
-We may want to keep track of which hashes are of interest to us by looking at the flag bit, but for now, we don't do this.
+We may want to keep track of which hashes are of interest to us by looking at the flag bit, but for now, we don't do this. flag_bits.pop(0)是Python中一种出队下一个标志位的方法。我们可能需要通过查看标志位来跟踪哪些哈希对我们有重要意义，但在此处，我们不这样做。
 <4> `hashes.pop(0)` is how we get the next hash from the hashes field.
-We need to set the current node to that hash.
+We need to set the current node to that hash. hashes.pop(0)是从哈希字段中获取下一个哈希的方法。我们需要将当前节点设置为该哈希。
 <5> If we don't have the left child value, there are two possibilities.
-This node's value may be in the hashes field, or it might need calculation.
+This node's value may be in the hashes field, or it might need calculation. 如果我们没有左子节点的值，有两种可能性。这个节点的值可能在哈希字段中，或者可能需要计算。 
 <6> The next flag bit tells us whether we need to calculate this node or not.
 If the flag bit is 0, the next hash in the hashes field is this node's value.
-If the flag bit is 1, we need to calculate the left (and possibly the right) node's value.
-<7> We are guaranteed that there's a left child, so we traverse to that node and get its value.
-<8> We check that the right node exists.
+If the flag bit is 1, we need to calculate the left (and possibly the right) node's value. 下一个标志位告诉我们是否需要计算此节点。如果标志位为0，哈希字段中的下一个哈希就是此节点的值。如果标志位为1，我们需要计算左（和可能的右）节点的值。 
+<7> We are guaranteed that there's a left child, so we traverse to that node and get its value. 我们保证有左子节点，因此遍历到该节点并获取其值。
+<8> We check that the right node exists. 我们检查右节点是否存在。
 <9> We have the left hash, but not the right.
-We traverse to the right node to get its value.
-<10> We have both the left and the right node's values, so we calculate their Merkle parent to get the current node's value.
+We traverse to the right node to get its value. 我们有左哈希，但没有右哈希。遍历到右节点以获取其值。
+<10> We have both the left and the right node's values, so we calculate their Merkle parent to get the current node's value. 我们既有左节点的值，也有右节点的值，因此我们计算它们的Merkle父节点以获取当前节点的值。 
 <11> We have the left node's value, but the right does not exist.
-In this case, according to Merkle tree rules, we calculate the Merkle parent of the left node twice.
-<12> All hashes must be consumed or we got bad data.
-<13> All flag bits must be consumed or we got bad data.((("", startref="Bmerkel11")))((("", startref="flagbit11")))((("", startref="Hblock11")))((("", startref="MBflag11")))
+In this case, according to Merkle tree rules, we calculate the Merkle parent of the left node twice. 我们有左节点的值，但右节点不存在。根据Merkle树规则，在这种情况下，我们计算左节点的Merkle父节点两次。
+<12> All hashes must be consumed or we got bad data. 所有哈希都必须被消耗，否则我们得到的数据是错误的。
+<13> All flag bits must be consumed or we got bad data.((("", startref="Bmerkel11")))((("", startref="flagbit11")))((("", startref="Hblock11")))((("", startref="MBflag11"))) 所有标志位都必须被消耗，否则我们得到的数据是错误的。
 
 include::code-ch11/answers.py[tag=exercise7,indent=0]
 
-=== Conclusion
+=== Conclusion 结论
 
 Simplified payment verification is useful but not without some significant downsides.
 The full details are outside the scope of this book, but despite the programming being pretty straightforward, most light wallets do not use SPV and instead trust data from the wallet vendor servers.
@@ -505,3 +667,8 @@ The main drawback of SPV is that the nodes you are connecting to know something 
 That is, you lose some privacy by using SPV.
 This will be covered in more detail in <<chapter_bloom_filters>> as we make Bloom filters to tell nodes what transactions we are interested in.
 
+简化支付验证是有用的，但也有一些显著的缺点。
+本书的范围之外，但尽管编程相当简单，大多数轻钱包并没有使用SPV，而是信任钱包供应商服务器的数据。
+SPV的主要缺点是，您连接到的节点知道一些您感兴趣的交易的信息。
+也就是说，使用SPV会损失一些隐私。
+我们将在<<布隆过滤器章节>>中更详细地讨论这个问题，因为我们制作布隆过滤器来告诉节点我们感兴趣的交易。
