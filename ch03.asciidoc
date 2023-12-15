@@ -500,7 +500,7 @@ You can add them together to get __aG__ + (__n__ – __a__)__G__ = (__a__ + __n_
 
 We((("finite cyclic groups", "commutativity property")))((("commutativity"))) know from point addition that _A_ + _B_ = _B_ + _A_ (<<the_line_through_the_points_doesnt_change>>).
 
-我们知道((“有限循环群”，“交换律属性”))((“交换律”))从点加法中 _A_ + _B_ = _B_ + _A_（<<通过点的直线不改变>>）。
+我们知道从点加法中 _A_ + _B_ = _B_ + _A_（<<通过点的直线不改变>>）。
 
 [[the_line_through_the_points_doesnt_change]]
 .The line through the points doesn't change
@@ -946,7 +946,7 @@ This is a fingerprint of the message containing the intent of the shooter, which
 We denote this with the letter _z_.
 This is incorporated into our _uG_ + _vP_ calculation this way:
 
-在签名/验证术语中，这被称为签名散列。 散列是一个确定性函数，它将任意数据转换为固定大小的数据。 这是包含射手意图的消息的指纹，任何验证消息的人都已知道。 我们用字母 _z_ 表示这个。 这是这样纳入我们的_uG_ + _vP_ 计算的：
+在签名/验证术语中，这被称为签名散列。 散列是一个确定性函数，它将任意数据转换为固定大小的数据。 这是包含射手意图的消息的指纹，任何验证消息的人都已知道。 我们用字母 _z_ 表示这个。 这是这样纳入我们的 _uG_ + _vP_ 计算的：
 
 ++++
 <ul class="simplelist">
@@ -1024,7 +1024,7 @@ It's worth mentioning again: make sure you're using truly random numbers for _k_
 Signatures((("signing and verification", "verification process"))) sign some fixed-length value (our "contract")—in our case, something that's 32 bytes.
 The fact that 32 bytes is 256 bits is not a coincidence, as the thing we're signing will be a scalar for _G_.
 
-签名验证一些固定长度的值（我们的"合约"）—— 在我们的例子中，是32字节长。 32字节等于256位并不是巧合，因为我们签名的对象将是_G_的标量。
+签名验证一些固定长度的值（我们的"合约"）—— 在我们的例子中，是32字节长。 32字节等于256位并不是巧合，因为我们签名的对象将是 _G_ 的标量。
 
 To guarantee that the thing we're signing is 32 bytes, we hash the document first.
 In Bitcoin, the hashing function is hash256, or two rounds of sha256.
@@ -1222,7 +1222,7 @@ include::code-ch03/examples.py[tag=example10]
 <1> This is an example of a "brain wallet," which is a way to keep the private key in your head without having to memorize something too difficult.
 Please don't use this for a real secret. 这是一个“脑钱包”的例子，它是一种在不记住过于困难的内容的情况下将私钥保存在脑海中的方法。 请勿将此目标用于实际秘钥。
 <2> This is the signature hash, or hash of the message that we're signing. 这是签名哈希，或者是我们要签名的消息的哈希。
-<3> We're going to use a fixed _k_ here for demonstration purposes. 我们在这里将使用一个固定的_k_，以供演示目的。
+<3> We're going to use a fixed _k_ here for demonstration purposes. 我们在这里将使用一个固定的 _k_，以供演示目的。
 <4> _kG_ = (_r_,_y_), so we take the _x_ coordinate only. _kG_ = (_r_,_y_)，所以我们只取 _x_ 坐标。
 <5> _s_ = (_z_ + _re_)/_k_.
 We can mod by _n_ because we know this is a cyclical group of order _n_.  我们知道这是一个循环群，阶数为 _n_，所以我们可以在 _n_ 上取模。 
@@ -1264,7 +1264,7 @@ class PrivateKey:
         return Signature(r, s) # <6>
 ----
 <1> `randint` chooses a random integer from ++[0,__n__)++.
-Please don't use this function in production, because the random number from this library is not nearly random enough. `randint`` 从 ++[0,__n__)++ 中选择一个随机整数。请勿在生产环境中使用此函数，因为此库生成的随机数远未足够随机。
+Please don't use this function in production, because the random number from this library is not nearly random enough. `randint` 从 ++[0, __n__)++ 中选择一个随机整数。请勿在生产环境中使用此函数，因为此库生成的随机数远未足够随机。
 <2> _r_ is the _x_ coordinate of _kG_. _r_ 是 _kG_ 的 _x_ 坐标。
 <3> We use Fermat's little theorem again, and _n_, which is prime. 我们再次使用费马小定理，_n_ 是质数。
 <4> _s_ = (_z_ + _re_)/_k_.
@@ -1339,7 +1339,7 @@ We've covered elliptic curve cryptography and can now prove that we know a secre
 Even if you don't read another page in this book, you've learned to implement what was once considered https://en.wikipedia.org/wiki/Export_of_cryptography_from_the_United_States["weapons-grade munitions"].
 This is a major step in your journey and will be essential for the rest of the book!
 
-我们已经介绍了椭圆曲线密码学，现在可以通过签名来证明我们知道一个秘钥。我们也可以验证拥有秘钥的人是否实际上签署了一个信息。 即使你不再阅读这本书的其他内容，你已经学会了实现曾经被认为是https://en.wikipedia.org/wiki/Export_of_cryptography_from_the_United_States[“武器级弹药”]的东西。 这是你旅程中的一个重要步骤，对于书的其余部分来说至关重要！
+我们已经介绍了椭圆曲线密码学，现在可以通过签名来证明我们知道一个秘钥。我们也可以验证拥有秘钥的人是否实际上签署了一个信息。 即使你不再阅读这本书的其他内容，你已经学会了实现曾经被认为是 https://en.wikipedia.org/wiki/Export_of_cryptography_from_the_United_States[“武器级弹药”]的东西。 这是你旅程中的一个重要步骤，对于书的其余部分来说至关重要！
 
 We now turn to serializing a lot of these structures so that we can store them on disk and send them over the network.
 
