@@ -378,8 +378,8 @@ To make this work, we have to do two things. First, we have to adjust the `__ini
 Second, we have to overload the addition operator or `__add__` as we did with the `FieldElement` class:
 
 
-为了让这个方法工作，我们需要做两件事。首先，我们需要稍微调整`__init__`方法，使其在无穷大点的情况下不检查曲线方程是否满足。
-其次，我们需要重载加法运算符或`__add__`，就像我们在`FieldElement`类中所做的那样：  
+为了让这个方法工作，我们需要做两件事。首先，我们需要稍微调整 `__init__` 方法，使其在无穷大点的情况下不检查曲线方程是否满足。
+其次，我们需要重载加法运算符或 `__add__` ，就像我们在 `FieldElement` 类中所做的那样：  
 
 [source,python]
 ----
@@ -396,8 +396,8 @@ include::code-ch02/ecc.py[tag=source2]
 
 include::code-ch02/ecc.py[tag=source3]
 ----
-<1> The _x_ coordinate and _y_ coordinate being `None` is how we signify the point at infinity. _x_坐标和_y_坐标为None是我们表示无穷大点的方式。 
-Note that the next +if+ statement will fail if we don't return here. 请注意，如果我们在这种情况下不返回，下一个+if+语句将失败。
+<1> The _x_ coordinate and _y_ coordinate being `None` is how we signify the point at infinity. _x_ 坐标和 _y_ 坐标为None是我们表示无穷大点的方式。 
+Note that the next +if+ statement will fail if we don't return here. 请注意，如果我们在这种情况下不返回，下一个 +if+ 语句将失败。
 <2> We overload the `+` operator here. 我们在这里重载+运算符。
 <3> `self.x` being `None` means that `self` is the point at infinity, or the additive identity. 如果self.x为None，则意味着self是无穷大点，也就是加法恒等元。
 Thus, we return `other`. 因此，我们返回other。

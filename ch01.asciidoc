@@ -184,10 +184,10 @@ The bare bones of the class look like this:
 include::code-ch01/ecc.py[tag=source1]
 ----
 <1> We first check that `num` is between `0` and `prime-1` inclusive.
-If not, we get an invalid +FieldElement+ and we raise a `ValueError`, which is what we should raise when we get an inappropriate value. 我们首先检查`num`是否在`0`和`prime-1`之间（包括`0`和`prime-1`）。
-如果不是，我们将得到一个无效的`FieldElement`，并引发一个`ValueError`，这是当我们得到不合适的值时应该引发的异常。
-<2> The((("&#x005F;&#x005F;init&#x005F;&#x005F; method"))) rest of the `__init__` method assigns the initialization values to the object. `__init__`方法的剩余部分将初始化值分配给对象。
-<3> The((("&#x005F;&#x005F;eq&#x005F;&#x005F; method"))) `__eq__` method checks if two objects of class `FieldElement` are equal. `__eq__`方法检查两个`FieldElement`类的对象是否相等。
+If not, we get an invalid +FieldElement+ and we raise a `ValueError`, which is what we should raise when we get an inappropriate value. 我们首先检查 `num` 是否在 `0` 和 `prime-1` 之间（包括 `0` 和 `prime-1` ）。
+如果不是，我们将得到一个无效的 `FieldElement`，并引发一个 `ValueError`，这是当我们得到不合适的值时应该引发的异常。
+<2> The((("&#x005F;&#x005F;init&#x005F;&#x005F; method"))) rest of the `__init__` method assigns the initialization values to the object. `__init__` 方法的剩余部分将初始化值分配给对象。
+<3> The((("&#x005F;&#x005F;eq&#x005F;&#x005F; method"))) `__eq__` method checks if two objects of class `FieldElement` are equal. `__eq__` 方法检查两个 `FieldElement` 类的对象是否相等。
 This is only true when the `num` and `prime` properties are equal. 这仅在`num`和`prime`属性相等时才是真的。
 
 What we've defined already allows us to do this:
@@ -208,7 +208,9 @@ Once you've set up Jupyter Notebook (see <<setting_up>>), you can navigate to _c
 For the next exercise, you'll want to open up _ecc.py_ by clicking the link in the Exercise 1 box.
 If you get stuck, please remember that the answers to every exercise are in <<appendix_solutions>>.((("", startref="FFsets01")))((("&#x005F;&#x005F;ne&#x005F;&#x005F; method")))
 
-您可以在本书附带的代码中看到这个操作。一旦您设置好Jupyter Notebook（请参阅<<设置>>），您就可以导航到 _code-ch01/Chapter1.ipynb_ 并运行代码以查看结果。 下一个练习，您需要打开 _ecc.py_，通过点击练习1框中的链接来访问。 如果您遇到困难，请记住每个练习的答案都在<<附录解决方案>>中。
+您可以在本书附带的代码中看到这个操作。一旦您设置好Jupyter Notebook（请参阅<<设置>>），您就可以导航到 _code-ch01/Chapter1.ipynb_ 并运行代码以查看结果。 
+下一个练习，您需要打开 _ecc.py_，通过点击练习1框中的链接来访问。 
+如果您遇到困难，请记住每个练习的答案都在<<附录解决方案>>中。
 
 include::code-ch01/answers.py[tag=exercise1,indent=0]
 

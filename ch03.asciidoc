@@ -111,7 +111,7 @@ include::code-ch03/ecc.py[tag=source1]
 The addition (`+`), multiplication (`*`), exponentiation (`**`), and not equals (`!=`) operators here use the `__add__`, `__mul__`, `__pow__`, and `__ne__` methods from `FiniteField`, respectively, and _not_ the integer equivalents.
 Being able to do the same equation but with different definitions for the basic arithmetic operators is how we construct an elliptic curve cryptography library.
 
-这里的加法（+），乘法（*），指数（**）和不等（!=）运算符分别使用 `FiniteField` 中的 __add__，__mul__，__pow__ 和 __ne__ 方法，而不是整数的等价物。 能够在相同方程的情况下，为基本算术运算符提供不同的定义，这就是我们构建椭圆曲线密码库的方式。
+这里的加法（`+`），乘法（`*`），指数（`**`）和不等（`!=`）运算符分别使用 `FiniteField` 中的 `__add__`， `__mul__`， `__pow__` 和 `__ne__` 方法，而不是整数的等价物。 能够在相同方程的情况下，为基本算术运算符提供不同的定义，这就是我们构建椭圆曲线密码库的方式。
 
 We've already coded the two classes that we need to implement elliptic curve points over a finite field.
 However, to check our work, it will be useful to create a test suite.
@@ -165,7 +165,7 @@ image::images/prbc_0303.png[Line over a finite field]
 
 The equation nevertheless works, and we can calculate what _y_ should be for a given _x_.
 
-方程仍然有效，我们可以计算出对于给定的_x_，_y_应该是多少。
+方程仍然有效，我们可以计算出对于给定的 _x_，_y_ 应该是多少。
 
 Remarkably, point addition works over finite fields as well.
 This is because elliptic curve point addition works over all fields!
@@ -209,7 +209,7 @@ All of the equations for elliptic curves work over finite fields, which sets us 
 
 Because we coded +FieldElement+ in such a way as to define `__add__`, `__sub__`, `__mul__`, `__truediv__`, `__pow__`, `__eq__`, and `__ne__`, we can simply initialize `Point` with `FieldElement` objects and point addition will((("", startref="ECCpoint03")))((("", startref="PAfinite03"))) work:
 
-由于我们以定义__add__，__sub__，__mul__，__truediv__，__pow__，__eq__和__ne__的方式编码了+FieldElement+，所以我们只需使用FieldElement对象初始化Point，点加法就可以正常工作：
+由于我们以定义 `__add__`， `__sub__`， `__mul__`， `__truediv__`， `__pow__`， `__eq__` 和 `__ne__` 的方式编码了 +FieldElement+，所以我们只需使用 `FieldElement` 对象初始化 `Point`，点加法就可以正常工作：
 
 [source,python]
 ----
@@ -248,8 +248,8 @@ That is, we have a _scalar_ number in front of the point.
 We can do this because we have defined point addition and point addition is associative.
 
 我们可以按照意愿进行多次操作。
-这就是我们所说的_标量乘法_。
-也就是说，点前面有一个_标量_数字。
+这就是我们所说的 _标量乘法_。
+也就是说，点前面有一个 _标量_ 数字。
 我们之所以能这样做，是因为我们定义了点加法，而点加法是具有结合律的。
 
 One property of scalar multiplication is that it's really hard to predict without calculating (see <<scalar_multiplication_results_for_y_2_x_3_7>>).
@@ -388,7 +388,7 @@ would we be able to solve for _s_?
 We can look up the results shown earlier, but that's because we have a small group.
 We'll see in <<definingCurveBC>> that when we have numbers that are a lot larger, discrete log becomes an intractable problem.((("", startref="ECCscalar03")))((("", startref="SMelliptic03")))
 
-我们能否解出_s_？ 我们可以查看之前展示的结果，但这仅仅是因为我们有一个小群体。 在<<definingCurveBC>>中，我们将看到当我们有更大的数字时，离散对数成为一个难以解决的问题。((("", startref="ECCscalar03")))((("", startref="SMelliptic03")))
+我们能否解出 _s_？ 我们可以查看之前展示的结果，但这仅仅是因为我们有一个小群体。 在<<definingCurveBC>>中，我们将看到当我们有更大的数字时，离散对数成为一个难以解决的问题。((("", startref="ECCscalar03")))((("", startref="SMelliptic03")))
 
 === Mathematical Groups 数学群
 
@@ -461,7 +461,7 @@ If _a+b < n_ (where _n_ is the order of the group), then we know it's in the gro
 If _a_+_b_ >= _n_, then we know _a_ < _n_ and _b_ < _n_, so _a_+_b_ < 2__n__, so _a_+_b_–_n_ < _n_:
 
 我们如何确定这个元素是否在群中？
-如果 _a+b < n_ （其中_n_是群的大小），那么根据定义，我们知道它在群中。
+如果 _a+b < n_ （其中 _n_ 是群的大小），那么根据定义，我们知道它在群中。
 如果 _a+_b_ >= _n_，那么我们知道 _a_ < _n_ 且 _b_ < _n_，所以 _a_+_b_ < 2__n__，所以 _a_+_b_–_n_ < _n_：
 
 ++++
@@ -482,7 +482,7 @@ So we know that this element is in the group, proving closure.
 
 Invertibility((("invertibility")))((("finite cyclic groups", "invertibility property"))) is easy to depict (<<each_point_is_invertible_by_taking_the_reflection_over_the_x_axis>>).
 
-可逆性((“可逆性”))((“有限循环群”，“可逆性属性”))很容易描述（<<通过取x轴的反射，每个点都是可逆的>>）。
+可逆性很容易描述（<<通过取x轴的反射，每个点都是可逆的>>）。
 
 [[each_point_is_invertible_by_taking_the_reflection_over_the_x_axis]]
 .Each point is invertible by taking the reflection over the x-axis
@@ -582,7 +582,7 @@ include::code-ch03/ecc.py[tag=source3]
 <1> `current` represents the point that's at the current bit.
 The first time through the loop it represents 1 &#xd7; +self+; the second time it will be 2 &#xd7; +self+, the third time 4 &#xd7; +self+, then 8 &#xd7; +self+, and so on. 
 We double the point each time.
-In binary the coefficients are 1, 10, 100, 1000, 10000, etc. `current` 代表当前比特处的点。 第一次循环时，它代表1乘以+self+；第二次循环时，它将代表2乘以+self+；第三次循环时，它将代表4乘以+self+；然后是8乘以+self+，依此类推。 每次我们将点加倍。 在二进制中，系数是1、10、100、1000、10000等。
+In binary the coefficients are 1, 10, 100, 1000, 10000, etc. `current` 代表当前比特处的点。 第一次循环时，它代表1乘以 +self+；第二次循环时，它将代表2乘以 +self+；第三次循环时，它将代表4乘以 +self+；然后是8乘以 +self+，依此类推。 每次我们将点加倍。 在二进制中，系数是1、10、100、1000、10000等。
 <2> We start the result at 0, or the point at infinity. 我们从0开始结果，或者无限远处的点。
 <3> We are looking at whether the rightmost bit is a 1.
 If it is, then we add the value of the current bit. 我们查看最右边的比特是否为1。 如果是，那么我们加上当前比特的值。
@@ -595,7 +595,7 @@ This is an advanced technique. If you don't understand bitwise operators, think 
 
 With `__add__` and `__rmul__`, we can start defining some more complicated elliptic curves.
 
-通过`__add__`和`__rmul__`，我们可以开始定义一些更复杂的椭圆曲线。
+通过 `__add__` 和 `__rmul__`，我们可以开始定义一些更复杂的椭圆曲线。
 
 [[definingCurveBC]]
 === Defining the Curve for Bitcoin 定义比特币的曲线
@@ -614,10 +614,10 @@ The security of elliptic curve cryptography depends on computers _not_ being abl
 
 An elliptic curve for public key cryptography is defined with the following pass:[<span class="keep-together">parameters</span>]: 公钥密码学中的椭圆曲线定义为以下参数：
 
-* We specify the _a_ and _b_ of the curve __y__^2^ = __x__^3^ + _ax_ + _b_. 我们指定曲线的_a_和_b_，使得 __y__^2^ = __x__^3^ + _ax_ + _b_。
+* We specify the _a_ and _b_ of the curve __y__^2^ = __x__^3^ + _ax_ + _b_. 我们指定曲线的 _a_ 和 _b_，使得 __y__^2^ = __x__^3^ + _ax_ + _b_。
 * We specify the prime of the finite field, _p_. 我们指定有限域的素数 _p_。
 * We specify the _x_ and _y_ coordinates of the generator point _G_. 我们指定生成点 _G_ 的 _x_ 和 _y_ 坐标。
-* We specify the order of the group generated by _G_, _n_. 我们指定由 _G_ 生成的群的阶_n_。
+* We specify the order of the group generated by _G_, _n_. 我们指定由 _G_ 生成的群的阶 _n_。
 
 These numbers are known publicly and together form the cryptographic curve.
 There are many cryptographic curves and they have different security/convenience trade-offs, but the one we're most interested in is the one Bitcoin uses: secp256k1.
