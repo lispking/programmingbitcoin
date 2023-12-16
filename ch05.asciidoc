@@ -48,7 +48,7 @@ The differently highlighted parts represent the version, inputs, outputs, and lo
 
 With this in mind, we can start constructing the((("transactions", "creating transaction class (Tx)"))) transaction class, which we'll call `Tx`:
 
-有了这个概念，我们可以开始构建(((“transactions”, “创建交易类 (Tx)”)))交易类，我们将称之为 Tx：
+有了这个概念，我们可以开始构建(((“transactions”, “创建交易类 (Tx)”)))交易类，我们将称之为 `Tx`：
 
 [source,python]
 ----
@@ -58,9 +58,9 @@ include::code-ch05/tx.py[tag=source1]
 We'll define the specific object types later. 输入和输出是非常通用的术语，因此我们需要指定它们是哪种输入。 我们稍后会定义具体对象类型。 
 <2> We need to know which network this transaction is on to be able to validate it fully. 我们需要知道这笔交易在哪个网络上，才能完全验证它。 
 <3> The `id` is what block explorers((("block explorers"))) use for looking up transactions.
-It's the hash256 of the transaction in hexadecimal format. id 是区块探索器(((“区块探索器”)))用来查找交易的标识符。 它是交易在十六进制格式中的 hash256。
+It's the hash256 of the transaction in hexadecimal format. `id` 是区块探索器用来查找交易的标识符。 它是交易在十六进制格式中的 hash256。
 <4> The hash is the hash256 of the serialization in little-endian.
-Note we don't have the `serialize` method yet; so until we do, this won't work. hash 是序列化在小端序中的 hash256。 请注意，我们还没有 serialize 方法；所以，在实现该方法之前，这段代码不会运行。
+Note we don't have the `serialize` method yet; so until we do, this won't work. hash 是序列化在小端序中的 hash256。 请注意，我们还没有 `serialize` 方法；所以，在实现该方法之前，这段代码不会运行。
 
 The rest of this chapter will be concerned with parsing transactions.
 We could, at this point, write code like this:
@@ -78,8 +78,8 @@ class Tx:
         version = serialization[0:4]  # <2>
 	...
 ----
-<1> This method has to be a class method as the serialization will return a new instance of a `Tx` object. 由于序列化将返回一个 Tx 对象的新实例，所以此方法必须是类方法。
-<2> We assume here that the variable `serialization` is a byte array. 我们在这里假设变量 serialization 是一个字节数组。
+<1> This method has to be a class method as the serialization will return a new instance of a `Tx` object. 由于序列化将返回一个 `Tx` 对象的新实例，所以此方法必须是类方法。
+<2> We assume here that the variable `serialization` is a byte array. 我们在这里假设变量 `serialization` 是一个字节数组。
 
 This could definitely work, but the transaction may be very large.
 Ideally, we want to be able to parse from a _stream_ instead.
@@ -109,7 +109,7 @@ Our method will be able to handle any sort of stream and return the `Tx` object 
 
 从工程角度来看，这是有利的，因为流可以是网络上的套接字连接或文件句柄。 
 我们可以立即开始解析流，而不是等待整个传输或读取。
-我们的方法将能够处理任何类型的流，并返回我们需要的 Tx 对象。
+我们的方法将能够处理任何类型的流，并返回我们需要的 `Tx` 对象。
 
 === Version 版本
 
@@ -129,12 +129,12 @@ Similarly, Bitcoin transactions have version numbers.
 In Bitcoin's case, the transaction version is generally 1, but there are cases where it can be 2 (transactions((("OP_CHECKSEQUENCEVERIFY operation"))) using an opcode called `OP_CHECKSEQUENCEVERIFY` as defined in((("BIP (Bitcoin Improvement Proposals)", "BIP0112"))) BIP0112 require use of version > 1).
 
 同样，比特币交易也有版本号。 
-在比特币的情况下，交易版本通常为1，但也有版本为2的情况（使用名为 OP_CHECKSEQUENCEVERIFY 的操作码进行交易的 OP_CHECKSEQUENCEVERIFY 操作，如 BIP0112 中所定义）。
+在比特币的情况下，交易版本通常为1，但也有版本为2的情况（使用名为 `OP_CHECKSEQUENCEVERIFY` 的操作码进行交易操作，如 BIP0112 中所定义）。
 
 You may notice here that the actual value in hexadecimal is `01000000`, which doesn't look like 1.
 Interpreted as a little-endian integer, however, this number is actually 1 (recall the discussion from <<chapter_serialization>>).
 
-你可能注意到，这里的十六进制实际值为 01000000，看起来并不像1。 
+你可能注意到，这里的十六进制实际值为 `01000000`，看起来并不像1。 
 然而，作为一个小端整数，这个数字实际上就是1（回顾一下<<chapter_serialization>>中的讨论）。
 
 
@@ -200,7 +200,7 @@ We can see that the byte is actually `01`, which means that this transaction has
 It may be tempting here to assume that it's always a single byte, but it's not.
 A single byte has 8 bits, so anything over 255 inputs will not be expressible in a single byte.
 
-我们可以看到，这个字节实际上是 01，这意味着这笔交易有一个输入。 
+我们可以看到，这个字节实际上是 `01`，这意味着这笔交易有一个输入。 
 在这里，我们可能会误以为它总是只有一个字节，但实际上并非如此。 
 一个字节有8位，所以超过255个输入将无法用单个字节表示。
 
@@ -210,10 +210,10 @@ We could, of course, always reserve 8 bytes for the number of inputs, but that w
 This is the case with the number of inputs in a normal transaction, so using varints helps to save space.
 You can see how they work in the following sidebar.
 
-这就是 varints 的用武之地。 
-Varint 是 variable integer（可变整数）的缩写，它是一种将整数编码成字节的方法，这些字节的范围从0到2^64^-1。 
+这就是 _varints_ 的用武之地。 
+Varint 是 _variable integer_（可变整数）的缩写，它是一种将整数编码成字节的方法，这些字节的范围从0到2^64^-1。 
 当然，我们总是可以为输入的数量保留8个字节，但如果预期的输入数量相对较小（例如，小于200），这将浪费很多空间。 
-普通交易的输入数量就是这种情况，所以使用varints有助于节省空间。
+普通交易的输入数量就是这种情况，所以使用 varints 有助于节省空间。
 你可以在下面的侧栏中了解它们是如何工作的。
 
 [role="pagebreak-before less_space"]
