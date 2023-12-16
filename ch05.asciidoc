@@ -392,7 +392,7 @@ Each transaction must have one or more outputs.
 Why would anyone have more than one output?
 An exchange may batch transactions, for example, and pay out to a lot of people at once instead of generating a single transaction for every single person that requests bitcoins.
 
-正如上一节所暗示的（“交易”，“输出组件”））（“输出”），输出定义了比特币的去向。 
+正如上一节所暗示的，输出定义了比特币的去向。 
 每个交易必须有一个或多个输出。 
 为什么有人会有一个以上的输出？ 
 例如，交易所可能会批量处理交易，一次性向很多人支付，而不是为每个要求比特币的人生成一个单独的交易。
@@ -446,7 +446,7 @@ The reason why UTXOs are important is because at any moment in time, they repres
 In other words, these are the bitcoins that are in circulation.
 Full nodes on the network must keep track of the UTXO set, and keeping the UTXO set indexed makes validating new transactions much faster.
 
-UTXO（"未花费交易输出"集）代表未花费的交易输出。 
+UTXO 代表未花费的交易输出。 
 在任何给定时刻，整个未花费交易输出集被称为UTXO集。 
 UTXO之所以重要，是因为在任何时刻，它们都代表了所有可用的比特币。 
 换句话说，这些是在流通中的比特币。 
@@ -584,7 +584,7 @@ Transactions not in blocks (so-called _mempool transactions_) are not part of th
 您可能会好奇为什么输入和输出不能简单地强制相等。 
 这是因为如果每笔交易的成本都为零，那么矿工就没有任何动力将交易包含在区块中（请参见<<chapter_blocks>>）。 
 费用是一种激励矿工包含交易的方式。 
-不在区块中的交易（所谓的_mempool交易_）不属于区块链，因此不是最终的。
+不在区块中的交易（所谓的 _mempool交易_ ）不属于区块链，因此不是最终的。
 
 The transaction fee is simply the sum of the inputs minus the sum of the outputs.
 This difference is what the miner gets to keep.

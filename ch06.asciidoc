@@ -247,7 +247,7 @@ include::code-ch06/script.py[tag=source2]
 <3> We parse until the right amount of bytes are consumed. 我们一直解析，直到消耗了正确的字节数。
 <4> The byte determines if we have an opcode or element. 字节决定我们是得到指令还是元素。
 <5> This converts the byte into an integer in Python. 这将字节转换为Python中的整数。
-<6> For a number between 1 and 75 inclusive, we know the next +n+ bytes are an pass:[<span class="keep-together">element</span>]. 对于在1到75（含）之间的数字，我们知道接下来的+n+字节是一个元素。
+<6> For a number between 1 and 75 inclusive, we know the next +n+ bytes are an pass:[<span class="keep-together">element</span>]. 对于在1到75（含）之间的数字，我们知道接下来的 +n+ 字节是一个元素。
 <7> 76 is `OP_PUSHDATA1`, so the next byte tells us how many bytes to read. 76是OP_PUSHDATA1，所以下一个字节告诉我们需要读取多少字节。
 <8> 77 is `OP_PUSHDATA2`, so the next two bytes tell us how many bytes to read. 77是OP_PUSHDATA2，所以接下来的两个字节告诉我们需要读取多少字节。 
 <9> We have an opcode that we store. 我们有一个指令，我们将其存储起来。
@@ -348,7 +348,8 @@ Pay-to-pubkey (p2pk) ((("ScriptPubKeys", "p2pk (pay-to-pubkey)", id="Sp2pk06")))
 Most coins thought to belong to Satoshi are in p2pk UTXOs—that is, transaction outputs whose ScriptPubKeys have the p2pk form.
 There are some limitations that we'll discuss in <<problemsp2pk>>, but first, let's look at how p2pk works.
 
-支付到公钥（p2pk）在比特币的早期阶段被广泛使用。大多数被认为属于中本聪的硬币都在p2pk UTXOs中——也就是说，交易输出的ScriptPubKeys具有p2pk形式。我们在<>中讨论一些限制，但首先，让我们看看p2pk是如何工作的。
+支付到公钥（p2pk）在比特币的早期阶段被广泛使用。大多数被认为属于中本聪的硬币都在p2pk UTXOs中 —— 也就是说，交易输出的ScriptPubKeys具有p2pk形式。
+我们在<<problemsp2pk>>中讨论一些限制，但首先，让我们看看p2pk是如何工作的。
 
 Back in <<chapter_elliptic_curve_cryptography>>, we learned about both ECDSA signing and verification.
 To verify an ECDSA signature, we need the message, _z_, the public key, _P_, and the signature, _r_ and _s_.
@@ -360,7 +361,8 @@ The ScriptPubKey of a transaction puts the assigned bitcoins under the control o
 Specifying where the bitcoins go is the job of the ScriptPubKey—this is the lockbox that receives the bitcoins.
 The p2pk ScriptPubKey looks like <<pay_to_pubkey_p2pk_scriptpubkey>>.
 
-指定比特币的去向是ScriptPubKey的工作——这是接收比特币的锁箱。p2pk ScriptPubKey 看起来像<<pay_to_pubkey_p2pk_scriptpubkey>>。
+指定比特币的去向是ScriptPubKey的工作 —— 这是接收比特币的锁箱。
+p2pk ScriptPubKey 看起来像<<pay_to_pubkey_p2pk_scriptpubkey>>。
 
 [[pay_to_pubkey_p2pk_scriptpubkey]]
 .Pay-to-pubkey (p2pk) ScriptPubKey 支付到公钥（p2pk）ScriptPubKey
