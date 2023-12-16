@@ -100,10 +100,8 @@ Recall((("serialization", "compressed SEC format")))((("SEC serialization format
 
 [role="width-90"]
 [[the_two_possible_values_for_y_are_where_this_vertical_line_intersects_the_curve]]
-.The two possible values for y are where this vertical line intersects the curve
+.The two possible values for y are where this vertical line intersects the curve y的可能值为这个垂直线与曲线相交的地方
 image::images/prbc_0212.png[Elliptic Curve Vertical Line]
-
-y的可能值为这个垂直线与曲线相交的地方 image::images/prbc_0212.png[椭圆曲线垂直线]
 
 It turns out that even over a finite field, we have the same symmetry.
 
@@ -503,7 +501,7 @@ The mainnet chain as of this writing has around 550,000 blocks, while testnet ha
 
 ((("ripemd160 operation")))((("sha256 operation")))((("hash160 operation")))We can implement the hash160 operation in _helper.py_:
 
-我们可以在_helper.py_中实现hash160运算：
+我们可以在 _helper.py_ 中实现hash160运算：
 
 [source,python]
 ----
@@ -571,7 +569,12 @@ From <<chapter_tx_parsing>> onward, we will use little-endian encoding a lot mor
 For this reason, we turn to the next two exercises.
 The last exercise of this section is to create a testnet address for yourself.
 
-在Python中如何实现大端和小端对于接下来的几章将解析和大端/little-endian序列化数字将非常有用。 特别是，中本聪在比特币中使用了大量的小端，不幸的是，没有容易学习的规则来确定何时使用小端和何时使用大端。 回想一下，SEC 格式使用大端编码，地址和 WIF 也是如此。 从<<tx_parsing 章节>>开始，我们将使用更多的小端编码。 为此，我们转向接下来的两个练习。 本节的最后一个练习是为自己创建一个测试网地址。
+在 `Python` 中如何实现大端和小端对于接下来的几章将解析和大端/小端序列化数字将非常有用。 
+特别是，中本聪在比特币中使用了大量的小端，不幸的是，没有容易学习的规则来确定何时使用小端和何时使用大端。 
+回想一下，SEC 格式使用大端编码，地址和 WIF 也是如此。 
+从<<tx_parsing 章节>>开始，我们将使用更多的小端编码。 
+为此，我们转向接下来的两个练习。 
+本节的最后一个练习是为自己创建一个测试网地址。
 
 include::code-ch04/answers.py[tag=exercise7,indent=0]
 
@@ -583,11 +586,14 @@ Go to a https://faucet.programmingbitcoin.com[testnet faucet] and send some test
 If you succeeded, congrats!
 You're now the proud owner of some testnet coins!((("", startref="MTserial04")))
 
-去一个 https://faucet.programmingbitcoin.com[testnet水龙头]，将一些测试网硬币发送到那个地址（它应该以 `m` 或 `n` 开头，否则就有问题）。 如果你成功了，恭喜！ 你现在拥有一些测试网硬币！(((“”, startref=“MTserial04”)))
+去一个 https://faucet.programmingbitcoin.com[testnet水龙头]，将一些测试网硬币发送到那个地址（它应该以 `m` 或 `n` 开头，否则就有问题）。 
+如果你成功了，恭喜！ 
+你现在拥有一些测试网硬币！(((“”, startref=“MTserial04”)))
 
 === Conclusion 结论
 
 In this chapter we learned how to serialize a lot of different structures that we created in the previous chapters.
 We now turn to parsing and understanding transactions.
 
-在本章中，我们学会了如何序列化在前面章节中创建的各种不同结构。 现在我们转向解析和理解交易。
+在本章中，我们学会了如何序列化在前面章节中创建的各种不同结构。 
+现在我们转向解析和理解交易。
