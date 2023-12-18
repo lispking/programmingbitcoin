@@ -868,7 +868,7 @@ In((("SHA-1 piñata")))((("Script", "SHA-1 piñata")))((("hash collisions"))) 20
 The donations reached 2.49153717 BTC, and when Google actually found a https://security.googleblog.com/2017/02/announcing-first-sha1-collision.html[hash collision for SHA-1 in February 2017], this script was promptly redeemed.
 The transaction output was 2.48 BTC, which was 2,848.88 USD at the time.
 
-在(((“SHA-1彩罐”)))((“脚本”, “SHA-1彩罐”)))((“哈希碰撞”))2013年，Peter Todd创建了一个与练习4中非常相似的脚本，并将一些比特币放入其中，为人们找到哈希碰撞创造经济激励。 捐款达到了2.49153717 BTC，当谷歌在2017年2月实际找到一个 https://security.googleblog.com/2017/02/announcing-first-sha1-collision.html[SHA-1的哈希碰撞时]，这个脚本立即被兑换。 当时，交易输出是2.48 BTC，相当于2,848.88美元。
+在2013年，Peter Todd创建了一个与练习4中非常相似的脚本，并将一些比特币放入其中，为人们找到哈希碰撞创造经济激励。 捐款达到了2.49153717 BTC，当谷歌在2017年2月实际找到一个 https://security.googleblog.com/2017/02/announcing-first-sha1-collision.html[SHA-1的哈希碰撞时]，这个脚本立即被兑换。 当时，交易输出是2.48 BTC，相当于2,848.88美元。
 
 Peter created more piñatas for sha256, hash256, and hash160, which add economic incentives to find collisions for these hashing functions.
 

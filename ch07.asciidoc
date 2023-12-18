@@ -135,7 +135,10 @@ The hard part is getting the signature hash.
 A naive way to do this would be to hash the transaction serialization as shown in <<a_signature_is_in_the_yellow_highlighted_part_or_the_scriptsig>>.
 Unfortunately, we can't do that, since the signature is part of the ScriptSig and a signature can't sign itself.
 
-SEC（“OP_CHECKSIG操作”）当执行类似OP_CHECKSIG的命令时，公钥和DER签名在栈中，使得获取公钥和签名相当直接（请参见<<chapter_script>>）。 困难的部分是获取签名哈希。 一种简单的方法是将交易序列化并进行哈希，如<<a_signature_is_in_the_yellow_highlighted_part_or_the_scriptsig>>所示。 不幸的是，我们不能这样做，因为签名是ScriptSig的一部分，而且签名不能签名自身。
+SEC 当执行类似OP_CHECKSIG的命令时，公钥和DER签名在栈中，使得获取公钥和签名相当直接（请参见<<chapter_script>>）。 
+困难的部分是获取签名哈希。 
+一种简单的方法是将交易序列化并进行哈希，如<<a_signature_is_in_the_yellow_highlighted_part_or_the_scriptsig>>所示。 
+不幸的是，我们不能这样做，因为签名是ScriptSig的一部分，而且签名不能签名自身。
 
 [[a_signature_is_in_the_yellow_highlighted_part_or_the_scriptsig]]
 .A signature is in the yellow highlighted part, or the ScriptSig 签名在黄色高亮部分，或者ScriptSig
@@ -145,7 +148,9 @@ Instead, we modify the transaction before signing it.
 That is, we compute a different signature hash _for each input_.
 The procedure is as follows.
 
-相反，我们在签名交易之前对其进行修改。 也就是说，我们为每个输入计算不同的签名哈希。 程序如下。
+相反，我们在签名交易之前对其进行修改。 
+也就是说，我们为每个输入计算不同的签名哈希。 
+程序如下。
 
 ===== Step 1: Empty all the ScriptSigs 第1步：清空所有ScriptSigs
 
@@ -190,7 +195,12 @@ The latter two have some theoretical use cases, but in practice, almost every tr
 There's also a rarely used hash type called `SIGHASH_ANYONECANPAY` that can be combined with any of the previous three, which we won't get into here.
 For `SIGHASH_ALL`, the final transaction must have the exact outputs that were signed or the input signature is invalid.
 
-最后，我们在末尾添加一个4字节（“SIGHASH_ALL”）的哈希类型。 这是为了指定签名授权的内容。 签名可以授权此输入与其他所有输入和输出一起使用（SIGHASH_ALL），与特定输出一起使用（SIGHASH_SINGLE），或与任何输出一起使用（SIGHASH_NONE）。 后两种在理论上有一些用例，但在实践中，几乎所有交易都是用SIGHASH_ALL签名的。 还有一个很少使用的哈希类型SIGHASH_ANYONECANPAY，可以与前三个中的任何一个结合使用，这里不详细介绍。 对于SIGHASH_ALL，最终交易必须具有签名时确切输出，否则输入签名无效。
+最后，我们在末尾添加一个4字节的哈希类型。 
+这是为了指定签名授权的内容。 
+签名可以授权此输入与其他所有输入和输出一起使用（`SIGHASH_ALL`），与特定输出一起使用（`SIGHASH_SINGLE`），或与任何输出一起使用（`SIGHASH_NONE`）。 
+后两种在理论上有一些用例，但在实践中，几乎所有交易都是用 `SIGHASH_ALL` 签名的。 
+还有一个很少使用的哈希类型 `SIGHASH_ANYONECANPAY`，可以与前三个中的任何一个结合使用，这里不详细介绍。 
+对于 `SIGHASH_ALL`，最终交易必须具有签名时确切输出，否则输入签名无效。
 
 The integer corresponding to `SIGHASH_ALL` is 1 and this has to be encoded in little-endian over 4 bytes, which makes the modified transaction look like <<append_the_hash_type_sighash_all_or_the_orange_01000000>>.
 
@@ -486,7 +496,7 @@ You can Google "testnet bitcoin faucet" to find one, or use one from the https:/
 My website, https://faucet.programmingbitcoin.com[], is also updated to point to a testnet faucet that works.
 Enter your new testnet address into any of these faucets to get some testnet coins.
 
-一旦你有了地址，你就可以从提供免费测试币的测试网水龙头中获取一些硬币。你可以通过Google搜索"testnet bitcoin faucet"来找到一个，或者使用 https://en.bitcoin.it/wiki/Testnet#Faucets[wiki上的列表]中的一个。我的网站，https://faucet.programmingbitcoin.com[]，也更新为指向一个可用的测试网水龙头。 将你的新测试网地址输入到这些水龙头中的任何一个，以获取一些测试网硬币。
+一旦你有了地址，你就可以从提供免费测试币的测试网水龙头中获取一些硬币。你可以通过Google搜索"testnet bitcoin faucet"来找到一个，或者使用 https://en.bitcoin.it/wiki/Testnet#Faucets[wiki上的列表]中的一个。我的网站， https://faucet.programmingbitcoin.com[]，也更新为指向一个可用的测试网水龙头。 将你的新测试网地址输入到这些水龙头中的任何一个，以获取一些测试网硬币。
 
 After receiving some coins, spend them using this library.
 This is a big accomplishment for a budding Bitcoin developer, so please take some time to complete these exercises.((("", startref="Tsign07")))((("", startref="SAVsign07")))
