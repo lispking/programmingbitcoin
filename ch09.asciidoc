@@ -99,7 +99,7 @@ Other coinbase transactions' ScriptSigs contain similarly arbitrary data.
 BIP0034((("BIP (Bitcoin Improvement Proposals)", "BIP0034"))) regulates the first element of the ScriptSig of coinbase transactions.
 This was due to a network problem where miners were using the _same_ coinbase transaction for different blocks.
 
-BIP0034((("BIP (Bitcoin Improvement Proposals)", "BIP0034"))) 规定了coinbase交易ScriptSig的第一个元素。 这是由于一个网络问题，矿工们在不同区块中使用_相同_的coinbase交易。
+BIP0034((("BIP (Bitcoin Improvement Proposals)", "BIP0034"))) 规定了coinbase交易ScriptSig的第一个元素。 这是由于一个网络问题，矿工们在不同区块中使用 _相同_ 的coinbase交易。
 
 The coinbase transaction being the same byte-wise means that the transaction IDs are also the same, since the hash256 of the transaction is deterministic.
 To prevent transaction ID duplication, Gavin Andresen authored BIP0034, which is a soft-fork rule that adds the height of the block being mined into the first element of the coinbase ScriptSig.

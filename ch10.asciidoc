@@ -4,13 +4,13 @@
 [.lead]
 The((("peer-to-peer network", seealso="networking")))((("networking", "basics of"))) peer-to-peer network that Bitcoin runs on is what gives it a lot of its robustness. More than 65,000 nodes are running on the network as of this writing and are communicating constantly.
 
-比特币运行的点对点网络（请参阅“网络基础知识”）是其健壮性的关键所在。截至本书撰写时，网络上已有超过65,000个节点在不断地进行通信。
+比特币运行的点对点网络是其健壮性的关键所在。截至本书撰写时，网络上已有超过65,000个节点在不断地进行通信。
 
 The Bitcoin network is a((("broadcast networks", seealso="networking")))((("gossip networks", seealso="networking"))) broadcast network, or gossip network.
 Every node is announcing different transactions, blocks, and peers that it knows about.
 The protocol is rich and has a lot of features that have been added to it over the years.
 
-比特币网络是一个广播网络（请参阅“网络基础知识”）或闲聊网络。每个节点都在宣布它所知道的不同交易、区块和同伴。这个协议非常丰富，并且多年来已经添加了许多功能。
+比特币网络是一个广播网络或闲聊网络。每个节点都在宣布它所知道的不同交易、区块和同伴。这个协议非常丰富，并且多年来已经添加了许多功能。
 
 One thing to note about the networking protocol is that it is not consensus-critical.
 The same data can be sent from one node to another using some other protocol and the blockchain itself will not be affected.
@@ -25,7 +25,7 @@ With that in mind, we'll work in this chapter toward requesting, receiving, and 
 
 All((("networking", "network messages"))) network messages look like <<network_message_or_the_envelope_that_contains_the_actual_payload>>.
 
-所有的（请参阅“网络消息”）网络消息看起来像<<网络消息或包含实际有效载荷的信封>>。
+所有的网络消息看起来像<<网络消息或包含实际有效载荷的信封>>。
 
 The((("networking", "network magic"))) first 4 bytes are always the same and are referred to as the _network magic_.
 Magic bytes((("magic bytes"))) are common in network programming as the communication is asynchronous and can be intermittent.
@@ -35,7 +35,13 @@ You would not want a Bitcoin node to connect to a((("Litecoin nodes"))) Litecoin
 Thus, a Litecoin node has a different magic.
 Bitcoin testnet also has a different magic, `0b110907`, as opposed to the Bitcoin mainnet magic, `f9beb4d9`.
 
-前4个字节总是相同的，被称为网络魔数（请参阅“网络魔数”）。在异步且可能间歇的网络编程中，魔数字节非常常见。魔数字节给消息的接收者提供了一个在通信被中断（例如，手机信号丢失）时的起始位置。它们还有助于识别网络。例如，您不希望比特币节点连接到（请参阅“莱特币节点”）莱特币节点。因此，莱特币节点具有不同的魔数。比特币测试网也有一个不同的魔数，0b110907，与比特币主网魔数f9beb4d9不同。
+前4个字节总是相同的，被称为网络魔数。
+在异步且可能间歇的网络编程中，魔数字节非常常见。
+魔数字节给消息的接收者提供了一个在通信被中断（例如，手机信号丢失）时的起始位置。
+它们还有助于识别网络。
+例如，您不希望比特币节点连接到莱特币节点。
+因此，莱特币节点具有不同的魔数。
+比特币测试网也有一个不同的魔数，`0b110907`，与比特币主网魔数 `f9beb4d9` 不同。
 
 [[network_message_or_the_envelope_that_contains_the_actual_payload]]
 .A network message—the envelope that contains the actual payload 网络消息 —— 包含实际有效载荷的信封
@@ -53,14 +59,18 @@ As we saw in Chapters pass:[<a data-type="xref" href="#chapter_tx_parsing" data-
 2^32^ is about 4 billion, so payloads can be as big as 4 GB, though the reference client rejects any payloads over 32 MB.
 In the message in Figure 10-1, our payload is 101 bytes.
 
-接下来的4个字节是以小端方式表示的有效载荷长度。正如我们在第#chapter_tx_parsing和#chapter_blocks章中所看到的，有效载荷的长度是必要的，因为有效载荷是可变的。2^32^大约是40亿，所以有效载荷可以达到4GB的大小，尽管参考客户端会拒绝任何超过32MB的有效载荷。在图10-1中的消息中，我们的有效载荷是101字节。
+接下来的4个字节是以小端方式表示的有效载荷长度。正如我们在第 pass:[<a data-type="xref" href="#chapter_tx_parsing" data-xrefstyle="select:labelnumber">#chapter_tx_parsing</a> 和 
+<a data-type="xref" href="#chapter_blocks" data-xrefstyle="select:labelnumber">#chapter_blocks</a>] 章中所看到的，有效载荷的长度是必要的，因为有效载荷是可变的。2^32^大约是40亿，所以有效载荷可以达到4GB的大小，尽管参考客户端会拒绝任何超过32MB的有效载荷。在图10-1中的消息中，我们的有效载荷是101字节。
 
 The((("checksum algorithm"))) next 4 bytes are the checksum field.
 The checksum algorithm is something of an odd choice, as it's the first 4 bytes of the hash256 of the payload.
 It's an odd choice because networking protocol checksums are normally designed to have error-correcting capability and hash256 has none.
 That said, hash256 is common in the rest of the Bitcoin protocol, which is probably the reason it's used here.
 
-下一个4个字节是校验和字段（请参阅“校验和算法”）。校验和算法是一个有些奇特的choice，因为它是有效载荷的hash256的前4个字节。这是一个奇特的选择，因为网络协议校验和通常是为了具有纠错能力而设计的，而hash256没有这种能力。话虽如此，hash256在比特币协议的其余部分中非常常见，这可能是它在这里被使用的原因。
+下一个4个字节是校验和字段。
+校验和算法是一个有些奇特的choice，因为它是有效载荷的hash256的前4个字节。
+这是一个奇特的选择，因为网络协议校验和通常是为了具有纠错能力而设计的，而hash256没有这种能力。
+话虽如此，hash256在比特币协议的其余部分中非常常见，这可能是它在这里被使用的原因。
 
 The code to handle network messages requires us to create a new class:
 
@@ -82,7 +92,8 @@ include::code-ch10/answers.py[tag=exercise3,indent=0]
 Each((("networking", "parsing payloads"))) command has a separate payload specification.
 <<parsed_version_chap_ten>> is the parsed payload for `version`.
 
-每个（请参阅“解析有效载荷”）命令都有自己的有效载荷规范。<<解析后的版本>>是version的解析有效载荷。
+每个命令都有自己的有效载荷规范。
+<<解析后的版本>>是version的解析有效载荷。
 
 [[parsed_version_chap_ten]]
 .Parsed version
@@ -102,13 +113,18 @@ IP addresses can be IPv6, IPv4, or OnionCat (a mapping of TOR's `.onion` address
 If IPv4, the first 12 bytes are `00000000000000000000ffff` and the last 4 bytes are the IP.
 The port is 2 bytes in big-endian. The default on mainnet is 8333, which maps to `208d` in big-endian hex.
 
-IP地址可以是IPv6、IPv4或OnionCat（将TOR的.onion地址映射到IPv6）。如果是IPv4，前12个字节是00000000000000000000ffff，最后4个字节是IP地址。端口是2个字节的大端格式。主网上的默认端口是8333，映射到大端十六进制的208d。
+IP地址可以是IPv6、IPv4或OnionCat（将TOR的.onion地址映射到IPv6）。
+如果是IPv4，前12个字节是00000000000000000000ffff，最后4个字节是IP地址。
+端口是2个字节的大端格式。
+主网上的默认端口是8333，映射到大端十六进制的208d。
 
 A nonce is a number used by a node to detect a connection to itself.
 The user agent identifies the software being run.
 The height or latest block field helps the other node know which block a node is synced up to.
 
-nonce是一个由节点用于检测连接到自身的数字。用户代理标识正在运行的软件。高度或最新区块字段帮助另一个节点知道节点同步到的哪个区块。
+nonce是一个由节点用于检测连接到自身的数字。
+用户代理标识正在运行的软件。
+高度或最新区块字段帮助另一个节点知道节点同步到的哪个区块。
 
 Relay is used for Bloom filters, which we'll get to in <<chapter_bloom_filters>>.
 
@@ -144,14 +160,17 @@ Once the handshake is finished, A and B can communicate however they want.
 Note that there is no authentication here, and it's up to the nodes to verify all data that they receive.
 If a node sends a bad transaction or block, it can expect to get banned or disconnected.
 
-握手完成后，A和B可以按他们希望的任何方式进行通信。请注意，这里没有身份验证，节点需要验证它们收到的所有数据。如果一个节点发送了一个错误的交易或区块，它可能会被禁止或断开连接。
+握手完成后，A和B可以按他们希望的任何方式进行通信。
+请注意，这里没有身份验证，节点需要验证它们收到的所有数据。
+如果一个节点发送了一个错误的交易或区块，它可能会被禁止或断开连接。
 
 === Connecting to the Network 连接到网络
 
 Network communication((("networking", "connecting to networks"))) is tricky due to its asynchronous nature.
 To experiment, we can establish a connection to a node on the network synchronously:
 
-由于网络通信的异步性，网络通信变得复杂。为了进行实验，我们可以同步地建立一个与网络上的节点的连接：
+由于网络通信的异步性，网络通信变得复杂。
+为了进行实验，我们可以同步地建立一个与网络上的节点的连接：
 
 [source,python]
 ----
@@ -180,7 +199,8 @@ A stream made this way can be passed to all the parse methods. 我们创建一�
 Connecting in this way, we can't send until we've received and can't respond intelligently to more than one message at a time.
 A more robust implementation would use an asynchronous library (like `asyncio` in Python 3) to send and receive without being blocked.
 
-以这种方式连接，我们在收到之前无法发送，并且无法同时响应多个消息。 更健壮的实现将使用异步库（如Python 3中的asyncio）来发送和接收，而不会阻塞。
+以这种方式连接，我们在收到之前无法发送，并且无法同时响应多个消息。 
+更健壮的实现将使用异步库（如Python 3中的asyncio）来发送和接收，而不会阻塞。
 
 We also need a verack message class, which we'll create here:
 

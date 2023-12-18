@@ -303,7 +303,7 @@ image::images/prbc_1102.png[Merkle Proof]
 
 You can see that in <<merkle_proof>>, the dotted boxes correspond to the hashes that the light client calculates. In particular, the Merkle root is H~ABCDEFGHIJKLMNOP~, which can then be checked against the block header whose proof-of-work has been validated.
 
-在Merkle证明中，你可以看到虚线框对应轻客户端计算的哈希。特别是，Merkle根是H~ABCDEFGHIJKLMNOP~，然后可以与已验证证明-of-work的块头进行比较。
+在Merkle证明中，你可以看到虚线框对应轻客户端计算的哈希。特别是，Merkle根是H~ABCDEFGHIJKLMNOP~，然后可以与已验证 proof-of-work 的块头进行比较。
 
 .How Secure Is an SPV Proof? SPV证明有多安全？
 ****
@@ -311,21 +311,23 @@ The((("SPV (Simplified Payment Verification)", "security of")))((("Simplified Pa
 This does not guarantee that the transaction is in the longest blockchain, but it does assure the light client that the full node would have had to spend a lot of hashing power or energy creating a valid proof-of-work.
 As long as the reward for creating such a proof-of-work is greater than the amounts in the transactions, the light client can at least know that the full node has no clear economic incentive to lie.
 
-全节点可以发送有关块和轻客户端可以重新计算Merkle根的有限信息，然后将其与块头中的Merkle根进行验证。 这不能保证交易在最长区块链中，但确实让轻客户端知道全节点必须花费大量哈希能力或能量创建有效的证明-of-work。 只要创建这种证明-of-work的奖励大于交易中的金额，轻客户端至少可以知道全节点没有明确的欺诈动机。
+全节点可以发送有关块和轻客户端可以重新计算Merkle根的有限信息，然后将其与块头中的Merkle根进行验证。 
+这不能保证交易在最长区块链中，但确实让轻客户端知道全节点必须花费大量哈希能力或能量创建有效的 proof-of-work。 
+只要创建这种 proof-of-work 的奖励大于交易中的金额，轻客户端至少可以知道全节点没有明确的欺诈动机。
 
 Since block headers can be requested from multiple nodes, light clients have a way to verify if one node is trying to show them block headers that are not the longest.
 It only takes a single honest node to invalidate a hundred dishonest ones, since proof-of-work is objective.
 Therefore, isolation of a light client (that is, control of who the light client is connected to) is required to deceive in this way.
 The security of SPV requires that there be lots of honest nodes on the network.
 
-由于块头可以从多个节点请求，因此轻客户端有一种方法可以验证是否有一个节点试图显示不是最长的块头。 只需要一个诚实节点来使一百个不诚实的节点无效，因为证明-of-work是客观的。 因此，要欺骗轻客户端（即控制轻客户端连接的对象），需要将其隔离。 SPV的安全性要求网络中存在大量诚实节点。
+由于块头可以从多个节点请求，因此轻客户端有一种方法可以验证是否有一个节点试图显示不是最长的块头。 只需要一个诚实节点来使一百个不诚实的节点无效，因为 proof-of-work 是客观的。 因此，要欺骗轻客户端（即控制轻客户端连接的对象），需要将其隔离。 SPV的安全性要求网络中存在大量诚实节点。
 
 In((("light client security"))) other words, light client security is based on a robust network of nodes and the economic cost of producing proof-of-work.
 For small transactions relative to the block subsidy (currently 12.5 BTC), there's probably little to worry about.
 For large transactions (say, 100 BTC), the full nodes may have an economic incentive to deceive you.
 Transactions that large should generally be validated using a full node.
 
-换句话说，轻客户端的安全性基于一个强大的节点网络和产生证明-of-work的经济成本。 对于与块补贴（目前为12.5 BTC）相比较小的交易，可能无需担心。 对于大型交易（例如100 BTC），则全节点可能有欺诈您的经济动机。 这种规模的交易通常应使用全节点进行验证。
+换句话说，轻客户端的安全性基于一个强大的节点网络和产生 proof-of-work 的经济成本。 对于与块补贴（目前为12.5 BTC）相比较小的交易，可能无需担心。 对于大型交易（例如100 BTC），则全节点可能有欺诈您的经济动机。 这种规模的交易通常应使用全节点进行验证。
 
 ****
 
@@ -438,7 +440,7 @@ We can do a depth-first traversal and only fill in the nodes that we can calcula
 To traverse, we need to keep track of where exactly in the tree we are.
 The properties `self.current_depth` and `self.current_index` do this.
 
-_Tre遍历_ 将是我们的实现方式。 
+_Tree遍历_ 将是我们的实现方式。 
 我们可以进行深度优先遍历，只填充我们可以计算出来的节点。 
 为了遍历，我们需要跟踪我们在树中的确切位置。 
 self.current_depth和self.current_index属性实现了这一点。
